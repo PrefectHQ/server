@@ -1,0 +1,221 @@
+aliases:
+  - &set_environment_variables
+    run:
+      name: Set environment variables
+      command: |
+        # set prefect tag -- pin for master-like branches, float otherwise
+        if [[ $CIRCLE_BRANCH == master* ]]; then echo 'export PREFECT_VERSION=master' >> $BASH_ENV; else echo 'export PREFECT_VERSION=master' >> $BASH_ENV; fi
+
+  - &install_prefect_server
+    run:
+      name: Install Prefect Server
+      command: |
+        # install prefect
+        pip install --progress-bar off "git+https://github.com/prefecthq/prefect.git@${PREFECT_VERSION}"
+        # install prefect server
+        pip install --progress-bar off -e ".[dev]"
+        cd services/apollo && npm install
+
+  - &install_docker
+    run:
+      name: Install Docker client
+      command: |
+        set -x
+        VER="18.09.3"
+        curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+        tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+        rm /usr/local/bin/docker
+        mv /tmp/docker/* /usr/bin
+
+commands:
+  emit_deployment_event:
+    parameters:
+      ENV:
+        type: string
+    steps:
+      - checkout:
+          path: ~/prefect-server
+      - run:
+          name: install requests
+          command: pip install requests
+      - run:
+          name: emit
+          command: ENV=<< parameters.ENV >> python ~/prefect-server/infrastructure/scripts/emit_deployment_event.py
+
+  prep_utils:
+    description: "Checkout, Add SSH Keys, Get Testing Utilities (e.g. node)"
+    steps:
+      - add_ssh_keys
+      - checkout
+      - run:
+          name: Install utilities
+          command: |
+            apt-get update
+            # official binaries for nodejs
+            curl -sL https://deb.nodesource.com/setup_11.x | bash -
+            apt-get install -y sudo nodejs netcat
+  prep_tests:
+    description: "Run Prefect Server database migrations"
+    steps:
+      - run:
+          name: Run Prefect Server database migrations
+          command: prefect-server database upgrade --yes
+
+  build_publish_image:
+    description: Builds Docker Images for Apollo or Server
+    parameters:
+      IMAGE_NAME:
+        type: string
+      DOCKERFILE_PATH:
+        type: string
+      DOCKER_BUILD_FLAGS:
+        type: string
+    steps:
+      - run:
+          name: Docker Build
+          command: DOCKER_BUILDKIT=1 docker build --no-cache -q --build-arg VERSION=${CIRCLE_SHA1} -t << parameters.IMAGE_NAME >>:${CIRCLE_SHA1} << parameters.DOCKER_BUILD_FLAGS >> << parameters.DOCKERFILE_PATH >>
+      - run:
+          name: Docker Push
+          command: |
+            IMAGE=<< parameters.IMAGE_NAME >>
+            if [[ $CIRCLE_BRANCH == "master" ]]; then
+              docker tag $IMAGE:${CIRCLE_SHA1} $IMAGE:master
+              docker tag $IMAGE:${CIRCLE_SHA1} $IMAGE:latest
+            fi
+            docker images $IMAGE
+            docker push $IMAGE
+
+executors:
+  docker-prefect-server:
+    docker:
+      - image: python:3.7
+        environment:
+          PREFECT_SERVER__DATABASE__NAME: prefect_server
+          PREFECT_SERVER__DATABASE__USERNAME: prefect
+          PREFECT_SERVER__DATABASE__PASSWORD: pr343ct
+
+      - image: "postgres:11"
+        environment:
+          POSTGRES_USER: prefect
+          POSTGRES_PASSWORD: pr343ct
+          POSTGRES_DB: prefect_server
+        command: postgres -c max_connections=150
+
+      - image: "hasura/graphql-engine:v1.2.1"
+        command: /bin/sh -c "sleep 5 && graphql-engine serve"
+        environment:
+          HASURA_GRAPHQL_DATABASE_URL: postgres://prefect:prefect@localhost:5432/prefect_server
+          HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+          HASURA_GRAPHQL_SERVER_PORT: "3000"
+
+
+version: 2.1
+jobs:
+  check_formatting:
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - run:
+          name: Install Black
+          command: pip install black
+      - run:
+          name: Run Black
+          command: black --check .
+      - run:
+          name: Check for potentially unused imports
+          command: |
+            if [[ $(autoflake --remove-all-unused-imports -r --exclude __init__.py src | tee .unused-imports.txt | wc -c ) -ne 0 ]]; then
+              echo "Potentially unused imports found"
+              cat .unused-imports.txt
+              exit 2
+            fi
+
+  run_unit_tests:
+    executor: docker-prefect-server
+    steps:
+      - prep_utils
+      - *set_environment_variables
+      - *install_prefect_server
+      - prep_tests
+      - run:
+          name: Install coverage dependencies
+          command: pip install codecov pytest-cov
+      - run:
+          name: Run Server tests
+          command: pytest -v -m "not (service_test or integration_test or migration_test)" --cov=./
+      - run:
+          name: Upload coverage report
+          command: codecov --token=$CODECOV_TOKEN
+
+  run_database_migration_tests:
+    executor: docker-prefect-server
+    steps:
+      - prep_utils
+      - *set_environment_variables
+      - *install_prefect_server
+      - prep_tests
+      - run:
+          name: Run Server tests
+          command: pytest -v -m migration_test
+
+  run_service_tests:
+    executor: docker-prefect-server
+    steps:
+      - prep_utils
+      - *set_environment_variables
+      - *install_prefect_server
+      - prep_tests
+
+      - run:
+          name: Start Server services
+          command: prefect-server dev services
+          background: true
+      - run:
+          name: Wait 10 seconds for services to start...
+          command: sleep 10
+      - run:
+          name: Run Server service tests
+          command: pytest -v -m service_test
+
+  run_integration_tests:
+    executor: docker-prefect-server
+    steps:
+      - prep_utils
+      - *set_environment_variables
+      - *install_prefect_server
+      - prep_tests
+
+      - run:
+          name: Configure credentials
+          command: |
+            mkdir ~/.config/gcloud/
+            echo $GOOGLE_APPLICATION_CREDENTIALS_KEY > ~/.config/gcloud/integration-test-sa.json
+            echo 'export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/integration-test-sa.json' >> $BASH_ENV
+      - run:
+          name: Start Server services
+          command: prefect-server dev services
+          background: true
+      - run:
+          name: Wait 10 seconds for services to start...
+          command: sleep 10
+      - run:
+          name: Run Server integration tests
+          command: pytest -v -m integration_test
+
+
+workflows:
+  version: 2
+  "Check code style":
+    jobs:
+      - check_formatting
+
+  "Run unit tests":
+    jobs:
+      - run_unit_tests
+      - run_database_migration_tests
+
+  "Run service & integration tests":
+    jobs:
+      - run_service_tests
+      - run_integration_tests
