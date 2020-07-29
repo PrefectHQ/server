@@ -1,0 +1,124 @@
+# deploy environment, which impacts default values for some settings.
+# Make sure this is lower case because config keys are lower case.
+env = "local"
+
+# toggle development related environment settings, commonly used for tests
+dev = false
+
+# debug mode
+debug = false
+
+# core version cutoff
+core_version_cutoff = "0.6.1"
+
+# the max number of runs returned by get_runs_in_queue
+queued_runs_returned_limit = 25
+
+
+# path for user configuration file
+user_config_path = "~/.prefect_server/config.toml"
+
+[api]
+url = 'http://localhost:4200'
+
+
+[plugins]
+# plugin modules are imported on startup. This must be a list
+modules = "[]"
+
+
+[database]
+
+host = "localhost"
+port = 5432
+name = "prefect_server"
+
+username = "prefect"
+password = "pr343ct"
+connection_url = "postgresql://${database.username}:${database.password}@${database.host}:${database.port}/${database.name}"
+
+# hasura user
+hasura_username = "${database.username}"
+hasura_password = "${database.password}"
+hasura_connection_url = "${database.connection_url}"
+
+
+[hasura]
+
+host = "localhost"
+port = 3000
+graphql_url = "http://${hasura.host}:${hasura.port}/v1alpha1/graphql"
+ws_url = "ws://${hasura.host}:${hasura.port}/v1alpha1/graphql"
+db_url = "${database.hasura_connection_url}"
+execute_retry_seconds = 10
+
+
+[logging]
+
+# The logging level: NOTSET, DEBUG, INFO, WARNING, ERROR, or CRITICAL
+level = "DEBUG"
+
+# The log format
+format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
+
+
+[sendgrid]
+
+    api_key = ""
+    send_email = false
+
+    [sendgrid.cloud_hook_email]
+
+    from_email = "cloud-hooks@prefect.io"
+    template_id = "d-b3d7d02beb894c0bad09dd13b10fe7e2"
+    base_url="${api.url}"
+
+[services]
+
+    host = "0.0.0.0"
+
+    [services.apollo]
+    host = "${services.host}"
+    port = 4200
+
+    [services.graphql]
+    host = "${services.host}"
+    port = 4201
+    debug = false
+    path = "/graphql/"
+
+    [services.scheduler]
+    # run scheduler every 5 minutes
+    scheduler_loop_seconds = 300
+
+    [services.lazarus]
+    resurrection_attempt_limit = 3
+
+    [services.sla]
+    # kill scheduled work if it is 24 hours late
+    late_work_seconds = 86400
+
+
+
+# UI Colors corresponding to run states
+[state_colors]
+
+    Failed = "#eb0000"
+    Pending = "#b9dcff"
+    Scheduled = "#ffbe1e"
+    Retrying = "#fc7b09"
+    Resuming = "#ffa617"
+    Queued = "#fff9c2"
+    Submitted = "#fff499"
+    Paused = "#d4dadf"
+    Running = "#27b1ff"
+    Listening = "#93d8ff"
+    Finished = "#003483"
+    Success = "#2cbe4e"
+    Cancelled = "#bdbdbd"
+    Cached = "#74c367"
+    TriggerFailed = "#c42800"
+    Skipped = "#607583"
+    TimedOut = "#dc370b"
+    Mapped = "#4067a2"
+    Looped = "#4c4cff"

@@ -1,0 +1,22 @@
+extend type Mutation {
+  "Submit logs for flow and task runs. Called automatically by Prefect Core."
+  write_run_logs(input: write_run_logs_input!): success_payload
+}
+
+# ------------------------------------------------------
+# log inputs
+# ------------------------------------------------------
+
+input write_run_log_input {
+  flow_run_id: UUID!
+  task_run_id: UUID
+  timestamp: DateTime
+  message: String
+  name: String
+  level: log_level
+  info: JSON
+}
+
+input write_run_logs_input {
+  logs: [write_run_log_input!]!
+}

@@ -1,0 +1,35 @@
+{
+  "name": "prefect-server",
+  "version": "0.1.0",
+  "description": "Prefect Server",
+  "main": "none",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "@vuepress/theme-default": "^1.0.0-alpha.0",
+    "auth0-js": "^9.10.2",
+    "vuex": "^3.1.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^6.8.0",
+    "vuepress": "^1.0.0-alpha.47"
+  },
+  "scripts": {
+    "docs:build": "vuepress build docs",
+    "docs:deploy": "firebase deploy --project prefect-server-docs",
+    "docs:deploy:ci": "firebase deploy --token \"$FIREBASE_TOKEN\"",
+    "docs:dev": "vuepress dev docs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrefectHQ/server.git"
+  },
+  "author": "Jeremiah Lowin",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/PrefectHQ/server/issues"
+  },
+  "homepage": "https://github.com/PrefectHQ/server#readme"
+}

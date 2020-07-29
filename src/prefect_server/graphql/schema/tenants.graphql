@@ -1,0 +1,56 @@
+extend type Mutation {
+  # ------------------------------------------------------
+  # tenants
+  # ------------------------------------------------------
+
+  "Create a new tenant."
+  create_tenant(input: create_tenant_input!): tenant_id_payload
+
+  "Delete a tenant."
+  delete_tenant(input: delete_tenant_input!): success_payload
+
+  "Update a tenant's name."
+  update_tenant_name(input: update_tenant_name_input!): tenant_id_payload
+
+  "Update a tenant's slug."
+  update_tenant_slug(input: update_tenant_slug_input!): tenant_id_payload
+
+  "Update a tenant's settings."
+  update_tenant_settings(
+    input: update_tenant_settings_input!
+  ): tenant_id_payload
+
+}
+
+# ------------------------------------------------------
+# tenant inputs
+# ------------------------------------------------------
+
+input create_tenant_input {
+  name: String!
+  slug: String!
+}
+
+input delete_tenant_input {
+  confirm: Boolean!
+  tenant_id: UUID!
+}
+
+input update_tenant_name_input {
+  tenant_id: UUID!
+  name: String!
+}
+
+input update_tenant_slug_input {
+  tenant_id: UUID!
+  slug: String!
+}
+
+input update_tenant_settings_input {
+  tenant_id: UUID!
+  settings: JSON
+}
+
+type tenant_id_payload {
+  id: UUID
+}

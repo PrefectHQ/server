@@ -1,0 +1,59 @@
+
+extend type Mutation {
+
+  # ------------------------------------------------------
+  # projects
+  # ------------------------------------------------------
+
+  "Create a new project."
+  create_project(input: create_project_input!): project_id_payload
+
+  "Delete a project."
+  delete_project(input: delete_project_input!): success_payload
+
+  "Update a project's name."
+  set_project_name(input: set_project_name_input!): project_id_payload
+
+  "Update a project's description."
+  set_project_description(
+    input: set_project_description_input!
+  ): project_id_payload
+
+}
+# ------------------------------------------------------
+# project inputs
+# ------------------------------------------------------
+
+input create_project_input {
+  "The tenant"
+  tenant_id: String!
+  "The name of the project to create"
+  name: String!
+  "An optional description of this project - can be updated later with setProjectDescription"
+  description: String
+}
+
+input delete_project_input {
+  "The ID of the project to delete"
+  project_id: UUID!
+}
+
+input set_project_name_input {
+  "The ID of the project to update"
+  project_id: UUID!
+  "The new name for this project"
+  name: String!
+}
+
+input set_project_description_input {
+  "The ID of the project to update"
+  project_id: UUID!
+  "The new description of this project."
+  description: String
+}
+
+
+type project_id_payload {
+  id: UUID
+}
+

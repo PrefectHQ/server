@@ -1,0 +1,26 @@
+extend type Mutation {
+  "Mark message as seen."
+  mark_message_as_read(input: mark_message_as_read_input!): success_payload
+
+  "Mark message as not seen."
+  mark_message_as_unread(input: mark_message_as_unread_input!): success_payload
+
+  "Delete a message."
+  delete_message(input: delete_message_input!): success_payload
+}
+
+# ------------------------------------------------------
+# message inputs
+# ------------------------------------------------------
+
+input mark_message_as_read_input {
+  message_id: UUID!
+}
+
+input mark_message_as_unread_input {
+  message_id: UUID!
+}
+
+input delete_message_input {
+  message_id: UUID!
+}
