@@ -1,0 +1,196 @@
+extend type Mutation {
+  # ------------------------------------------------------
+  # flows
+  # ------------------------------------------------------
+
+  "Create a new flow from a serialized JSON representation."
+  create_flow(input: create_flow_input!): flow_id_payload
+
+  "Create a new flow from a compressed JSON representation. Used by Prefect Core."
+  create_flow_from_compressed_string(
+    input: create_flow_from_compressed_string_input!
+  ): flow_id_payload
+
+  "Delete a flow."
+  delete_flow(input: delete_flow_input!): success_payload
+
+  """
+  Archive a flow. This hides it from the Prefect UI and turns off its schedule, but does
+  not delete it or its history. Archived flows cannot be run.
+  """
+  archive_flow(input: archive_flow_input!): success_payload
+
+  "Update the project to which a flow belongs."
+  update_flow_project(input: update_flow_project_input!): flow_id_payload
+
+  "Disable heartbeats for a flow."
+  disable_flow_heartbeat(input: disable_flow_heartbeat_input!): success_payload
+
+  "Enable heartbeats for a flow."
+  enable_flow_heartbeat(input: enable_flow_heartbeat_input!): success_payload
+
+  "Disable Lazarus process resurrection for a flow."
+  disable_flow_lazarus_process(
+    input: disable_flow_lazarus_process_input!
+  ): success_payload
+
+  "Enable Lazarus process resurrection for a flow."
+  enable_flow_lazarus_process(
+    input: enable_flow_lazarus_process_input!
+  ): success_payload
+
+  "Enable version locking for a flow and its tasks. Version locking ensures that tasks run just once."
+  enable_flow_version_lock(
+    input: enable_flow_version_lock_input!
+  ): success_payload
+
+  "Disable version locking for a flow and its tasks. Version locking ensures that tasks run just once."
+  disable_flow_version_lock(
+    input: disable_flow_version_lock_input!
+  ): success_payload
+
+  "Set labels for a flow group."
+  set_flow_group_labels(input: set_flow_group_labels_input!): success_payload
+	  
+  "Set a schedule for a flow group."
+  set_flow_group_schedule(
+    input: set_flow_group_schedule_input!
+  ): success_payload
+
+  "Delete a flow group's schedule."
+  delete_flow_group_schedule(
+    input: delete_flow_group_schedule_input!
+  ): success_payload
+
+  # ------------------------------------------------------
+  # flow groups
+  # ------------------------------------------------------
+
+  "Set a default parameter for a flow group."
+  set_flow_group_default_parameters(
+    input: set_flow_group_default_parameters_input!
+  ): success_payload
+}
+
+# ------------------------------------------------------
+# flow inputs
+# ------------------------------------------------------
+
+input create_flow_input {
+  "The serialized representation of this flow (usually created from flow.serialize())"
+  serialized_flow: JSON!
+  "The ID of the project to associate with this flow"
+  project_id: UUID!
+  "An optional string specifying the version group - if provided, this flow will be added to the given version group; when not provided the flow will be versioned by name / project."
+  version_group_id: String
+  "A boolean specifying whether to begin scheduling runs for this flow immediately"
+  set_schedule_active: Boolean
+  "An optional description of this Flow"
+  description: String
+}
+
+input create_flow_from_compressed_string_input {
+  "The serialized representation of this flow (usually created from flow.serialize())"
+  serialized_flow: String!
+  "The ID of the project to associate with this flow"
+  project_id: UUID!
+  "An optional string specifying the version group - if provided, this flow will be added to the given version group; when not provided the flow will be versioned by name / project."
+  version_group_id: String
+  "A boolean specifying whether to begin scheduling runs for this flow immediately"
+  set_schedule_active: Boolean
+  "An optional description of this Flow"
+  description: String
+}
+
+input delete_flow_input {
+  "The ID of the flow to delete"
+  flow_id: UUID!
+}
+
+input archive_flow_input {
+  "The ID of the flow to archive"
+  flow_id: UUID!
+}
+
+input update_flow_project_input {
+  "The ID of the flow the update"
+  flow_id: UUID!
+  "The new project ID to associate with this flow"
+  project_id: UUID!
+}
+
+input enable_flow_heartbeat_input {
+  "The ID of the flow to update"
+  flow_id: UUID!
+}
+
+input disable_flow_heartbeat_input {
+  "The ID of the flow to update"
+  flow_id: UUID!
+}
+
+input enable_flow_lazarus_process_input {
+  "The ID of the flow to update"
+  flow_id: UUID!
+}
+
+input disable_flow_lazarus_process_input {
+  "The ID of the flow to update"
+  flow_id: UUID!
+}
+
+input enable_flow_version_lock_input {
+  "The ID of the flow to update"
+  flow_id: UUID!
+}
+
+input disable_flow_version_lock_input {
+  "The ID of the flow to update"
+  flow_id: UUID!
+}
+
+# ------------------------------------------------------
+# flow group inputs
+# ------------------------------------------------------
+
+input set_flow_group_default_parameters_input {
+  "The ID of the flow group to update"
+  flow_group_id: UUID!
+  "Key/value pairs default parameters and their values."
+  parameters: JSON!
+}
+
+input set_flow_group_labels_input {
+  "The ID of the flow group to update"
+  flow_group_id: UUID!
+  "Labels to associate with the flow group"
+  labels: [String!]
+}
+
+	input set_flow_group_schedule_input {
+  "The ID of the flow group to update"
+  flow_group_id: UUID!
+  "A list of cron clocks for the schedule"
+  cron_clocks: [cron_clock_input!]
+  "A list of interval clocks for the schedule"
+  interval_clocks: [interval_clock_input!]
+}
+
+input cron_clock_input {
+  "A cron string representing how often the flow should run"
+  cron: String!
+  "Parameter defaults associated with this clock"
+  parameter_defaults: JSON
+}
+
+input interval_clock_input {
+  "The interval between runs of this flow specified in seconds"
+  interval: Int!
+  "Parameter defaults associated with this clock"
+  parameter_defaults: JSON
+}
+
+input delete_flow_group_schedule_input {
+  "The ID of the flow group to update"
+  flow_group_id: UUID!
+}

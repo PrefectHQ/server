@@ -1,0 +1,39 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: "postgres:11"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - prefect-server
+    restart: "always"
+    command:
+      - "postgres"
+      # explicitly set max connections
+      - "-c"
+      - "max_connections=150"
+  hasura:
+    image: "hasura/graphql-engine:v1.2.1"
+    ports:
+      - "3000:3000"
+    command: "graphql-engine serve"
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: ${HASURA_GRAPHQL_DATABASE_URL}
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_SERVER_PORT: "3000"
+      HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE: 100
+      HASURA_GRAPHQL_LOG_LEVEL: "warn"
+    networks:
+      - prefect-server
+    restart: "always"
+    depends_on:
+      - postgres
+  
+networks:
+  prefect-server:
+    name: prefect-server

@@ -1,0 +1,67 @@
+extend type Mutation {
+  # ------------------------------------------------------
+  # states
+  # ------------------------------------------------------
+
+  "Update one or more flow run states. A valid run version must be provided."
+  set_flow_run_states(
+    input: set_flow_run_states_input!
+  ): set_flow_run_states_payload
+
+  "Update one or more task run states. A valid run version must be provided."
+  set_task_run_states(
+    input: set_task_run_states_input!
+  ): set_task_run_states_payload
+
+  "Cancel a flow run if it's not already finished"
+  cancel_flow_run(input: cancel_flow_run_input!): cancel_flow_run_payload
+}
+
+input set_flow_run_states_input {
+  states: [set_flow_run_state_input!]!
+}
+
+input set_flow_run_state_input {
+  flow_run_id: UUID!
+  version: Int
+  state: JSON!
+}
+
+input set_task_run_states_input {
+  states: [set_task_run_state_input!]!
+}
+
+input set_task_run_state_input {
+  task_run_id: UUID!
+  version: Int
+  state: JSON!
+  flow_run_version: Int
+}
+
+input cancel_flow_run_input {
+  flow_run_id: UUID!
+}
+
+type set_flow_run_state_payload {
+  id: UUID
+  status: String
+  message: String
+}
+
+type set_flow_run_states_payload {
+  states: [set_flow_run_state_payload!]
+}
+
+type set_task_run_state_payload {
+  id: UUID
+  status: String
+  message: String
+}
+
+type set_task_run_states_payload {
+  states: [set_task_run_state_payload!]
+}
+
+type cancel_flow_run_payload {
+  state: String
+}

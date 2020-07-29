@@ -1,0 +1,4 @@
+include src/prefect_server/config.toml
+include versioneer.py
+include src/prefect_server/_version.py
+graft services

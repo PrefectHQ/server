@@ -1,0 +1,21 @@
+[tool.black]
+target_version = ['py37']
+exclude = '''
+    (
+        \.eggs
+        | \.git
+        | \.hg
+        | \.mypy_cache
+        | \.tox
+        | \.venv
+        | _build
+        | buck-out
+        | build
+        | dist
+
+        # server-specific
+        | node_modules
+        | terraform
+        | docs
+    )
+    '''
