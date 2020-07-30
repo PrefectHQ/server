@@ -23,6 +23,7 @@ def upgrade():
     op.execute("CREATE SCHEMA utility;")
     op.create_table(
         "traversal",
+        sa.Column("tenant_id", UUID),
         sa.Column("task_id", UUID),
         sa.Column("depth", sa.Integer),
         schema="utility",
