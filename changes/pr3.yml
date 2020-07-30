@@ -1,0 +1,5 @@
+enhancement:
+  - "Ported telemetry over from old Prefect Server - [#3](https://github.com/PrefectHQ/server/pull/3)"
+
+contributor:
+  - "[Dylan Hughes](https://github.com/dylanbhughes)"
