@@ -508,6 +508,7 @@ class TestCallHooks:
     async def test_call_hooks_multiple_times(
         self, tenant_id, flow_run_id, cloud_hook_mock
     ):
+        await asyncio.sleep(0.25)
         await api.cloud_hooks.create_cloud_hook(
             tenant_id=tenant_id,
             type="WEBHOOK",
