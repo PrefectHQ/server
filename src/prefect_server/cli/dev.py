@@ -30,6 +30,7 @@ def make_env(fname=None):
         HASURA_API_URL=f"http://hasura:{config.hasura.port}/v1alpha1/graphql",
         HASURA_WS_URL=f"ws://hasura:{config.hasura.port}/v1alpha1/graphql",
         PREFECT_API_URL=f"http://services:{config.services.graphql.port}{config.services.graphql.path}/",
+        TELEMETRY__ENABLED=("true" if config.telemetry.enabled is True else "false"),
     )
 
     POSTGRES_ENV = dict(
