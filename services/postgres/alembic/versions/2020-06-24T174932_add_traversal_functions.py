@@ -37,15 +37,15 @@ def upgrade():
         with recursive traverse(task_id, depth) AS (
             SELECT
                 -- a task id
-                edge.upstream_task_id,
+                task.id,
 
                 -- the depth
                 0
 
-            FROM edge
+            FROM task
 
             -- the starting point
-            WHERE edge.upstream_task_id = ANY(start_task_ids)
+            WHERE task.id = ANY(start_task_ids)
 
             UNION
 
@@ -76,7 +76,7 @@ def upgrade():
         GROUP BY task_id
 
         -- sort by the last time a task was visited
-        ORDER BY MAX(traverse.depth)
+        ORDER BY MAX(traverse.depth), task_id
 
         $$ LANGUAGE sql STABLE;
     """
@@ -91,15 +91,15 @@ def upgrade():
             SELECT
 
                 -- a task id
-                edge.downstream_task_id,
+                task.id,
 
                 -- the depth
                 0
 
-            FROM edge
+            FROM task
 
             -- the starting point
-            WHERE edge.downstream_task_id = ANY(start_task_ids)
+            WHERE task.id = ANY(start_task_ids)
 
             UNION
 
@@ -130,7 +130,7 @@ def upgrade():
         GROUP BY task_id
 
         -- sort by the last time a task was visited
-        ORDER BY MAX(traverse.depth)
+        ORDER BY MAX(traverse.depth), task_id
 
         $$ LANGUAGE sql STABLE;
     """
