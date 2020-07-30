@@ -19,6 +19,8 @@ async def flow_id(project_id):
              7 -> 8 -> 9 -> 10
            /
         6
+    
+                 11
     """
 
     t1 = prefect.Task("t1", slug="t1")
@@ -32,11 +34,15 @@ async def flow_id(project_id):
     t9 = prefect.Task("t9", slug="t9")
     t10 = prefect.Task("t10", slug="t10")
 
+    # unconnected task
+    t11 = prefect.Task("t11", slug="t11")
+
     f = prefect.Flow("traversal flow")
     f.chain(t1, t2, t3, t4, t5)
     f.chain(t6, t7, t8, t9, t10)
     f.chain(t2, t7)
     f.chain(t9, t5)
+    f.add_task(t11)
 
     return await prefect_server.api.flows.create_flow(
         project_id=project_id, serialized_flow=f.serialize()
@@ -354,3 +360,69 @@ class TestUpstreamTraversal:
             t == {"task": {"slug": "t7"}, "depth": 1}
             for t in result.data.utility_upstream_tasks
         )
+
+
+class TestOrphanedTraversal:
+    """
+    Ensure that tasks with no downstreams / upstreams are included in traversal
+    """
+
+    async def test_traverse_upstream_from_t11(self, flow_id):
+        task = await models.Task.where(
+            {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t11"}}
+        ).first({"id"})
+
+        result = await query_upstream(task.id)
+
+        assert result.data.utility_upstream_tasks == [
+            {"task": {"slug": "t11"}, "depth": 0},
+        ]
+
+    async def test_traverse_downstream_from_t11(self, flow_id):
+        task = await models.Task.where(
+            {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t11"}}
+        ).first({"id"})
+
+        result = await query_downstream(task.id)
+
+        assert result.data.utility_downstream_tasks == [
+            {"task": {"slug": "t11"}, "depth": 0},
+        ]
+
+    async def test_traverse_downstream_from_t4_and_t11(self, flow_id):
+        t4 = await models.Task.where(
+            {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t4"}}
+        ).first({"id"})
+        t11 = await models.Task.where(
+            {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t11"}}
+        ).first({"id"})
+
+        result = await query_downstream(t4.id, t11.id)
+
+        assert len(result.data.utility_downstream_tasks) == 3
+        for item in [
+            {"task": {"slug": "t4"}, "depth": 0},
+            {"task": {"slug": "t5"}, "depth": 1},
+            {"task": {"slug": "t11"}, "depth": 0},
+        ]:
+            assert item in result.data.utility_downstream_tasks
+
+    async def test_traverse_upstream_from_t7_and_t11(self, flow_id):
+        t7 = await models.Task.where(
+            {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t7"}}
+        ).first({"id"})
+        t11 = await models.Task.where(
+            {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t11"}}
+        ).first({"id"})
+
+        result = await query_upstream(t7.id, t11.id)
+
+        assert len(result.data.utility_upstream_tasks) == 5
+        for item in [
+            {"task": {"slug": "t7"}, "depth": 0},
+            {"task": {"slug": "t11"}, "depth": 0},
+            {"task": {"slug": "t2"}, "depth": 1},
+            {"task": {"slug": "t6"}, "depth": 1},
+            {"task": {"slug": "t1"}, "depth": 2},
+        ]:
+            assert item in result.data.utility_upstream_tasks

@@ -23,6 +23,7 @@ def upgrade():
     op.execute("CREATE SCHEMA utility;")
     op.create_table(
         "traversal",
+        sa.Column("tenant_id", UUID),
         sa.Column("task_id", UUID),
         sa.Column("depth", sa.Integer),
         schema="utility",
@@ -34,22 +35,28 @@ def upgrade():
         RETURNS SETOF utility.traversal AS
 
         $$
-        with recursive traverse(task_id, depth) AS (
+        with recursive traverse(tenant_id, task_id, depth) AS (
             SELECT
+                -- a tenant id
+                task.tenant_id,
+
                 -- a task id
-                edge.upstream_task_id,
+                task.id,
 
                 -- the depth
                 0
 
-            FROM edge
+            FROM task
 
             -- the starting point
-            WHERE edge.upstream_task_id = ANY(start_task_ids)
+            WHERE task.id = ANY(start_task_ids)
 
             UNION
 
             SELECT
+
+                -- a tenant id
+                edge.tenant_id,
 
                 -- a new task
                 edge.downstream_task_id,
@@ -68,15 +75,16 @@ def upgrade():
                 AND traverse.depth < depth_limit
             )
         SELECT
+            tenant_id,
             task_id,
             MAX(traverse.depth) as depth
         FROM traverse
 
         -- group by task_id to remove duplicate observations
-        GROUP BY task_id
+        GROUP BY task_id, tenant_id
 
         -- sort by the last time a task was visited
-        ORDER BY MAX(traverse.depth)
+        ORDER BY MAX(traverse.depth), task_id, tenant_id
 
         $$ LANGUAGE sql STABLE;
     """
@@ -87,23 +95,28 @@ def upgrade():
         RETURNS SETOF utility.traversal AS
 
         $$
-        with recursive traverse(task_id, depth) AS (
+        with recursive traverse(tenant_id, task_id, depth) AS (
             SELECT
 
+                -- a tenant id
+                task.tenant_id,
+
                 -- a task id
-                edge.downstream_task_id,
+                task.id,
 
                 -- the depth
                 0
 
-            FROM edge
+            FROM task
 
             -- the starting point
-            WHERE edge.downstream_task_id = ANY(start_task_ids)
+            WHERE task.id = ANY(start_task_ids)
 
             UNION
 
             SELECT
+                -- a tenant id
+                edge.tenant_id,
 
                 -- a new task
                 edge.upstream_task_id,
@@ -122,15 +135,16 @@ def upgrade():
                 AND traverse.depth < depth_limit
             )
         SELECT
+            tenant_id,
             task_id,
             MAX(traverse.depth) as depth
         FROM traverse
 
         -- group by task_id to remove duplicate observations
-        GROUP BY task_id
+        GROUP BY task_id, tenant_id
 
         -- sort by the last time a task was visited
-        ORDER BY MAX(traverse.depth)
+        ORDER BY MAX(traverse.depth), task_id, tenant_id
 
         $$ LANGUAGE sql STABLE;
     """
