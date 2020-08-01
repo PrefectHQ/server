@@ -97,7 +97,7 @@ async def set_flow_run_state(
         # we might want to batch this rather than kicking off lots of asyncio
         # tasks at once.
         await asyncio.gather(
-            *(set_task_run_state(t.id, state) for t in to_cancel),
+            *(api.states.set_task_run_state(t.id, state) for t in to_cancel),
             return_exceptions=True,
         )
 
