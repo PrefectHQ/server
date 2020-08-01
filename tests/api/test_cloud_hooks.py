@@ -773,7 +773,7 @@ class TestTestHooks:
         post_mock = CoroutineMock()
         client = MagicMock(post=post_mock)
         monkeypatch.setattr(
-            "prefect_server._api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
+            "prefect_server.api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
         )
 
         cloud_hook_id = await api.cloud_hooks.create_cloud_hook(
@@ -815,7 +815,7 @@ class TestTestHooks:
         post_mock = CoroutineMock()
         client = MagicMock(post=post_mock)
         monkeypatch.setattr(
-            "prefect_server._api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
+            "prefect_server.api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
         )
 
         hook_id = await api.cloud_hooks.create_cloud_hook(

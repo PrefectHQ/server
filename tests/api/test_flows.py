@@ -136,7 +136,7 @@ class TestCreateFlow:
         )
 
         result = await models.Flow.where(id=flow_id).first({"tasks": {"trigger"}})
-        assert "prefect_server._api.flows.create_flow" in {
+        assert "prefect_server.api.flows.create_flow" in {
             t.trigger for t in result.tasks
         }
 

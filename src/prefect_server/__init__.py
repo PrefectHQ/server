@@ -7,7 +7,7 @@ from prefect_server.configuration import config
 
 import prefect_server.utilities
 import prefect_server.database
-import prefect_server._api
+import prefect_server.api
 
 # -------------------------------------------
 # versioneer - automatic versioning
