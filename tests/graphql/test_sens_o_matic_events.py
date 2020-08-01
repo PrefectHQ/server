@@ -1,7 +1,7 @@
 # import uuid
 # from asyncio import sleep
 
-# from prefect_server import api
+# from prefect import api
 # from prefect_server.database import models
 # from prefect_server.utilities import context
 # from prefect_server.utilities.tests import (

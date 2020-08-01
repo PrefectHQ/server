@@ -5,7 +5,7 @@ import pendulum
 
 import prefect
 from prefect.engine.state import Pending, Scheduled
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 
 

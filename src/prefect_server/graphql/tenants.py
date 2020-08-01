@@ -2,7 +2,7 @@ from typing import Any
 
 from graphql import GraphQLResolveInfo
 
-from prefect_server import api
+from prefect import api
 from prefect_server.utilities.graphql import mutation
 
 

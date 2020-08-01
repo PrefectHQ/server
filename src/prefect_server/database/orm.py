@@ -199,7 +199,7 @@ class HasuraModel(ORMModel):
         else:
             return_id = False
 
-        result = await prefect_server.plugins.hasura.client.insert(
+        result = await prefect.plugins.hasura.client.insert(
             graphql_type=self.__hasura_type__,
             objects=[self.to_hasura_dict(is_insert=True)],
             on_conflict=on_conflict,
@@ -245,7 +245,7 @@ class HasuraModel(ORMModel):
         else:
             check_result = False
 
-        result = await prefect_server.plugins.hasura.client.delete(
+        result = await prefect.plugins.hasura.client.delete(
             graphql_type=self.__hasura_type__,
             id=str(self.id) if isinstance(self.id, uuid.UUID) else self.id,
             selection_set=selection_set,
@@ -294,7 +294,7 @@ class HasuraModel(ORMModel):
                 obj = cls(**obj)
             validated_objects.append(obj.to_hasura_dict(is_insert=True))
 
-        result = await prefect_server.plugins.hasura.client.insert(
+        result = await prefect.plugins.hasura.client.insert(
             graphql_type=cls.__hasura_type__,
             objects=validated_objects,
             on_conflict=on_conflict,
@@ -319,7 +319,7 @@ class HasuraModel(ORMModel):
         """
         if isinstance(id, uuid.UUID):
             id = str(id)
-        return await prefect_server.plugins.hasura.client.exists(
+        return await prefect.plugins.hasura.client.exists(
             graphql_type=cls.__hasura_type__, id=id
         )
 
@@ -397,7 +397,7 @@ class ModelQuery:
         else:
             set = {}
 
-        result = await prefect_server.plugins.hasura.client.update(
+        result = await prefect.plugins.hasura.client.update(
             graphql_type=self.model.__hasura_type__,
             where=self.where,
             set=set,
@@ -428,7 +428,7 @@ class ModelQuery:
             - dict: the fields in the `selection_set`
         """
 
-        result = await prefect_server.plugins.hasura.client.delete(
+        result = await prefect.plugins.hasura.client.delete(
             graphql_type=self.model.__hasura_type__,
             where=self.where,
             selection_set=selection_set,
@@ -482,7 +482,7 @@ class ModelQuery:
         if arguments:
             obj = with_args(obj, arguments)
 
-        result = await prefect_server.plugins.hasura.client.execute(
+        result = await prefect.plugins.hasura.client.execute(
             query={"query": {obj: selection_set}},
             # if we are applying the schema, don't retrieve a box object
             # if we are NOT applying the schema, DO retrieve a box object
@@ -549,7 +549,7 @@ class ModelQuery:
                 ): {"aggregate": "count"}
             }
         }
-        result = await prefect_server.plugins.hasura.client.execute(query, as_box=False)
+        result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["count_query"]["aggregate"]["count"]
 
     async def max(self, columns) -> dict:
@@ -569,7 +569,7 @@ class ModelQuery:
                 ): {"aggregate": {"max": set(columns)}}
             }
         }
-        result = await prefect_server.plugins.hasura.client.execute(query, as_box=False)
+        result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["max_query"]["aggregate"]["max"]
 
     async def min(self, columns) -> dict:
@@ -589,5 +589,5 @@ class ModelQuery:
                 ): {"aggregate": {"min": set(columns)}}
             }
         }
-        result = await prefect_server.plugins.hasura.client.execute(query, as_box=False)
+        result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["min_query"]["aggregate"]["min"]
