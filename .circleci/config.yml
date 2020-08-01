@@ -4,7 +4,7 @@ aliases:
       name: Set environment variables
       command: |
         # set prefect tag -- pin for master-like branches, float otherwise
-        if [[ $CIRCLE_BRANCH == master* ]]; then echo 'export PREFECT_VERSION=master' >> $BASH_ENV; else echo 'export PREFECT_VERSION=master' >> $BASH_ENV; fi
+        if [[ $CIRCLE_BRANCH == master* ]]; then echo 'export PREFECT_VERSION=server-2' >> $BASH_ENV; else echo 'export PREFECT_VERSION=server-2' >> $BASH_ENV; fi
 
   - &install_prefect_server
     run:
