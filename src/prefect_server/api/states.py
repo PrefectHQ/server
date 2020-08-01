@@ -9,11 +9,11 @@ from box import Box
 
 import prefect
 from prefect.engine.state import Cancelled, Cancelling, State
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 from prefect_server.utilities import events
 from prefect_server.utilities.logging import get_logger
-from prefect_server.utilities.plugins import register_api
+from prefect.utilities.plugins import register_api
 
 logger = get_logger("api")
 
@@ -31,7 +31,7 @@ async def set_flow_run_state(
         - flow_run_id (str): the flow run id to update
         - state (State): the new state
         - version (int): a version to enforce version-locking
-        
+
     Returns:
         - models.FlowRunState
     """

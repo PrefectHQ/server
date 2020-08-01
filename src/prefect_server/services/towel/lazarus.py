@@ -5,7 +5,8 @@ import pendulum
 import prefect
 from prefect.engine.state import Failed, Paused, Running, Scheduled
 from prefect.utilities.graphql import EnumValue
-from prefect_server import api, config
+from prefect import api
+from prefect_server import config
 from prefect_server.database import models
 from prefect_server.services.loop_service import LoopService
 

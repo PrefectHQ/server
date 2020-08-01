@@ -6,7 +6,7 @@ from typing import Any
 from graphql import GraphQLResolveInfo
 
 import prefect
-from prefect_server import api
+from prefect import api
 from prefect_server.utilities.graphql import mutation
 
 state_schema = prefect.serialization.state.StateSchema()

@@ -2,9 +2,9 @@ from typing import List
 
 from prefect.serialization.schedule import ClockSchema
 
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
-from prefect_server.utilities.plugins import register_api
+from prefect.utilities.plugins import register_api
 
 
 @register_api("flow_groups.set_flow_group_default_parameters")

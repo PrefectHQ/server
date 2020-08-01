@@ -11,7 +11,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 import prefect
-from prefect_server import api, config
+from prefect import api
+from prefect_server import config
 from prefect_server.database import models
 from prefect_server.utilities import exceptions, tests, events
 
@@ -772,7 +773,7 @@ class TestTestHooks:
         post_mock = CoroutineMock()
         client = MagicMock(post=post_mock)
         monkeypatch.setattr(
-            "prefect_server._api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
+            "prefect_server.api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
         )
 
         cloud_hook_id = await api.cloud_hooks.create_cloud_hook(
@@ -814,7 +815,7 @@ class TestTestHooks:
         post_mock = CoroutineMock()
         client = MagicMock(post=post_mock)
         monkeypatch.setattr(
-            "prefect_server._api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
+            "prefect_server.api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
         )
 
         hook_id = await api.cloud_hooks.create_cloud_hook(

@@ -1,6 +1,6 @@
 import pytest
 
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models as m
 from prefect_server.services.towel.scheduler import Scheduler
 

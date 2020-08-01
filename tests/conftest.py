@@ -43,6 +43,6 @@ def sens_o_matic_httpx_mock(monkeypatch):
 def cloud_hook_mock(monkeypatch):
     post_mock = CoroutineMock()
     monkeypatch.setattr(
-        "prefect_server._api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
+        "prefect_server.api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
     )
     return post_mock

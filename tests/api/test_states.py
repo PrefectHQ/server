@@ -24,7 +24,7 @@ from prefect.engine.state import (
     TriggerFailed,
     _MetaState,
 )
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 
 

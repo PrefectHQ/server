@@ -44,13 +44,13 @@ async def flow_id(project_id):
     f.chain(t9, t5)
     f.add_task(t11)
 
-    return await prefect_server.api.flows.create_flow(
+    return await prefect.api.flows.create_flow(
         project_id=project_id, serialized_flow=f.serialize()
     )
 
 
 async def query_downstream(*ids,):
-    return await prefect_server.plugins.hasura.client.execute(
+    return await prefect.plugins.hasura.client.execute(
         {
             "query": {
                 with_args(
@@ -69,7 +69,7 @@ async def query_downstream(*ids,):
 
 
 async def query_upstream(*ids,):
-    return await prefect_server.plugins.hasura.client.execute(
+    return await prefect.plugins.hasura.client.execute(
         {
             "query": {
                 with_args(
@@ -111,7 +111,7 @@ class TestDownstreamTraversal:
         task = await models.Task.where(
             {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t1"}}
         ).first({"id"})
-        result = await prefect_server.plugins.hasura.client.execute(
+        result = await prefect.plugins.hasura.client.execute(
             {
                 "query": {
                     with_args(
@@ -142,7 +142,7 @@ class TestDownstreamTraversal:
         task = await models.Task.where(
             {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t1"}}
         ).first({"id"})
-        result = await prefect_server.plugins.hasura.client.execute(
+        result = await prefect.plugins.hasura.client.execute(
             {
                 "query": {
                     with_args(
@@ -251,7 +251,7 @@ class TestUpstreamTraversal:
         task = await models.Task.where(
             {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t5"}}
         ).first({"id"})
-        result = await prefect_server.plugins.hasura.client.execute(
+        result = await prefect.plugins.hasura.client.execute(
             {
                 "query": {
                     with_args(
@@ -283,7 +283,7 @@ class TestUpstreamTraversal:
         task = await models.Task.where(
             {"flow_id": {"_eq": flow_id}, "slug": {"_eq": "t5"}}
         ).first({"id"})
-        result = await prefect_server.plugins.hasura.client.execute(
+        result = await prefect.plugins.hasura.client.execute(
             {
                 "query": {
                     with_args(

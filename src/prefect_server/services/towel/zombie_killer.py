@@ -4,7 +4,7 @@ import pendulum
 
 from prefect.engine.state import Failed, Retrying
 from prefect.utilities.graphql import EnumValue, with_args
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models, orm
 from prefect_server.services.loop_service import LoopService
 

@@ -1,4 +1,3 @@
-import prefect_server.utilities.plugins
 import prefect_server.utilities.context
 import prefect_server.utilities.email
 import prefect_server.utilities.exceptions
