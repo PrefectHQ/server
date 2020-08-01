@@ -3,21 +3,19 @@ import asyncio
 import pendulum
 
 import prefect
-from prefect.engine.state import Failed, Paused, Running, Scheduled
+from prefect.engine.state import Failed, Running, Scheduled, State
 from prefect.utilities.graphql import EnumValue
-from prefect import api
 from prefect_server import config
 from prefect_server.database import models
 from prefect_server.services.loop_service import LoopService
 
 # lazarus should not restart flows with states that are scheduled, running, or
 # indicative of future runs (like Paused)
-SCHEDULED_STATES = [
-    s
+LAZARUS_EXCLUDE = [
+    s.__name__
     for s in prefect.engine.state.__dict__.values()
     if isinstance(s, type) and issubclass(s, (Scheduled, Running))
 ]
-LAZARUS_EXCLUDE = [s.__name__ for s in SCHEDULED_STATES + [Paused]]
 
 
 class Lazarus(LoopService):
@@ -25,14 +23,6 @@ class Lazarus(LoopService):
     loop_seconds_default = 600
 
     async def run_once(self) -> int:
-        """
-        The Lazarus process revives any flow runs that are submitted or running but have no tasks in
-        a running or scheduled state. The heartbeat must be stale in order to avoid race conditions
-        with transitioning tasks.
-
-        Returns:
-            - int: the number of flow runs that were scheduled
-        """
         time = pendulum.now("utc").subtract(minutes=10)
 
         flow_runs = await models.FlowRun.where(
@@ -60,7 +50,7 @@ class Lazarus(LoopService):
                 },
             }
         ).get(
-            selection_set={"id", "version", "times_resurrected"},
+            selection_set={"id", "version", "tenant_id", "times_resurrected"},
             order_by={"heartbeat": EnumValue("asc")},
         )
         self.logger.info(
@@ -80,7 +70,7 @@ class Lazarus(LoopService):
             ):
                 try:
                     # Set flow run state to scheduled
-                    await api.states.set_flow_run_state(
+                    await prefect.api.states.set_flow_run_state(
                         flow_run_id=fr.id,
                         state=Scheduled(message="Rescheduled by a Lazarus process."),
                     )
@@ -90,9 +80,10 @@ class Lazarus(LoopService):
                         set=dict(times_resurrected=fr.times_resurrected + 1)
                     )
                     # log flow run state change
-                    await api.logs.create_logs(
+                    await prefect.api.logs.create_logs(
                         [
                             dict(
+                                tenant_id=fr.tenant_id,
                                 flow_run_id=fr.id,
                                 name=f"{self.logger.name}.FlowRun",
                                 message=(
@@ -122,13 +113,14 @@ class Lazarus(LoopService):
                     "without success. Marking as failed."
                 )
                 # Set flow run state to failed
-                await api.states.set_flow_run_state(
+                await prefect.api.states.set_flow_run_state(
                     flow_run_id=fr.id, state=Failed(message=message),
                 )
                 # log flow run state change
-                await api.logs.create_logs(
+                await prefect.api.logs.create_logs(
                     [
                         dict(
+                            tenant_id=fr.tenant_id,
                             flow_run_id=fr.id,
                             name=f"{self.logger.name}.FlowRun",
                             message=message,
