@@ -23,6 +23,14 @@ class Lazarus(LoopService):
     loop_seconds_default = 600
 
     async def run_once(self) -> int:
+        """
+        The Lazarus process revives any flow runs that are submitted or running but have no tasks in
+        a running or scheduled state. The heartbeat must be stale in order to avoid race conditions
+        with transitioning tasks.
+
+        Returns:
+            - int: the number of flow runs that were scheduled
+        """
         time = pendulum.now("utc").subtract(minutes=10)
 
         flow_runs = await models.FlowRun.where(
