@@ -9,7 +9,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from prefect.engine.state import Failed, Running, Success
-from prefect_server import api, config
+from prefect import api
+from prefect_server import config
 from prefect_server.database import models
 from prefect_server.utilities import tests
 

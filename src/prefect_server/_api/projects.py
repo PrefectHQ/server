@@ -1,5 +1,5 @@
 from prefect_server.database import models
-from prefect_server.utilities.plugins import register_api
+from prefect.utilities.plugins import register_api
 
 
 @register_api("projects.create_project")

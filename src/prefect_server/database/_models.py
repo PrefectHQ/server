@@ -6,7 +6,7 @@ import pydantic
 
 import prefect
 from prefect_server.database.orm import HasuraModel, UUIDString
-from prefect_server.utilities import plugins
+from prefect.utilities import plugins
 
 models = plugins.MODELS
 
