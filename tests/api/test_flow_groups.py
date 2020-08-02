@@ -233,19 +233,29 @@ class TestSetFlowGroupSchedule:
 
 
 class TestDeleteFlowGroupSchedule:
-    async def test_delete_flow_group_schedule(self, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            set=dict(schedule={"foo": "bar"})
+    async def test_delete_flow_group_schedule(self, flow_id, flow_group_id):
+
+        # update the flow group schedule and confirm the runs have been repopulated
+        clock = {"type": "CronClock", "cron": "42 0 0 * * *"}
+
+        success = await api.flow_groups.set_flow_group_schedule(
+            flow_group_id=flow_group_id, clocks=[clock]
         )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
-        assert flow_group.schedule == {"foo": "bar"}
+        assert success is True
+
+        await api.flows.set_schedule_active(flow_id=flow_id)
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
         success = await api.flow_groups.delete_flow_group_schedule(
             flow_group_id=flow_group_id
         )
         assert success is True
+
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule is None
+
+        # ensure old runs were deleted
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
     async def test_delete_flow_group_schedule_for_invalid_flow_group(self):
         success = await api.flow_groups.delete_flow_group_schedule(

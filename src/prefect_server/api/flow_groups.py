@@ -87,6 +87,15 @@ async def delete_flow_group_schedule(flow_group_id: str) -> bool:
     result = await models.FlowGroup.where(id=flow_group_id).update(
         set=dict(schedule=None)
     )
+
+    deleted_runs = await models.FlowRun.where(
+        {
+            "flow": {"flow_group_id": {"_eq": flow_group_id}},
+            "state": {"_eq": "Scheduled"},
+            "auto_scheduled": {"_eq": True},
+        }
+    ).delete()
+
     return bool(result.affected_rows)
 
 
