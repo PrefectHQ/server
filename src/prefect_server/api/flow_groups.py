@@ -11,8 +11,7 @@ from prefect.utilities.plugins import register_api
 async def set_flow_group_default_parameters(
     flow_group_id: str, parameters: dict
 ) -> bool:
-    """
-    Sets default value(s) for parameter(s) on a flow group
+    """ Sets default value(s) for parameter(s) on a flow group
 
     Args:
         - flow_group_id (str): the ID of the flow group to update
@@ -58,6 +57,14 @@ async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> boo
     result = await models.FlowGroup.where(id=flow_group_id).update(
         set=dict(schedule=dict(type="Schedule", clocks=clocks))
     )
+
+    deleted_runs = await models.FlowRun.where(
+        {
+            "flow": {"flow_group_id": {"_eq": flow_group_id}},
+            "state": {"_eq": "Scheduled"},
+            "auto_scheduled": {"_eq": True},
+        }
+    ).delete()
     return bool(result.affected_rows)
 
 
@@ -80,6 +87,15 @@ async def delete_flow_group_schedule(flow_group_id: str) -> bool:
     result = await models.FlowGroup.where(id=flow_group_id).update(
         set=dict(schedule=None)
     )
+
+    deleted_runs = await models.FlowRun.where(
+        {
+            "flow": {"flow_group_id": {"_eq": flow_group_id}},
+            "state": {"_eq": "Scheduled"},
+            "auto_scheduled": {"_eq": True},
+        }
+    ).delete()
+
     return bool(result.affected_rows)
 
 

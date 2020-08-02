@@ -111,6 +111,46 @@ class TestSetFlowGroupSchedule:
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule["clocks"][0] == clock
 
+    async def test_setting_schedule_deletes_runs(self, flow_id, flow_group_id):
+        """
+        This test takes a flow with a schedule and ensures that updating the Flow Group
+        schedule deletes previously auto-scheduled runs.
+        """
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
+        assert flow_group.schedule is None
+
+        # make sure we're starting from a clean slate
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
+        await api.flows.set_schedule_active(flow_id=flow_id)
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
+        # create one manual run that won't be deleted
+        await api.runs.create_flow_run(flow_id=flow_id)
+
+        # 10 autoscheduled runs and 1 manual run
+        runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
+            {"scheduled_start_time"}
+        )
+        assert len(runs) == 11
+        start_times = {r.scheduled_start_time for r in runs}
+
+        # update the flow group schedule and confirm the runs have been repopulated
+        clock = {"type": "CronClock", "cron": "42 0 0 * * *"}
+
+        success = await api.flow_groups.set_flow_group_schedule(
+            flow_group_id=flow_group_id, clocks=[clock]
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
+        assert flow_group.schedule["clocks"][0] == clock
+
+        # the only run that should still be scheduled from before is the manually created one
+        new_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
+            {"scheduled_start_time"}
+        )
+        assert len({r.scheduled_start_time for r in new_runs} & start_times) == 1
+
     async def test_set_schedule_with_two_clocks(self, flow_group_id):
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule is None
@@ -193,19 +233,29 @@ class TestSetFlowGroupSchedule:
 
 
 class TestDeleteFlowGroupSchedule:
-    async def test_delete_flow_group_schedule(self, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            set=dict(schedule={"foo": "bar"})
+    async def test_delete_flow_group_schedule(self, flow_id, flow_group_id):
+
+        # update the flow group schedule and confirm the runs have been repopulated
+        clock = {"type": "CronClock", "cron": "42 0 0 * * *"}
+
+        success = await api.flow_groups.set_flow_group_schedule(
+            flow_group_id=flow_group_id, clocks=[clock]
         )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
-        assert flow_group.schedule == {"foo": "bar"}
+        assert success is True
+
+        await api.flows.set_schedule_active(flow_id=flow_id)
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
         success = await api.flow_groups.delete_flow_group_schedule(
             flow_group_id=flow_group_id
         )
         assert success is True
+
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule is None
+
+        # ensure old runs were deleted
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
     async def test_delete_flow_group_schedule_for_invalid_flow_group(self):
         success = await api.flow_groups.delete_flow_group_schedule(
