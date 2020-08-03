@@ -1,3 +1,21 @@
+<p align="center" style="margin-bottom:40px;">
+   <img src="https://images.ctfassets.net/gm98wzqotmnx/3Ufcb7yYqcXBDlAhJ30gce/c237bb3254190795b30bf734f3cbc1d4/prefect-logo-full-gradient.svg" width="500" style="max-width: 500px;">
+</p>
+
+<p align="center">
+   <a href=https://circleci.com/gh/PrefectHQ/prefect/tree/master>
+      <img src="https://circleci.com/gh/PrefectHQ/prefect/tree/master.svg?style=shield&circle-token=28689a55edc3c373486aaa5f11a1af3e5fc53344">
+   </a>
+
+   <a href=https://github.com/ambv/black>
+      <img src="https://img.shields.io/badge/code%20style-black-000000.svg">
+   </a>
+
+   <a href="https://join.slack.com/t/prefect-community/shared_invite/enQtODQ3MTA2MjI4OTgyLTliYjEyYzljNTc2OThlMDE4YmViYzk3NDU4Y2EzMWZiODM0NmU3NjM0NjIyNWY0MGIxOGQzODMxNDMxYWYyOTE">
+      <img src="https://prefect-slackin.herokuapp.com/badge.svg">
+   </a>
+</p>
+
 # Prefect Server
 
 Please note: this repo is for Prefect Server development. If you want to run Prefect Server, install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
