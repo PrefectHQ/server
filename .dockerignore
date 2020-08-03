@@ -54,6 +54,3 @@ instance/
 env/
 venv/
 ENV/
-
-# documentation
-*.md
