@@ -20,6 +20,9 @@ async def emit_delete_event(row_id: str, table_name: str) -> dict:
     if env == "local":
         return None
 
+    if not config.sens_o_matic.enabled:
+        return None
+
     try:
         event_id = str(uuid.uuid4())
         payload = {"cloud_environment": env, "row_id": row_id, "table_name": table_name}
@@ -30,14 +33,15 @@ async def emit_delete_event(row_id: str, table_name: str) -> dict:
             "payload": payload,
         }
         result = await sens_o_matic_httpx_client.post(
-            "https://sens-o-matic.prefect.io/",
+            config.sens_o_matic.url,
             json=event,
             headers={"X-PREFECT-EVENT": "prefect_server-0.0.1"},
             timeout=10,
         )
         logger.debug("Delete event sent to sens-o-matic: %s", str(result))
     except Exception as e:
-        # Log the information that we were trying to send to sens-o-matic so Dylan can backfill
+        # Log the information that we were trying to send to sens-o-matic
+        # so the delete event is captured somewhere
         logger.error(
             "Error during attempt to send event to sens-o-matic: %s", str(event)
         )

@@ -12,6 +12,16 @@ from prefect_server.utilities.tests import (
 )
 
 
+@pytest.fixture(autouse=True)
+def enabled_sens_o_matic():
+
+    with set_temporary_config("sens_o_matic.enabled", True):
+        with set_temporary_config(
+            "sens_o_matic.url", "https://sens-o-matic.prefect.io/"
+        ):
+            yield
+
+
 class TestEmitDeleteEvent:
     async def test_event_payload_is_formed_properly(self, sens_o_matic_httpx_mock):
 
@@ -67,3 +77,30 @@ class TestEmitDeleteEvent:
         await sleep(0)
         assert result is None
         assert sens_o_matic_httpx_mock.called is False
+
+
+class TestControlledByConfig:
+    async def test_doesnt_fire_when_disabled(self, sens_o_matic_httpx_mock):
+        row_id = str(uuid.uuid4())
+        table_name = "test_table"
+
+        with set_temporary_config("env", "production"):
+            with set_temporary_config("sens_o_matic.enabled", False):
+                result = await emit_delete_event(row_id=row_id, table_name=table_name)
+
+        await sleep(0)
+        assert result is None
+        assert sens_o_matic_httpx_mock.called is False
+
+    async def test_fires_to_config_url(self, monkeypatch, sens_o_matic_httpx_mock):
+        row_id = str(uuid.uuid4())
+        table_name = "test_table"
+        url = "my event capture framework url"
+
+        with set_temporary_config("env", "production"):
+            with set_temporary_config("sens_o_matic.url", url):
+                result = await emit_delete_event(row_id=row_id, table_name=table_name)
+
+        await sleep(0)
+
+        assert sens_o_matic_httpx_mock.call_args[0][0] == url

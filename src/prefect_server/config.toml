@@ -61,6 +61,10 @@ level = "DEBUG"
 # The log format
 format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
 
+[sens_o_matic]
+enabled = false
+url = ""
+
 
 [sendgrid]
 
