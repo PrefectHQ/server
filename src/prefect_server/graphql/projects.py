@@ -4,7 +4,6 @@ from graphql import GraphQLResolveInfo
 
 from prefect import api
 from prefect_server.utilities.graphql import mutation
-from prefect_server.utilities.sens_o_matic_events import register_delete
 
 
 @mutation.field("create_project")
@@ -21,7 +20,6 @@ async def resolve_create_project(
 
 
 @mutation.field("delete_project")
-@register_delete(table_name="project", id_key="project_id")
 async def resolve_delete_project(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:

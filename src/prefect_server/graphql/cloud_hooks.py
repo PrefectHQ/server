@@ -5,7 +5,6 @@ from graphql import GraphQLResolveInfo
 import prefect
 from prefect import api
 from prefect_server.utilities.graphql import mutation
-from prefect_server.utilities.sens_o_matic_events import register_delete
 
 
 @mutation.field("create_cloud_hook")
@@ -26,7 +25,6 @@ async def resolve_create_cloud_hook(
 
 
 @mutation.field("delete_cloud_hook")
-@register_delete(table_name="cloud_hook", id_key="cloud_hook_id")
 async def resolve_delete_cloud_hook(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:

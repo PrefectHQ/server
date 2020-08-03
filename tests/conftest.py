@@ -30,16 +30,6 @@ def event_loop(request):
 
 
 @pytest.fixture
-def sens_o_matic_httpx_mock(monkeypatch):
-    post_mock = CoroutineMock()
-    client = MagicMock(post=post_mock)
-    monkeypatch.setattr(
-        "prefect_server.utilities.sens_o_matic_events.sens_o_matic_httpx_client", client
-    )
-    return post_mock
-
-
-@pytest.fixture
 def cloud_hook_mock(monkeypatch):
     post_mock = CoroutineMock()
     monkeypatch.setattr(
