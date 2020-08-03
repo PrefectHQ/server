@@ -31,7 +31,7 @@ def make_env(fname=None):
         HASURA_WS_URL=f"ws://hasura:{config.hasura.port}/v1alpha1/graphql",
         PREFECT_API_URL=f"http://services:{config.services.graphql.port}{config.services.graphql.path}/",
         PREFECT_SERVER__TELEMETRY__ENABLED=(
-            "true" if prefect_server.config.telemetry.enabled is True else "false"
+            "true" if prefect_server.config.telemetry.enabled else "false"
         ),
     )
 
