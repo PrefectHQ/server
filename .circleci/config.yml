@@ -215,6 +215,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
           path: 'services/apollo'
+          extra_build_args: '--build-arg PREFECT_VERSION=server-2'
           tag: alpha
           filters:
             branches:
@@ -225,6 +226,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/server'
           path: '.'
+          extra_build_args: '--build-arg PREFECT_VERSION=server-2'
           tag: alpha
           filters:
             branches:
