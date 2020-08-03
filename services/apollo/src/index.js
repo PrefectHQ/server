@@ -4,6 +4,7 @@ import { ApolloServer } from 'apollo-server-express'
 import { prefectExecutor, hasuraExecutor } from './executors'
 import { introspectSchema, wrapSchema } from '@graphql-tools/wrap'
 import { stitchSchemas } from '@graphql-tools/stitch'
+import { v4 as uuidv4 } from 'uuid'
 
 const express = require('express')
 const APOLLO_API_PORT = process.env.APOLLO_API_PORT || '4200'
@@ -13,6 +14,11 @@ const PREFECT_API_HEALTH_URL =
   process.env.PREFECT_API_HEALTH_URL || 'http://localhost:4201/health'
 const PREFECT_SERVER_VERSION = process.env.PREFECT_SERVER_VERSION || 'UNKNOWN'
 
+const TELEMETRY_ENABLED_RAW =
+  process.env.PREFECT_SERVER__TELEMETRY__ENABLED || 'false'
+// Convert from a TOML boolean to a JavaScript boolean
+const TELEMETRY_ENABLED = TELEMETRY_ENABLED_RAW == 'true' ? true : false
+const TELEMETRY_ID = uuidv4()
 // --------------------------------------------------------------------
 // Server
 const app = express()
@@ -109,9 +115,40 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+async function send_telemetry_event(event) {
+  if (TELEMETRY_ENABLED) {
+    try {
+      // TODO add timeout
+      const body = JSON.stringify({
+        source: 'prefect_server',
+        type: event,
+        payload: { id: TELEMETRY_ID }
+      })
+      log(`Sending telemetry to Prefect Technologies, Inc.: ${body}`)
+
+      fetch('https://sens-o-matic.prefect.io/', {
+        method: 'post',
+        body,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Prefect-Event': 'prefect_server-0.0.1'
+        }
+      })
+    } catch (error) {
+      log(`Error sending telemetry event: ${error.message}`)
+    }
+  }
+}
+
 async function runServerForever() {
   try {
     await runServer()
+    send_telemetry_event('startup')
+    if (TELEMETRY_ENABLED) {
+      setInterval(() => {
+        send_telemetry_event('heartbeat')
+      }, 600000) // send heartbeat every 10 minutes
+    }
   } catch (e) {
     log(e)
     log('Trying again in 3 seconds...')
