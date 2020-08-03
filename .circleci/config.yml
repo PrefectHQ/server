@@ -214,8 +214,8 @@ workflows:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
-          path: 'server/services/apollo'
-          tag: master
+          path: 'services/apollo'
+          tag: alpha
           filters:
             branches:
               only: master
@@ -224,18 +224,8 @@ workflows:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/server'
-          path: 'server'
-          tag: master
-          filters:
-            branches:
-              only: master
-
-      - docker/publish:
-          docker-password: DOCKER_HUB_PW
-          docker-username: DOCKER_HUB_USER
-          image: 'prefecthq/ui'
-          path: 'server/services/ui'
-          tag: master
+          path: '.'
+          tag: alpha
           filters:
             branches:
               only: master
@@ -246,7 +236,7 @@ workflows:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
-          path: 'server/services/apollo'
+          path: 'services/apollo'
           tag: $CIRCLE_TAG,latest
           filters:
             branches:
@@ -258,19 +248,7 @@ workflows:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/server'
-          path: 'server'
-          tag: $CIRCLE_TAG,latest
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^[0-9]+\.[0-9]+\.[0-9]+$/
-
-      - docker/publish:
-          docker-password: DOCKER_HUB_PW
-          docker-username: DOCKER_HUB_USER
-          image: 'prefecthq/ui'
-          path: 'server/services/ui'
+          path: '.'
           tag: $CIRCLE_TAG,latest
           filters:
             branches:
