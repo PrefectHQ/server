@@ -110,19 +110,3 @@ def check_if_service_is_running(port: int) -> bool:
         return check == 0
     except:
         return False
-
-
-# For sens-o-matic tests
-def evaluate_delete_event_payload(table_name, row_id, post_mock):
-    assert post_mock.call_args[0][0] == "https://sens-o-matic.prefect.io/"
-    assert post_mock.call_args[1].get("json").get("id")
-    assert post_mock.call_args[1].get("json").get("source") == "prefect_server"
-    assert post_mock.call_args[1].get("json").get("type") == "delete"
-    assert post_mock.call_args[1].get("json").get("payload") == {
-        "cloud_environment": "production",
-        "row_id": row_id,
-        "table_name": table_name,
-    }
-    assert post_mock.call_args[1].get("headers") == {
-        "X-PREFECT-EVENT": "prefect_server-0.0.1"
-    }

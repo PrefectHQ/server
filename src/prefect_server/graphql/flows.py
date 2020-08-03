@@ -6,7 +6,6 @@ from prefect.utilities.graphql import EnumValue, decompress
 from prefect import api
 from prefect_server.database import models
 from prefect_server.utilities.graphql import mutation
-from prefect_server.utilities.sens_o_matic_events import register_delete
 
 
 @mutation.field("create_flow_from_compressed_string")
@@ -82,7 +81,6 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
 
 
 @mutation.field("delete_flow")
-@register_delete(table_name="flow", id_key="flow_id")
 async def resolve_delete_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -> dict:
     return {"success": await api.flows.delete_flow(flow_id=input["flow_id"])}
 
