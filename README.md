@@ -1,4 +1,10 @@
+# Prefect Server
+
+Please note: this repo is for Prefect Server development. If you want to run Prefect Server, install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
+
 ## Overview
+
+Prefect Server is an open-source backend
 
 Prefect Server consists of a number of related services including:
 
