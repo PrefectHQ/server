@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-   <a href=https://circleci.com/gh/PrefectHQ/prefect/tree/master>
+   <a href=https://circleci.com/gh/PrefectHQ/server/tree/master>
       <img src="https://circleci.com/gh/PrefectHQ/server/tree/master.svg?style=shield&circle-token=28689a55edc3c373486aaa5f11a1af3e5fc53344">
    </a>
 
