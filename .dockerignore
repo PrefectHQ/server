@@ -6,9 +6,6 @@ Dockerfile
 .dockerignore
 */docker-compose.yml
 
-# UI code
-./services/ui/*
-#
 # git
 .git
 
