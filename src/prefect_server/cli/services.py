@@ -92,8 +92,10 @@ def apollo():
                 HASURA_API_URL=config.hasura.graphql_url,
                 HASURA_WS_URL=config.hasura.ws_url,
                 PREFECT_API_URL=f"http://{config.services.graphql.host}:{config.services.graphql.port}{config.services.graphql.path}",
-                TELEMETRY__ENABLED=(
-                    "true" if config.telemetry.enabled is True else "false"
+                PREFECT_SERVER__TELEMETRY__ENABLED=(
+                    "true"
+                    if prefect_server.config.telemetry.enabled is True
+                    else "false"
                 ),
             ),
         )
