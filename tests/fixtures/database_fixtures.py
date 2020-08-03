@@ -5,7 +5,8 @@ import pytest
 
 import prefect
 from prefect.engine.state import Running, Submitted, Success
-from prefect_server import api, config
+from prefect import api
+from prefect_server import config
 from prefect_server.database import models
 
 START_TIME = pendulum.now()
@@ -126,7 +127,7 @@ async def flow_run_id(flow_id):
 @pytest.fixture
 async def running_flow_run_id(flow_run_id):
     """
-    Sets the `flow_run_id` fixture to be running, which makes it easier to 
+    Sets the `flow_run_id` fixture to be running, which makes it easier to
     put task runs into a running state
     """
     await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=Running())

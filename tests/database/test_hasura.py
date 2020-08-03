@@ -8,12 +8,13 @@ from box import Box
 from graphql.error import GraphQLSyntaxError
 
 import prefect_server
+import prefect
 from prefect.utilities.graphql import EnumValue, parse_graphql
 from prefect_server.database.hasura import Variable
 from prefect_server.utilities import exceptions
 from prefect_server.utilities.tests import set_temporary_config
 
-hasura_client = prefect_server.plugins.hasura.client
+hasura_client = prefect.plugins.hasura.client
 
 
 class TestExecute:

@@ -3,15 +3,15 @@ from typing import Optional
 from graphql import GraphQLError
 
 
-class CloudException(Exception):
+class ServerException(Exception):
     pass
 
 
-class BadRequest(CloudException):
+class BadRequest(ServerException):
     pass
 
 
-class NotFound(CloudException):
+class NotFound(ServerException):
     pass
 
 

@@ -14,7 +14,7 @@ from prefect.engine.state import (
 )
 from prefect.environments import LocalEnvironment
 from prefect.environments.storage import Local
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 from prefect_server.utilities.tests import set_temporary_config
 

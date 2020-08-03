@@ -3,7 +3,7 @@ from typing import Any
 from graphql import GraphQLResolveInfo
 
 from prefect.utilities.graphql import EnumValue, decompress
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 from prefect_server.utilities.graphql import mutation
 from prefect_server.utilities.sens_o_matic_events import register_delete

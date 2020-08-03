@@ -6,7 +6,7 @@ import pendulum
 import prefect
 from prefect.engine.state import Submitted
 from prefect.utilities.graphql import EnumValue, with_args
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 from prefect_server.utilities import logging
 

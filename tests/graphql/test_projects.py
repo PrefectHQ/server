@@ -1,6 +1,6 @@
 import uuid
 
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 
 

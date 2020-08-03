@@ -14,7 +14,8 @@ from prefect.engine.state import (
     Success,
 )
 from prefect.utilities.graphql import EnumValue
-from prefect_server import api, config
+from prefect import api
+from prefect_server import config
 from prefect_server.database import models
 from prefect_server.utilities.exceptions import NotFound
 

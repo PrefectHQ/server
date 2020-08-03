@@ -7,7 +7,7 @@ import pytest
 
 import prefect
 from prefect.utilities.graphql import EnumValue
-from prefect_server import api
+from prefect import api
 from prefect_server.database import models
 
 
@@ -136,7 +136,7 @@ class TestCreateFlow:
         )
 
         result = await models.Flow.where(id=flow_id).first({"tasks": {"trigger"}})
-        assert "prefect_server._api.flows.create_flow" in {
+        assert "prefect_server.api.flows.create_flow" in {
             t.trigger for t in result.tasks
         }
 
@@ -866,7 +866,9 @@ class TestSetScheduleInactive:
         flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
         assert flow.is_schedule_active is False
 
-    async def test_set_schedule_inactive_deletes_runs(self, flow_id):
+    async def test_set_schedule_inactive_deletes_only_auto_scheduled_runs(
+        self, flow_id
+    ):
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
@@ -916,7 +918,7 @@ class TestSetScheduleInactive:
 
     async def test_set_schedule_inactive_deletes_runs_in_utc(self, project_id):
         """
-        Ensures that toggling schedules on and off properly creates new api.runs even if the 
+        Ensures that toggling schedules on and off properly creates new api.runs even if the
         schedule was in local time
         https://github.com/PrefectHQ/cloud/issues/2295
         """

@@ -6,12 +6,8 @@ if _sys.version_info < (3, 7):
 from prefect_server.configuration import config
 
 import prefect_server.utilities
-from prefect_server.utilities.plugins import API as api, PLUGINS as plugins
 import prefect_server.database
-import prefect_server._api
-
-# after server has loaded, import any plugins
-prefect_server.utilities.plugins.import_plugins()
+import prefect_server.api
 
 # -------------------------------------------
 # versioneer - automatic versioning

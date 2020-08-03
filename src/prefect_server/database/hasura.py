@@ -8,7 +8,7 @@ from prefect_server import config
 from prefect_server.utilities import exceptions
 from prefect_server.utilities.graphql import GraphQLClient
 from prefect_server.utilities.logging import get_logger
-from prefect_server.utilities.plugins import register_plugin
+from prefect.utilities.plugins import register_plugin
 
 GQLObjectTypes = Union[None, str, Dict, Iterable]
 logger = get_logger("Hasura")

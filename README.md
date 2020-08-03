@@ -77,11 +77,11 @@ Prefect Server has three types of tests:
 - `service tests`: used to verify functionality throughout Prefect Server
 - `integration tests`: used to verify functionality between Prefect Core and Server
 
-Prefect Server uses `pytest` for testing. For example, in order to run all unit tests
-for the API, run:
+Prefect Server uses `pytest` for testing. Tests are organized in a way that generally mimics the `src` directory. For example, in order to run all unit tests
+for the API and the GraphQL server, run:
 
 ```bash
-pytest tests/api/*
+pytest tests/api tests/graphql
 ```
 
 Unit tests can be run with only `prefect-server dev infrastructure` running. Service and

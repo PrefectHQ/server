@@ -6,10 +6,11 @@ import pendulum
 import prefect
 from prefect.engine.state import Pending, Queued, Scheduled
 from prefect.utilities.graphql import EnumValue
-from prefect_server import api, config
+from prefect import api
+from prefect_server import config
 from prefect_server.database import models
 from prefect_server.utilities import exceptions, names
-from prefect_server.utilities.plugins import register_api
+from prefect.utilities.plugins import register_api
 
 SCHEDULED_STATES = [
     s.__name__
@@ -289,7 +290,7 @@ async def update_flow_run_heartbeat(flow_run_id: str,) -> None:
 
     Args:
         - flow_run_id (str): the flow run id
-        
+
     Raises:
         - ValueError: if the flow_run_id is invalid
     """
@@ -308,7 +309,7 @@ async def update_task_run_heartbeat(task_run_id: str,) -> None:
 
     Args:
         - task_run_id (str): the task run id
-        
+
     Raises:
         - ValueError: if the task_run_id is invalid
     """
