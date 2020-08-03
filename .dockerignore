@@ -5,6 +5,12 @@
 Dockerfile
 .dockerignore
 */docker-compose.yml
+docker/*
+pyproject.toml
+
+# changelog
+changes/*
+update_changelog.py
 
 # git
 .git
@@ -54,3 +60,6 @@ instance/
 env/
 venv/
 ENV/
+
+# circleci
+.circleci/
