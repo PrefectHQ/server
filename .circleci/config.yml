@@ -189,6 +189,8 @@ jobs:
           name: Run Server integration tests
           command: pytest -v -m integration_test
 
+orbs:
+  docker: circleci/docker@1.0.0
 
 workflows:
   version: 2
