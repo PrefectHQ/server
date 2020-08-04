@@ -12,7 +12,6 @@ install_requires = [
     "coolname >= 1.1, < 2.0",
     "docker >= 3.4,< 5.0",
     "graphql-core < 3.1",
-    "gunicorn >= 19.9,< 20.1",
     "httpx >= 0.13.0, < 0.14.0",
     "json_log_formatter >= 0.3.0, < 0.4.0",
     "psycopg2-binary >= 2.7, < 3.0",
