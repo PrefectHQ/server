@@ -131,3 +131,7 @@ Helpful feature requests include:
 - if applicable, initial thoughts about feature implementation
 
 **Please be aware** that Prefect Server feature requests that might compete with propriety [Prefect Cloud](https://cloud.prefect.io/) features will be rejected.
+
+## License
+
+Prefect Server is lovingly made by the team at [Prefect](https://www.prefect.io) and licensed under the [Prefect Community License](https://www.prefect.io/legal/prefect-community-license/). For information on how you can use, extend, and depend on Prefect Server to automate your data, take a look at our [license](https://github.com/PrefectHQ/server/blob/master/LICENSE) or [contact us](https://www.prefect.io/get-prefect#contact).
