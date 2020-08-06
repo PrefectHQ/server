@@ -47,30 +47,6 @@ commands:
           name: Run Prefect Server database migrations
           command: prefect-server database upgrade --yes
 
-  build_publish_image:
-    description: Builds Docker Images for Apollo or Server
-    parameters:
-      IMAGE_NAME:
-        type: string
-      DOCKERFILE_PATH:
-        type: string
-      DOCKER_BUILD_FLAGS:
-        type: string
-    steps:
-      - run:
-          name: Docker Build
-          command: DOCKER_BUILDKIT=1 docker build --no-cache -q --build-arg VERSION=${CIRCLE_SHA1} -t << parameters.IMAGE_NAME >>:${CIRCLE_SHA1} << parameters.DOCKER_BUILD_FLAGS >> << parameters.DOCKERFILE_PATH >>
-      - run:
-          name: Docker Push
-          command: |
-            IMAGE=<< parameters.IMAGE_NAME >>
-            if [[ $CIRCLE_BRANCH == "master" ]]; then
-              docker tag $IMAGE:${CIRCLE_SHA1} $IMAGE:master
-              docker tag $IMAGE:${CIRCLE_SHA1} $IMAGE:latest
-            fi
-            docker images $IMAGE
-            docker push $IMAGE
-
 executors:
   docker-prefect-server:
     docker:
@@ -216,7 +192,7 @@ workflows:
           image: 'prefecthq/apollo'
           path: 'services/apollo'
           extra_build_args: '--build-arg PREFECT_VERSION=master'
-          tag: alpha
+          tag: master
           filters:
             branches:
               only: master
@@ -227,7 +203,7 @@ workflows:
           image: 'prefecthq/server'
           path: '.'
           extra_build_args: '--build-arg PREFECT_VERSION=master'
-          tag: alpha
+          tag: master
           filters:
             branches:
               only: master
