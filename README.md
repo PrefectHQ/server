@@ -57,11 +57,11 @@ These services are intended to be run within [Docker](https://www.docker.com/) a
    cd services/apollo && npm install
    ```
 
-_Note: if installing for local development, it is important to install using the -e flag with `[dev]` extras: `pip install -e ".[dev]"
+*Note: if installing for local development, it is important to install using the -e flag with `[dev]` extras: `pip install -e ".[dev]"`*
 
 ## Running the system as a developer
 
-_Note: for [deploying Prefect Server](https://docs.prefect.io/orchestration/server/overview.html#deploying-prefect-server), please use the `prefect server start` CLI command in Prefect Core 0.13.0+.
+*Note: for [deploying Prefect Server](https://docs.prefect.io/orchestration/server/overview.html#deploying-prefect-server), please use the `prefect server start` CLI command in Prefect Core 0.13.0+.*
 
 If you are doing local development on Prefect Server, it is best to run most services as local processes.
 This allows for hot-reloading as code changes, setting debugging breakpoints, and generally speeds up the
