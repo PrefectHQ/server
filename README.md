@@ -20,22 +20,24 @@
 
 Please note: this repo is for Prefect Server development. If you want to run Prefect Server, install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
 
+If you would like to work on the Prefect UI or open a UI-specific issue, please visit [the Prefect UI repository](https://github.com/PrefectHQ/ui).
+
 ## Overview
 
-Prefect Server is an open-source backend
+[Prefect Server](https://docs.prefect.io/orchestration/server/overview.html) is an open source backend that makes it easy to monitor and execute your Prefect flows.
 
 Prefect Server consists of a number of related services including:
 
 - `postgres`: the database persistence layer
 - `hasura`: a GraphQL API for Postgres (http://hasura.io)
 - `graphql`: a Python-based GraphQL server that exposes mutations (actions) representing Prefect Server's logic
-- `apollo`: an Apollo Server that serves as the main user interaction endpoint, and stitches together the `hasura` and `graphql` APIs.
-- `towel`: a variety of utility services that provide maintenance routines, because a towel is just about the most massively useful thing an interstellar hitchhiker can carry.
+- `apollo`: an Apollo Server that serves as the main user interaction endpoint, and stitches together the `hasura` and `graphql` APIs
+- `towel`: a variety of utility services that provide maintenance routines, because a towel is just about the most massively useful thing an interstellar hitchhiker can carry
   - `scheduler`: a service that searches for flows that need scheduling and creates new flow runs
   - `lazarus`: a service that detects when flow runs ended abnormally and should be restarted
   - `zombie_killer`: a service that detects when task runs ended abnormally and should be failed
 
-These services are intended to be run within [Docker](https://www.docker.com/) and some CLI commands require [`docker-compose`](https://docs.docker.com/compose/) which helps orchestrate running multiple Docker containers simultaneously; if you don't already have Docker installed, [this link](https://download.docker.com/mac/stable/Docker.dmg) should allow you to download the latest stable release of Docker (including `docker-compose`) without having to create a Docker login.
+These services are intended to be run within [Docker](https://www.docker.com/) and some CLI commands require [`docker-compose`](https://docs.docker.com/compose/) which helps orchestrate running multiple Docker containers simultaneously.
 
 ## Installation
 
@@ -55,9 +57,11 @@ These services are intended to be run within [Docker](https://www.docker.com/) a
    cd services/apollo && npm install
    ```
 
-_Note: if installing for local development, it is important to install using the -e flag_
+_Note: if installing for local development, it is important to install using the -e flag with `[dev]` extras: `pip install -e ".[dev]"
 
-## Running the system
+## Running the system as a developer
+
+_Note: for [deploying Prefect Server](https://docs.prefect.io/orchestration/server/overview.html#deploying-prefect-server), please use the `prefect server start` CLI command in Prefect Core 0.13.0+.
 
 If you are doing local development on Prefect Server, it is best to run most services as local processes.
 This allows for hot-reloading as code changes, setting debugging breakpoints, and generally speeds up the
@@ -125,3 +129,5 @@ Helpful feature requests include:
 - a description of the feature
 - how the feature could be helpful
 - if applicable, initial thoughts about feature implementation
+
+**Please be aware** that Prefect Server feature requests that might compete with propriety [Prefect Cloud](https://cloud.prefect.io/) features will be rejected.
