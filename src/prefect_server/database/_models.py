@@ -38,6 +38,7 @@ class Project(HasuraModel):
     description: str = None
 
     # relationships
+    tenant: Tenant = None
     flows: List["Flow"] = None
 
 
