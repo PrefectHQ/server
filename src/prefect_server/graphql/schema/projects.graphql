@@ -1,6 +1,4 @@
-
 extend type Mutation {
-
   # ------------------------------------------------------
   # projects
   # ------------------------------------------------------
@@ -18,7 +16,6 @@ extend type Mutation {
   set_project_description(
     input: set_project_description_input!
   ): project_id_payload
-
 }
 # ------------------------------------------------------
 # project inputs
@@ -26,7 +23,7 @@ extend type Mutation {
 
 input create_project_input {
   "The tenant"
-  tenant_id: String!
+  tenant_id: UUID!
   "The name of the project to create"
   name: String!
   "An optional description of this project - can be updated later with setProjectDescription"
@@ -52,8 +49,6 @@ input set_project_description_input {
   description: String
 }
 
-
 type project_id_payload {
   id: UUID
 }
-
