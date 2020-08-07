@@ -255,7 +255,7 @@ class TestFlowRunStates:
             if not s().is_running() and not s().is_submitted()
         ],
     )
-    async def test_non_running_state_does_not_set_heartbeat(self, state, flow_run_id):
+    async def test_state_does_not_set_heartbeat_unless_running_or_submitted(self, state, flow_run_id):
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"heartbeat"})
         assert flow_run.heartbeat is None
 
