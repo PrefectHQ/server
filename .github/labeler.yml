@@ -5,5 +5,3 @@ GraphQL:
   - src/prefect_cloud/graphql/**/*
 API:
   - src/prefect_cloud/api/**/*
-tests:
-  - tests/**/*
