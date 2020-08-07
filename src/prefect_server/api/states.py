@@ -126,7 +126,7 @@ async def set_flow_run_state(
 
     # FOR RUNNING STATES:
     #   - update the flow run heartbeat
-    if state.is_running():
+    if state.is_running() or state.is_submitted():
         await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
 
     # --------------------------------------------------------
