@@ -122,7 +122,7 @@ async function send_telemetry_event(event) {
       const body = JSON.stringify({
         source: 'prefect_server',
         type: event,
-        payload: { id: TELEMETRY_ID }
+        payload: { id: TELEMETRY_ID, prefect_server_version: PREFECT_SERVER_VERSION }
       })
       log(`Sending telemetry to Prefect Technologies, Inc.: ${body}`)
 
@@ -131,7 +131,7 @@ async function send_telemetry_event(event) {
         body,
         headers: {
           'Content-Type': 'application/json',
-          'X-Prefect-Event': 'prefect_server-0.0.1'
+          'X-Prefect-Event': 'prefect_server-0.2.0'
         }
       })
     } catch (error) {
