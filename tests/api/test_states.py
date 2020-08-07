@@ -68,11 +68,16 @@ class TestTaskRunStates:
                 task_run_id=str(uuid.uuid4()), state=state
             )
 
-    async def test_non_running_state_does_not_set_heartbeat(self, task_run_id):
+    @pytest.mark.parametrize(
+        "state", [s() for s in State.children() if not s().is_running()]
+    )
+    async def test_state_does_not_set_heartbeat_unless_running(
+        self, state, task_run_id
+    ):
         task_run = await models.TaskRun.where(id=task_run_id).first({"heartbeat"})
         assert task_run.heartbeat is None
 
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=Success())
+        await api.states.set_task_run_state(task_run_id=task_run_id, state=state)
 
         task_run = await models.TaskRun.where(id=task_run_id).first({"heartbeat"})
         assert task_run.heartbeat is None
@@ -244,22 +249,37 @@ class TestFlowRunStates:
         assert not flow_run_info.start_time
         assert not flow_run_info.end_time
 
-    async def test_non_running_state_does_not_set_heartbeat(self, flow_run_id):
+    @pytest.mark.parametrize(
+        "state",
+        [
+            s()
+            for s in State.children()
+            if not s().is_running() and not s().is_submitted()
+        ],
+    )
+    async def test_state_does_not_set_heartbeat_unless_running_or_submitted(
+        self, state, flow_run_id
+    ):
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"heartbeat"})
         assert flow_run.heartbeat is None
 
         dt = pendulum.now("UTC")
-        await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=Success())
+        await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=state)
 
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"heartbeat"})
         assert flow_run.heartbeat is None
 
-    async def test_running_state_sets_heartbeat(self, flow_run_id):
+    @pytest.mark.parametrize("state", [Running(), Submitted()])
+    async def test_running_and_submitted_state_sets_heartbeat(self, state, flow_run_id):
+        """
+        Both Running and Submitted states need to set heartbeats for services like Lazarus to
+        function properly.
+        """
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"heartbeat"})
         assert flow_run.heartbeat is None
 
         dt = pendulum.now("UTC")
-        await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=Running())
+        await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=state)
 
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"heartbeat"})
         assert flow_run.heartbeat > dt
