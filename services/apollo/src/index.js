@@ -112,7 +112,7 @@ async function runServer() {
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 async function send_telemetry_event(event) {
@@ -122,7 +122,11 @@ async function send_telemetry_event(event) {
       const body = JSON.stringify({
         source: 'prefect_server',
         type: event,
-        payload: { id: TELEMETRY_ID, prefect_server_version: PREFECT_SERVER_VERSION }
+        payload: {
+          id: TELEMETRY_ID,
+          prefect_server_version: PREFECT_SERVER_VERSION,
+          api_version: '0.2.0'
+        }
       })
       log(`Sending telemetry to Prefect Technologies, Inc.: ${body}`)
 
