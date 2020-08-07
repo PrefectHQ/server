@@ -71,7 +71,7 @@ class TestTaskRunStates:
     @pytest.mark.parametrize(
         "state", [s() for s in State.children() if not s().is_running()]
     )
-    async def test_non_running_state_does_not_set_heartbeat(self, state, task_run_id):
+    async def test_state_does_not_set_heartbeat_unless_running(self, state, task_run_id):
         task_run = await models.TaskRun.where(id=task_run_id).first({"heartbeat"})
         assert task_run.heartbeat is None
 
