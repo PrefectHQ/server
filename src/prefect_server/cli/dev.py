@@ -1,4 +1,5 @@
 import asyncio
+import atexit
 import glob
 import os
 import shutil
@@ -113,19 +114,22 @@ def is_process_group_empty(pgid: int):
 
 
 def kill_process_group(proc, timeout: int = 3):
-    pgid = os.getpgid(proc.pid)
-    os.killpg(pgid, signal.SIGTERM)
-    proc.terminate()
+    try:
+        pgid = os.getpgid(proc.pid)
+        os.killpg(pgid, signal.SIGTERM)
+        proc.terminate()
 
-    for _ in range(timeout):
-        if is_process_group_empty(pgid):
-            return
-        click.secho("Waiting for process group to exit...", fg="white", bg="blue")
-        time.sleep(1)
+        for _ in range(timeout):
+            if is_process_group_empty(pgid):
+                return
+            click.secho("Waiting for process group to exit...", fg="white", bg="blue")
+            time.sleep(1)
 
-    click.secho("Timeout while shutting down, killing!", fg="white", bg="red")
-    os.killpg(pgid, signal.SIGKILL)
-    proc.kill()
+        click.secho("Timeout while shutting down, killing!", fg="white", bg="red")
+        os.killpg(pgid, signal.SIGKILL)
+        proc.kill()
+    except:
+        pass
 
 
 @dev.command()
@@ -163,6 +167,7 @@ def services(include, exclude):
                 preexec_fn=os.setsid,
             )
         )
+        atexit.register(kill_process_group, procs[-1])
 
     try:
         while True:
