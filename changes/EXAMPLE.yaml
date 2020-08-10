@@ -6,6 +6,7 @@
 #   - fix
 #   - deprecation
 #   - breaking (for breaking changes)
+#   - migration (for database migrations)
 #
 # 2. Fill in one (or more) bullet points under the heading, describing the change.
 #    Markdown syntax may be used.
