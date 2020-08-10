@@ -67,9 +67,7 @@ def apply_hasura_metadata(context):
 
     fn = context.get_context().opts.get("fn")
     if fn and fn.__name__ == "upgrade":
-        dest_rev = context.get_context().opts.get("destination_rev")
-        head = context.script.get_current_head()
-        if dest_rev == "heads" or script.revision == head:
+        if script.revision == context.script.get_current_head():
             hasura_revision = None
         else:
             hasura_revision = script.up_revision
