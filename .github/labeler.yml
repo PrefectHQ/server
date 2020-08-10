@@ -1,8 +1,8 @@
 migration:
   - services/postgres/alembic/versions/**/*
 database:
-  - src/prefect_cloud/database/**/*
+  - src/prefect_server/database/**/*
 GraphQL:
-  - src/prefect_cloud/graphql/**/*
+  - src/prefect_server/graphql/**/*
 API:
-  - src/prefect_cloud/api/**/*
+  - src/prefect_server/api/**/*
