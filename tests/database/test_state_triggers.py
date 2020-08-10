@@ -16,7 +16,7 @@ class TestFlowRunStateTrigger:
 
         await models.FlowRun.where(id=flow_run_id).update({"version": original_version})
         old_run = await models.FlowRun.where(id=flow_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         dt = pendulum.now("UTC")
@@ -33,11 +33,10 @@ class TestFlowRunStateTrigger:
         ).insert()
 
         new_run = await models.FlowRun.where(id=flow_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         assert new_run.version == 10
-        assert new_run.state_id != old_run.state_id
         assert new_run.heartbeat is None
 
     async def test_equal_version_only_updates_if_timestamp_is_greater_than_current(
@@ -93,7 +92,7 @@ class TestFlowRunStateTrigger:
 
         await models.FlowRun.where(id=flow_run_id).update({"version": 10})
         old_run = await models.FlowRun.where(id=flow_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         dt = pendulum.now("UTC")
@@ -115,11 +114,10 @@ class TestFlowRunStateTrigger:
         )
 
         new_run = await models.FlowRun.where(id=flow_run_id).first(
-            {"version", "state_timestamp", "state_id"}
+            {"version", "state_timestamp"}
         )
 
         assert new_run.version == 100 != old_run.version
-        assert new_run.state_id != old_run.state_id
         assert new_run.state_timestamp == dt.add(seconds=100)
 
     @pytest.mark.parametrize("original_version", [11, 100])
@@ -130,7 +128,7 @@ class TestFlowRunStateTrigger:
         await models.FlowRun.where(id=flow_run_id).update({"version": original_version})
 
         old_run = await models.FlowRun.where(id=flow_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         dt = pendulum.now("UTC")
@@ -147,11 +145,10 @@ class TestFlowRunStateTrigger:
         ).insert()
 
         new_run = await models.FlowRun.where(id=flow_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         assert new_run.version == old_run.version
-        assert new_run.state_id == old_run.state_id
         assert new_run.heartbeat is None
 
 
@@ -163,7 +160,7 @@ class TestTaskRunStateTrigger:
 
         await models.TaskRun.where(id=task_run_id).update({"version": original_version})
         old_run = await models.TaskRun.where(id=task_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         dt = pendulum.now("UTC")
@@ -180,11 +177,10 @@ class TestTaskRunStateTrigger:
         ).insert()
 
         new_run = await models.TaskRun.where(id=task_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         assert new_run.version == 10
-        assert new_run.state_id != old_run.state_id
         assert new_run.heartbeat is None
 
     async def test_equal_version_only_updates_if_timestamp_is_greater_than_current(
@@ -240,7 +236,7 @@ class TestTaskRunStateTrigger:
 
         await models.TaskRun.where(id=task_run_id).update({"version": 10})
         old_run = await models.TaskRun.where(id=task_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         dt = pendulum.now("UTC")
@@ -262,11 +258,10 @@ class TestTaskRunStateTrigger:
         )
 
         new_run = await models.TaskRun.where(id=task_run_id).first(
-            {"version", "state_timestamp", "state_id"}
+            {"version", "state_timestamp"}
         )
 
         assert new_run.version == 100 != old_run.version
-        assert new_run.state_id != old_run.state_id
         assert new_run.state_timestamp == dt.add(seconds=100)
 
     @pytest.mark.parametrize("original_version", [11, 100])
@@ -277,7 +272,7 @@ class TestTaskRunStateTrigger:
         await models.TaskRun.where(id=task_run_id).update({"version": original_version})
 
         old_run = await models.TaskRun.where(id=task_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         dt = pendulum.now("UTC")
@@ -294,8 +289,7 @@ class TestTaskRunStateTrigger:
         ).insert()
 
         new_run = await models.TaskRun.where(id=task_run_id).first(
-            {"version", "heartbeat", "state_id"}
+            {"version", "heartbeat"}
         )
 
         assert new_run.version == old_run.version
-        assert new_run.state_id == old_run.state_id

@@ -27,14 +27,20 @@ async def state_event(flow_run_id):
             "version": True,
             "flow": {"id", "name", "version_group_id"},
             "tenant": {"id", "slug"},
-            "current_state": {"state", "serialized_state", "version"},
+            "state": True,
+            "serialized_state": True,
+            "version": True,
         }
     )
 
     return events.FlowRunStateChange(
         flow_run=flow_run,
         tenant=flow_run.tenant,
-        state=flow_run.current_state,
+        state=dict(
+            state=flow_run.state,
+            serialized_state=flow_run.serialized_state,
+            version=flow_run.version,
+        ),
         flow=flow_run.flow,
     )
 
