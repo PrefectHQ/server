@@ -8,7 +8,7 @@
 
 ### Enhancements
 
-- None
+- Updates the label resolver to dedupe labels input - [#38](https://github.com/PrefectHQ/server/pull/38)
 
 ### Infrastructure
 
@@ -25,4 +25,3 @@
 ### Deprecations
 
 - None
-
