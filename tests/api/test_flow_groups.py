@@ -64,6 +64,34 @@ class TestSetFlowGroupLabels:
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
         assert flow_group.labels == labels
 
+    async def test_set_flow_group_labels_dedupes(self, flow_group_id):
+        labels = ["meep", "morp", "morp"]
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert flow_group.labels is None
+
+        success = await api.flow_groups.set_flow_group_labels(
+            flow_group_id=flow_group_id, labels=labels
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert flow_group.labels == ["meep", "morp"]
+
+    @pytest.mark.parametrize("labels", [None, []])
+    async def test_set_flow_group_labels_to_none_and_empty_preseves_type(
+        self, flow_group_id, labels
+    ):
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert flow_group.labels is None
+
+        success = await api.flow_groups.set_flow_group_labels(
+            flow_group_id=flow_group_id, labels=labels
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert flow_group.labels == labels
+
     async def test_set_flow_group_labels_overwrites_existing(self, flow_group_id):
         labels = ["meep", "morp"]
         await models.FlowGroup.where(id=flow_group_id).update(

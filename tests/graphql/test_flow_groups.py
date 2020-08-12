@@ -24,6 +24,18 @@ class TestSetFlowGroupLabels:
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
         assert flow_group.labels == labels
 
+    @pytest.mark.parametrize("labels", [None, []])
+    async def test_set_flow_group_labels_preserves_type(
+        self, run_query, flow_group_id, labels
+    ):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_group_id=flow_group_id, labels=labels)),
+        )
+        assert result.data.set_flow_group_labels.success is True
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert flow_group.labels == labels
+
     async def test_clear_flow_group_labels(self, run_query, flow_group_id):
         await models.FlowGroup.where(id=flow_group_id).update(
             set=dict(labels=["zaphod"])
