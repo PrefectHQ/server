@@ -1,0 +1,2 @@
+enhancement:
+  - "Dedupe flow group labels when set - [#40](https://github.com/PrefectHQ/server/pull/40)"
