@@ -54,7 +54,7 @@ class TestSetFlowGroupLabels:
     async def test_set_flow_group_labels(self, flow_group_id):
         labels = ["meep", "morp"]
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
-        assert flow_group.labels is None
+        assert not flow_group.labels
 
         success = await api.flow_groups.set_flow_group_labels(
             flow_group_id=flow_group_id, labels=labels
