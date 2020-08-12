@@ -70,7 +70,7 @@ class TestSetFlowGroupLabels:
             set=dict(labels=["zaphod", "beeblebrox"])
         )
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
-        assert flow_group.labels == ["zaphod", "beeblebrox"]
+        assert flow_group.labels == set(["zaphod", "beeblebrox"])
 
         await api.flow_groups.set_flow_group_labels(
             flow_group_id=flow_group_id, labels=labels

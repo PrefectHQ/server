@@ -22,7 +22,7 @@ class TestSetFlowGroupLabels:
         )
         assert result.data.set_flow_group_labels.success is True
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
-        assert flow_group.labels == labels
+        assert flow_group.labels == set(labels)
 
     async def test_clear_flow_group_labels(self, run_query, flow_group_id):
         await models.FlowGroup.where(id=flow_group_id).update(
