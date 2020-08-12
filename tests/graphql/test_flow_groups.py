@@ -36,7 +36,7 @@ class TestSetFlowGroupLabels:
             variables=dict(input=dict(flow_group_id=flow_group_id, labels=None)),
         )
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
-        assert len(flow_group.labels) == 0
+        assert flow_group.labels is None
 
 
 class TestSetFlowGroupSchedule:
