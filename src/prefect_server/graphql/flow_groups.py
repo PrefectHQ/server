@@ -20,8 +20,9 @@ async def resolve_set_flow_group_default_parameters(
 async def resolve_set_flow_group_labels(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
+    labels = set(input["labels"]) if input["labels"] else set()
     result = await api.flow_groups.set_flow_group_labels(
-        flow_group_id=input["flow_group_id"], labels=input["labels"]
+        flow_group_id=input["flow_group_id"], labels=labels
     )
     return {"success": result}
 
