@@ -184,7 +184,7 @@ async def create_flow(
         config.core_version_cutoff
     ):
         raise ValueError(
-            "Prefect Serve requires new flows to be built with Prefect "
+            "Prefect Server requires new flows to be built with Prefect "
             f"{config.core_version_cutoff}+, but this flow was built with "
             f"Prefect {core_version}."
         )
@@ -234,7 +234,7 @@ async def create_flow(
                 {"name": {"_eq": version_group_id}},
             ]
         }
-    ).first()
+    ).first({"id", "schedule"})
     if flow_group is None:
         flow_group_id = await models.FlowGroup(
             tenant_id=tenant_id,
@@ -249,6 +249,11 @@ async def create_flow(
         flow_group_id = flow_group.id
 
     version = (await models.Flow.where(version_where).max({"version"}))["version"] or 0
+
+    # if there is no referenceable schedule for this Flow,
+    # we should set its "schedule" to inactive to avoid confusion
+    if flow.schedule is None and getattr(flow_group, "schedule", None) is None:
+        set_schedule_active = False
 
     # precompute task ids to make edges easy to add to database
     flow_id = await models.Flow(

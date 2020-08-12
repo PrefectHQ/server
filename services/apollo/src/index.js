@@ -91,7 +91,7 @@ async function runServer() {
     debug: false,
     introspection: true,
     playground: true,
-    tracing: true,
+    tracing: false, // set to true to see performance metrics w/ every request
     // this function is called whenever a request is made to the server in order to populate
     // the graphql context
     context: ({ req, connection }) => {
@@ -112,7 +112,7 @@ async function runServer() {
 }
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 async function send_telemetry_event(event) {
