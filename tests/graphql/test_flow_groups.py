@@ -22,7 +22,7 @@ class TestSetFlowGroupLabels:
         )
         assert result.data.set_flow_group_labels.success is True
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
-        assert flow_group.labels == labels
+        assert set(flow_group.labels) == set(labels)
 
     @pytest.mark.parametrize("labels", [None, []])
     async def test_set_flow_group_labels_preserves_type(
