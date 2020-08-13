@@ -1,0 +1,2 @@
+enhancement:
+  - "Set Apollo's `post-start.sh` script to wait for the GraphQL service's healthcheck - [#41](https://github.com/PrefectHQ/server/pull/41)"
