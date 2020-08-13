@@ -115,6 +115,8 @@ async def set_flow_group_labels(flow_group_id: str, labels: List[str] = None) ->
     Raises:
         - ValueError: if flow group ID isn't provided
     """
+    if labels:
+        labels = list(set(labels))  # dedupe
     if not flow_group_id:
         raise ValueError("Invalid flow group ID")
     result = await models.FlowGroup.where(id=flow_group_id).update(
