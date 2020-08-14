@@ -1,6 +1,9 @@
 import asyncio
 import random
+from datetime import timedelta
 from typing import Union
+
+import pendulum
 
 from prefect_server import config, utilities
 
@@ -49,11 +52,15 @@ class LoopService:
         # randomly stagger the start time
         startup_delay = random.randint(0, int(self.loop_seconds))
         self.logger.info(
-            f"{self.name} will start after an initial delay of {startup_delay} seconds..."
+            f"{self.name} will start after an initial sleep of {startup_delay} seconds..."
         )
         await asyncio.sleep(startup_delay)
 
+        last_log = pendulum.now("UTC")
+
         while True:
+            start_time = pendulum.now("UTC")
+
             try:
                 await self.run_once()
 
@@ -61,8 +68,17 @@ class LoopService:
             except Exception as exc:
                 self.logger.error(f"Unexpected error: {repr(exc)}")
 
-            self.logger.debug(f"Sleeping for {self.loop_seconds} seconds...")
-            await asyncio.sleep(self.loop_seconds)
+            # next run is every "loop seconds" after each previous run *started*
+            next_run = start_time.add(seconds=self.loop_seconds)
+
+            # don't log more than once every 5 minutes
+            if pendulum.now("UTC") - last_log > timedelta(minutes=5):
+                self.logger.debug(
+                    f"Heartbeat from {self.name}: next run at {next_run.replace(microsecond=0)}"
+                )
+                last_log = pendulum.now("UTC")
+
+            await asyncio.sleep((next_run - pendulum.now("UTC")).total_seconds())
 
     async def run_once(self) -> None:
         """
