@@ -71,6 +71,12 @@ class LoopService:
             # next run is every "loop seconds" after each previous run *started*
             next_run = start_time.add(seconds=self.loop_seconds)
 
+            # if the loop interval is too short, warn
+            if next_run < pendulum.now():
+                self.logger.warning(
+                    f"{self.name} took longer to run than its loop interval of {self.loop_seconds} seconds."
+                )
+
             # don't log more than once every 5 minutes
             if pendulum.now("UTC") - last_log > timedelta(minutes=5):
                 self.logger.debug(
