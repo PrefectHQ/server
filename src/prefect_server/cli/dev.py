@@ -144,7 +144,7 @@ def services(include, exclude):
     This command starts services
     """
 
-    all_services = ["graphql", "towel", "apollo", "ui"]
+    all_services = ["graphql", "towel", "apollo"]
     if not include:
         include = all_services
     else:
