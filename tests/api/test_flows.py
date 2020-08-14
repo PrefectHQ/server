@@ -53,6 +53,42 @@ class TestCreateFlow:
         )
         assert await models.Flow.exists(flow_id)
 
+    async def test_create_flow_with_no_schedule_sets_schedule_inactive(
+        self, project_id, flow
+    ):
+        assert flow.schedule is None
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+
+        flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
+        assert flow.is_schedule_active is False
+
+    async def test_create_flow_with_only_flow_group_schedule_keeps_schedule_active(
+        self, project_id, flow_group_id
+    ):
+        success = await api.flow_groups.set_flow_group_schedule(
+            flow_group_id=flow_group_id,
+            clocks=[{"type": "CronClock", "cron": "42 0 0 * * *"}],
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"schedule", "name"}
+        )
+        assert flow_group.schedule is not None
+
+        flow = prefect.Flow("empty Flow")
+        flow_id = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=flow.serialize(),
+            version_group_id=flow_group.name,
+        )
+
+        flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
+        assert flow.is_schedule_active is True
+
     async def test_create_old_and_valid_flow(self, project_id, flow):
         serialized_flow = flow.serialize()
         serialized_flow["environment"]["__version__"] = "0.0.42"
