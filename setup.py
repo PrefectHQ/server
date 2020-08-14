@@ -33,7 +33,6 @@ dev_requires = [
     "pytest-asyncio",
     "pytest-cov",
     "pytest-env",
-    "pytest-xdist",
 ]
 
 
