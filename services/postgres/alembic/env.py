@@ -65,16 +65,10 @@ def apply_hasura_metadata(context):
     if not script:
         return
 
-    fn = context.get_context().opts.get("fn")
-    if fn and fn.__name__ == "upgrade":
-        if script.revision == context.script.get_current_head():
-            hasura_revision = None
-        else:
-            hasura_revision = script.revision
-    elif fn and fn.__name__ == "downgrade":
-        hasura_revision = script.down_revision
+    if script.revision == context.script.get_current_head():
+        hasura_revision = None
     else:
-        return
+        hasura_revision = script.revision
 
     # attempt to load the corresponding hasura metadata
     metadata_path = os.path.join(__file__, "../../../hasura/migrations")
