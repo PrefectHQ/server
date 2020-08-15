@@ -70,7 +70,7 @@ def apply_hasura_metadata(context):
         if script.revision == context.script.get_current_head():
             hasura_revision = None
         else:
-            hasura_revision = script.up_revision
+            hasura_revision = script.revision
     elif fn and fn.__name__ == "downgrade":
         hasura_revision = script.down_revision
     else:
