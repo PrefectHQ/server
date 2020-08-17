@@ -43,33 +43,6 @@ def graphql():
 
 
 @services.command()
-def ui():
-    """
-    Start the Python GraphQL server
-    """
-    ui_path = (
-        os.environ.get("PREFECT_SERVER_WEB_UI_PATH") or root_dir.parent / "cloud-web-ui"
-    )
-
-    if not ui_path.exists():
-        raise RuntimeError(
-            "Cannot find cloud-web-ui repository path. Please set PREFECT_SERVER_WEB_UI_PATH environment variable."
-        )
-
-    run_proc_forever(
-        subprocess.Popen(
-            ["npm", "run", "serve"],
-            cwd=ui_path,
-            env=dict(
-                os.environ,
-                VUE_APP_GRAPHQL_HTTP=f"http://localhost:{config.services.apollo.port}",
-                VUE_APP_GRAPHQL_WS=f"ws://localhost:{config.services.apollo.port}",
-            ),
-        )
-    )
-
-
-@services.command()
 def towel():
     """
     Start the Server maintenance services

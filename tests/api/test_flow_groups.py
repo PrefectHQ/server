@@ -62,6 +62,35 @@ class TestSetFlowGroupLabels:
         assert success is True
 
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert set(flow_group.labels) == set(labels)
+
+    async def test_set_flow_group_labels_dedupes(self, flow_group_id):
+        labels = ["meep", "morp", "morp"]
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert flow_group.labels is None
+
+        success = await api.flow_groups.set_flow_group_labels(
+            flow_group_id=flow_group_id, labels=labels
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert len(flow_group.labels) == 2
+        assert set(flow_group.labels) == {"meep", "morp"}
+
+    @pytest.mark.parametrize("labels", [None, []])
+    async def test_set_flow_group_labels_to_none_and_empty_preseves_type(
+        self, flow_group_id, labels
+    ):
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
+        assert flow_group.labels is None
+
+        success = await api.flow_groups.set_flow_group_labels(
+            flow_group_id=flow_group_id, labels=labels
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
         assert flow_group.labels == labels
 
     async def test_set_flow_group_labels_overwrites_existing(self, flow_group_id):
@@ -70,13 +99,13 @@ class TestSetFlowGroupLabels:
             set=dict(labels=["zaphod", "beeblebrox"])
         )
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
-        assert flow_group.labels == ["zaphod", "beeblebrox"]
+        assert set(flow_group.labels) == set(["zaphod", "beeblebrox"])
 
         await api.flow_groups.set_flow_group_labels(
             flow_group_id=flow_group_id, labels=labels
         )
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
-        assert flow_group.labels == labels
+        assert set(flow_group.labels) == set(labels)
 
     async def test_set_flow_group_labels_for_invalid_flow_group(self):
         success = await api.flow_groups.set_flow_group_labels(

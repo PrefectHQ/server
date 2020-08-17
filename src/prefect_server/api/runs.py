@@ -388,6 +388,7 @@ async def get_runs_in_queue(
         if counter == config.queued_runs_returned_limit:
             continue
 
+        # critical line: if flow_group labels are None that means use the flow labels
         if flow_run.flow.flow_group.labels is not None:
             run_labels = flow_run.flow.flow_group.labels
         else:
