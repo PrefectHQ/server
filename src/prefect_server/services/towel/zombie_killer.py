@@ -1,5 +1,6 @@
 import asyncio
-
+from typing import List
+import datetime
 import pendulum
 
 import prefect
@@ -13,6 +14,34 @@ from prefect_server.database import orm, models
 class ZombieKiller(LoopService):
     loop_seconds_default = 120
 
+    async def get_zombie_cancelling_flow_runs(
+        self, heartbeat_cutoff: datetime.datetime
+    ) -> List[models.FlowRun]:
+        """
+        Helper function for retrieving flow runs that meet zombie criteria
+        while being cancelleda
+        """
+        return await models.FlowRun.where(
+            {
+                # the flow run is CANCELLING
+                "state": {"_eq": "Cancelling"},
+                # ... but the heartbeat is stale
+                "heartbeat": {"_lte": str(heartbeat_cutoff)},
+                # ... and the flow has heartbeats enabled
+                "flow": {
+                    "flow_group": {
+                        "_not": {
+                            "settings": {"_contains": {"heartbeat_enabled": False}}
+                        }
+                    }
+                },
+            }
+        ).get(
+            selection_set={"id", "tenant_id"},
+            limit=1000,
+            order_by={"updated": EnumValue("desc")},
+        )
+
     async def reap_zombie_cancelling_flow_runs(self) -> int:
         """
         Marks flow runs that are in a `Cancelling` state but fail to move to a
@@ -21,38 +50,22 @@ class ZombieKiller(LoopService):
         Returns:
             - int: the number of flow runs that were handled
         """
-        time = pendulum.now("utc").subtract(minutes=2)
+        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=2)
 
         zombies = 0
-        i = 0
-        limit = 1000
+        last_flow_runs = []
 
         while True:
-            flow_runs = await models.FlowRun.where(
-                {
-                    # the flow run is CANCELLING
-                    "state": {"_eq": "Cancelling"},
-                    # ... but the heartbeat is stale
-                    "heartbeat": {"_lte": str(time)},
-                    # ... and the flow has heartbeats enabled
-                    "flow": {
-                        "flow_group": {
-                            "_not": {
-                                "settings": {"_contains": {"heartbeat_enabled": False}}
-                            }
-                        }
-                    },
-                }
-            ).get(
-                selection_set={"id", "tenant_id"},
-                limit=limit,
-                offset=i * limit,
-                order_by={"updated": EnumValue("desc")},
+            flow_runs = await self.get_zombie_cancelling_flow_runs(
+                heartbeat_cutoff=heartbeat_cutoff
             )
-            i += 1
 
-            if not flow_runs:
+            # if no runs came back, or the result was unchanged
+            # from the last iteration, then we can't do any more work
+            if not flow_runs or set([r.id for r in flow_runs]) == set(last_flow_runs):
                 break
+
+            last_flow_runs = [r.id for r in flow_runs]
 
             self.logger.info(f"Zombie killer found {len(flow_runs)} flow runs.")
 
@@ -89,6 +102,49 @@ class ZombieKiller(LoopService):
 
         return zombies
 
+    async def get_zombie_task_runs(
+        self, heartbeat_cutoff: datetime.datetime
+    ) -> List[str]:
+        """
+        Helper function for retrieving task runs that meet zombie criteria
+        """
+        return await models.TaskRun.where(
+            {
+                # the task run is RUNNING
+                "state": {"_eq": "Running"},
+                # ... but the heartbeat is stale
+                "heartbeat": {"_lte": str(heartbeat_cutoff)},
+                # ... and the flow has heartbeats enabled
+                "task": {
+                    "flow": {
+                        "flow_group": {
+                            "_not": {
+                                "settings": {"_contains": {"heartbeat_enabled": False}}
+                            }
+                        }
+                    }
+                },
+            }
+        ).get(
+            selection_set={
+                "id": True,
+                "flow_run_id": True,
+                "tenant_id": True,
+                # Information about the current flow run state
+                "flow_run": {"state"},
+                # get information about retries from task
+                "task": {"max_retries", "retry_delay"},
+                # count the number of retrying states for this task run
+                with_args(
+                    "retry_count: states_aggregate",
+                    {"where": {"state": {"_eq": "Retrying"}}},
+                ): {"aggregate": {"count"}},
+            },
+            limit=1000,
+            order_by={"updated": EnumValue("desc")},
+            apply_schema=False,
+        )
+
     async def reap_zombie_task_runs(self) -> int:
         """
         Zombie tasks are tasks that claim to be Running, but haven't updated their heartbeat.
@@ -98,57 +154,22 @@ class ZombieKiller(LoopService):
         Returns:
             - int: the number of zombie task runs that were handled
         """
-        time = pendulum.now("utc").subtract(minutes=2)
+        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=2)
 
         zombies = 0
-        i = 0
-        limit = 1000
+        last_task_runs = []
 
         while True:
-
-            task_runs = await models.TaskRun.where(
-                {
-                    # the task run is RUNNING
-                    "state": {"_eq": "Running"},
-                    # ... but the heartbeat is stale
-                    "heartbeat": {"_lte": str(time)},
-                    # ... and the flow has heartbeats enabled
-                    "task": {
-                        "flow": {
-                            "flow_group": {
-                                "_not": {
-                                    "settings": {
-                                        "_contains": {"heartbeat_enabled": False}
-                                    }
-                                }
-                            }
-                        }
-                    },
-                }
-            ).get(
-                selection_set={
-                    "id": True,
-                    "flow_run_id": True,
-                    "tenant_id": True,
-                    # Information about the current flow run state
-                    "flow_run": {"state"},
-                    # get information about retries from task
-                    "task": {"max_retries", "retry_delay"},
-                    # count the number of retrying states for this task run
-                    with_args(
-                        "retry_count: states_aggregate",
-                        {"where": {"state": {"_eq": "Retrying"}}},
-                    ): {"aggregate": {"count"}},
-                },
-                limit=limit,
-                offset=i * limit,
-                order_by={"updated": EnumValue("desc")},
-                apply_schema=False,
+            task_runs = await self.get_zombie_task_runs(
+                heartbeat_cutoff=heartbeat_cutoff
             )
-            i += 1
 
-            if not task_runs:
+            # if no runs came back, or the result was unchanged
+            # from the last iteration, then we can't do any more work
+            if not task_runs or set([r.id for r in task_runs]) == set(last_task_runs):
                 break
+
+            last_task_runs = [r.id for r in task_runs]
 
             self.logger.info(f"Zombie killer found {len(task_runs)} task runs.")
 
