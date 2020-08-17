@@ -1,4 +1,4 @@
-<!-- Thank you for contributing to Prefect Server! 🎉-->
+<!-- Thanks for contributing to Prefect Server! 🎉-->
 
 ## Summary
 <!-- A sentence summarizing the PR -->
