@@ -148,6 +148,9 @@ tables:
           name: task_run
           schema: public
   object_relationships:
+  - name: current_state
+    using:
+      foreign_key_constraint_on: state_id
   - name: flow
     using:
       foreign_key_constraint_on: flow_id
@@ -173,6 +176,9 @@ tables:
           name: task_run_state
           schema: public
   object_relationships:
+  - name: current_state
+    using:
+      foreign_key_constraint_on: state_id
   - name: flow_run
     using:
       foreign_key_constraint_on: flow_run_id

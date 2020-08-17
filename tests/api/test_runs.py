@@ -13,7 +13,7 @@ from prefect.engine.state import (
     Submitted,
     Success,
 )
-from prefect.utilities.graphql import EnumValue
+from prefect.utilities.graphql import EnumValue, with_args
 from prefect import api
 from prefect_server import config
 from prefect_server.database import models
@@ -532,10 +532,16 @@ class TestGetOrCreateMappedChildren:
         map_indices = []
         for child in mapped_children:
             task_run = await models.TaskRun.where(id=child).first(
-                {"state_id", "map_index"}
+                {
+                    "map_index": True,
+                    with_args(
+                        "states",
+                        {"order_by": {"version": EnumValue("desc")}, "limit": 1},
+                    ): {"id"},
+                }
             )
             map_indices.append(task_run.map_index)
-            assert task_run.state_id is not None
+            assert task_run.states[0] is not None
         assert map_indices == sorted(map_indices)
 
     async def test_get_or_create_mapped_children_retrieves_children(
@@ -636,10 +642,16 @@ class TestGetOrCreateMappedChildren:
         # confirm each of the mapped children has a state and is ordered properly
         for child in mapped_children:
             task_run = await models.TaskRun.where(id=child).first(
-                {"state_id", "map_index"}
+                {
+                    "map_index": True,
+                    with_args(
+                        "states",
+                        {"order_by": {"version": EnumValue("desc")}, "limit": 1},
+                    ): {"id"},
+                }
             )
             map_indices.append(task_run.map_index)
-            assert task_run.state_id is not None
+            assert task_run.states[0] is not None
         assert map_indices == sorted(map_indices)
 
         # confirm the one child created with a state only has the one state
