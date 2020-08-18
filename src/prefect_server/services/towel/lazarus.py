@@ -1,9 +1,10 @@
 import asyncio
+from typing import List
 
 import pendulum
 
 import prefect
-from prefect.engine.state import Failed, Running, Scheduled, State
+from prefect.engine.state import Failed, Running, Scheduled
 from prefect.utilities.graphql import EnumValue
 from prefect_server import config
 from prefect_server.database import models
@@ -22,7 +23,7 @@ class Lazarus(LoopService):
 
     loop_seconds_default = 600
 
-    async def run_once(self) -> int:
+    async def run_once(self) -> None:
         """
         The Lazarus process revives any flow runs that are submitted or running but have no tasks in
         a running or scheduled state. The heartbeat must be stale in order to avoid race conditions
@@ -31,14 +32,21 @@ class Lazarus(LoopService):
         Returns:
             - int: the number of flow runs that were scheduled
         """
-        time = pendulum.now("utc").subtract(minutes=10)
 
-        flow_runs = await models.FlowRun.where(
+        return await self.reschedule_flow_runs()
+
+    async def get_flow_runs(self) -> List[models.FlowRun]:
+        """
+        Helper function for retrieving flow runs that meet lazarus criteria
+        """
+        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=10)
+
+        return await models.FlowRun.where(
             {
                 # get runs that are currently running or submitted
                 "state": {"_in": ["Running", "Submitted"]},
                 # that were last updated some time ago
-                "heartbeat": {"_lte": str(time)},
+                "heartbeat": {"_lte": str(heartbeat_cutoff)},
                 # but have no task runs in a near-running state
                 "_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}},
                 # and whose do not have heartbeats or lazarus enabled
@@ -61,6 +69,10 @@ class Lazarus(LoopService):
             selection_set={"id", "version", "tenant_id", "times_resurrected"},
             order_by={"heartbeat": EnumValue("asc")},
         )
+
+    async def reschedule_flow_runs(self) -> int:
+        flow_runs = await self.get_flow_runs()
+
         self.logger.info(
             f"Found {len(flow_runs)} flow runs to reschedule with a Lazarus process"
         )

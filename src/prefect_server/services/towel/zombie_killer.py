@@ -1,6 +1,5 @@
 import asyncio
 from typing import List
-import datetime
 import pendulum
 
 import prefect
@@ -14,13 +13,13 @@ from prefect_server.database import orm, models
 class ZombieKiller(LoopService):
     loop_seconds_default = 120
 
-    async def get_zombie_cancelling_flow_runs(
-        self, heartbeat_cutoff: datetime.datetime
-    ) -> List[models.FlowRun]:
+    async def get_zombie_cancelling_flow_runs(self) -> List[models.FlowRun]:
         """
         Helper function for retrieving flow runs that meet zombie criteria
         while being cancelleda
         """
+        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=2)
+
         return await models.FlowRun.where(
             {
                 # the flow run is CANCELLING
@@ -50,15 +49,11 @@ class ZombieKiller(LoopService):
         Returns:
             - int: the number of flow runs that were handled
         """
-        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=2)
-
         zombies = 0
         last_flow_runs = []
 
         while True:
-            flow_runs = await self.get_zombie_cancelling_flow_runs(
-                heartbeat_cutoff=heartbeat_cutoff
-            )
+            flow_runs = await self.get_zombie_cancelling_flow_runs()
 
             # if no runs came back, or the result was unchanged
             # from the last iteration, then we can't do any more work
@@ -102,12 +97,12 @@ class ZombieKiller(LoopService):
 
         return zombies
 
-    async def get_zombie_task_runs(
-        self, heartbeat_cutoff: datetime.datetime
-    ) -> List[str]:
+    async def get_zombie_task_runs(self) -> List[str]:
         """
         Helper function for retrieving task runs that meet zombie criteria
         """
+        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=2)
+
         return await models.TaskRun.where(
             {
                 # the task run is RUNNING
@@ -154,15 +149,11 @@ class ZombieKiller(LoopService):
         Returns:
             - int: the number of zombie task runs that were handled
         """
-        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=2)
-
         zombies = 0
         last_task_runs = []
 
         while True:
-            task_runs = await self.get_zombie_task_runs(
-                heartbeat_cutoff=heartbeat_cutoff
-            )
+            task_runs = await self.get_zombie_task_runs()
 
             # if no runs came back, or the result was unchanged
             # from the last iteration, then we can't do any more work
