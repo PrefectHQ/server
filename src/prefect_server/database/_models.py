@@ -270,8 +270,6 @@ class Log(HasuraModel):
     __hasura_type__ = "log"
 
     id: UUIDString = None
-    created: datetime.datetime = None
-    updated: datetime.datetime = None
     tenant_id: UUIDString = None
     flow_run_id: UUIDString = None
     task_run_id: UUIDString = None
