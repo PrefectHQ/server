@@ -49,12 +49,6 @@ class LoopService:
         This helps ensure that multiple services are staggered uniformly.
         """
 
-        # randomly stagger the start time
-        startup_delay = random.randint(0, int(self.loop_seconds))
-        self.logger.info(
-            f"{self.name} will start after an initial sleep of {startup_delay} seconds..."
-        )
-        await asyncio.sleep(startup_delay)
 
         last_log = pendulum.now("UTC")
 
