@@ -6,7 +6,6 @@
 #   - fix
 #   - deprecation
 #   - breaking (for breaking changes)
-#   - migration (for database migrations)
 #
 # 2. Fill in one (or more) bullet points under the heading, describing the change.
 #    Markdown syntax may be used.
@@ -16,8 +15,5 @@
 #
 # Here's an example of a PR that adds an enhancement
 
-enhancement:
-  - "Example change description - [#1234](https://github.com/PrefectHQ/server/pull/1234)"
-
-contributor:
-  - "[Contributor Name](https://github.com/contributor_github_username)"
+migration:
+  - "Remove unused `state_id` column - [#35](https://github.com/PrefectHQ/server/pull/35)"

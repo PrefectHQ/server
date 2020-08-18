@@ -35,8 +35,7 @@ async def test_full_migration_downgrade_works_with_data_in_db(
         subprocess.check_output(["prefect-server", "database", "upgrade", "-y"])
 
 
-# @pytest.mark.parametrize("n", [1, 2, 3])
-@pytest.mark.parametrize("n", [3])
+@pytest.mark.parametrize("n", [1, 2, 3])
 async def test_recent_migration_upgrades_work_with_data_in_db(
     flow_id, task_run_id, task_run_id_2, task_run_id_3, n,
 ):
@@ -56,5 +55,6 @@ async def test_recent_migration_upgrades_work_with_data_in_db(
             )
 
     finally:
-        # upgrade DB so other tests can run
+        # upgrade DB so other tests can run in case this test errored and left it
+        # in a bad state
         subprocess.check_output(["prefect-server", "database", "upgrade", "-y"])

@@ -259,11 +259,10 @@ async def get_or_create_mapped_task_run_children(
     # get task runs without states
     stateless_runs = await models.TaskRun.where(
         {
-            "_and": [
-                {"flow_run_id": {"_eq": flow_run_id}},
-                {"task_id": {"_eq": task_id}},
-                {"state_id": {"_is_null": True}},
-            ]
+            "flow_run_id": {"_eq": flow_run_id},
+            "task_id": {"_eq": task_id},
+            # this syntax indicates "where there are no states"
+            "_not": {"states": {}},
         }
     ).get({"id", "map_index", "version"})
     # create and insert states for stateless task runs
@@ -361,27 +360,23 @@ async def get_runs_in_queue(
             "_or": [
                 # The flow run is scheduled
                 {
-                    "current_state": {
-                        "state": {"_in": SCHEDULED_STATES},
-                        "start_time": {"_lte": str(before)},
-                    }
+                    "state": {"_in": SCHEDULED_STATES},
+                    "state_start_time": {"_lte": str(before)},
                 },
                 # one of the flow run's task runs is scheduled
                 # and the flow run is running
                 {
-                    "current_state": {"state": {"_eq": "Running"}},
+                    "state": {"_eq": "Running"},
                     "task_runs": {
-                        "current_state": {
-                            "state": {"_in": SCHEDULED_STATES},
-                            "start_time": {"_lte": str(before)},
-                        }
+                        "state": {"_in": SCHEDULED_STATES},
+                        "state_start_time": {"_lte": str(before)},
                     },
                 },
             ],
         }
     ).get(
         {"id": True, "flow": {"environment": True, "flow_group": {"labels": True}}},
-        order_by=[{"current_state": {"start_time": EnumValue("asc")}}],
+        order_by=[{"state_start_time": EnumValue("asc")}],
         # get extra in case labeled runs don't show up at the top
         limit=config.queued_runs_returned_limit * 3,
     )

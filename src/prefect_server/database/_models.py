@@ -135,7 +135,6 @@ class FlowRun(HasuraModel):
     auto_scheduled: bool = None
     name: str = None
     times_resurrected: int = None
-    state_id: str = None
     idempotency_key: str = None
 
     # state fields
@@ -149,7 +148,6 @@ class FlowRun(HasuraModel):
     # relationships
     tenant: Tenant = None
     flow: Flow = None
-    current_state: "FlowRunState" = None
     states: List["FlowRunState"] = None
     task_runs: List["TaskRun"] = None
     logs: List["Log"] = None
@@ -173,7 +171,6 @@ class TaskRun(HasuraModel):
     duration: datetime.timedelta = None
     run_count: int = None
     cache_key: str = None
-    state_id: str = None
 
     # state fields
     state: str = None
@@ -188,7 +185,6 @@ class TaskRun(HasuraModel):
     task: Task = None
     states: List["TaskRunState"] = None
     logs: List["Log"] = None
-    current_state: "TaskRunState" = None
 
 
 @plugins.register_model("FlowRunState")
