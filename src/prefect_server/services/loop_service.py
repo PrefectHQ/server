@@ -19,6 +19,7 @@ class LoopService:
     # if set, and no `loop_seconds` is provided, the service will attempt to load
     # `loop_seconds` from this config key
     loop_seconds_config_key = None
+
     # if no loop_seconds_config_key is provided, this will be the default
     loop_seconds_default = 600
 
@@ -40,19 +41,18 @@ class LoopService:
         self.loop_seconds = float(loop_seconds)
         self.name = type(self).__name__
         self.logger = utilities.logging.get_logger(self.name)
+        self._stop_running = False
 
     async def run(self) -> None:
         """
         Run the service forever.
-
-        The service will start after a delay randomly chosen between 1 and `loop_seconds`.
-        This helps ensure that multiple services are staggered uniformly.
         """
 
+        self._stop_running = False
 
         last_log = pendulum.now("UTC")
 
-        while True:
+        while not self._stop_running:
             start_time = pendulum.now("UTC")
 
             try:
@@ -79,6 +79,12 @@ class LoopService:
                 last_log = pendulum.now("UTC")
 
             await asyncio.sleep((next_run - pendulum.now("UTC")).total_seconds())
+
+    def stop(self) -> None:
+        """
+        Stops a running LoopService
+        """
+        self._stop_running = True
 
     async def run_once(self) -> None:
         """
