@@ -8,7 +8,7 @@ Create Date: 2020-08-18 07:22:34.527630
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB, UUID, ARRAY
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 
 # revision identifiers, used by Alembic.
@@ -25,6 +25,18 @@ def upgrade():
             "id", UUID, primary_key=True, server_default=sa.func.gen_random_uuid()
         ),
         sa.Column(
+            "created",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.Column(
+            "updated",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.Column(
             "tenant_id",
             UUID(),
             sa.ForeignKey("tenant.id", ondelete="CASCADE"),
@@ -34,15 +46,29 @@ def upgrade():
         sa.Column("name", sa.String),
         sa.Column("type", sa.String),
         sa.Column("core_version", sa.String),
-        sa.Column("labels", ARRAY(sa.String)),
+        sa.Column(
+            "labels",
+            JSONB,
+            nullable=False,
+            server_default="[]"
+        ),
         sa.Column(
             "last_query_time",
             sa.TIMESTAMP(timezone=True),
-            nullable=False,
+            nullable=True,
             server_default=sa.func.now(),
         ),
 
         # TODO: Auth in other repo
+    )
+
+    op.execute(
+        f"""
+        CREATE TRIGGER update_timestamp
+        BEFORE UPDATE ON agent
+        FOR EACH ROW
+        EXECUTE PROCEDURE set_updated_timestamp();
+        """
     )
 
 
