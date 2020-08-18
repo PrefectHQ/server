@@ -58,8 +58,6 @@ def upgrade():
             nullable=True,
             server_default=sa.func.now(),
         ),
-
-        # TODO: Auth in other repo
     )
 
     op.execute(
