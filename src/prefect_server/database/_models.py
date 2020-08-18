@@ -331,6 +331,21 @@ class Message(HasuraModel):
     content: dict = None
 
 
+@plugins.register_model("Agent")
+class Agent(HasuraModel):
+    __hasura_type__ = "agent"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    updated: datetime.datetime = None
+    tenant_id: UUIDString = None
+    name: str = None
+    type: str = None
+    core_version: str = None
+    labels: List[str] = None
+    last_query_time: datetime.datetime = None
+
+
 # process forward references for all Pydantic models (meaning string class names)
 for obj in list(locals().values()):
     if isinstance(obj, type) and issubclass(obj, pydantic.BaseModel):
