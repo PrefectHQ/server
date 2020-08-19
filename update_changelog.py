@@ -13,6 +13,7 @@ SECTIONS = [
     ("fix", "Fixes"),
     ("deprecation", "Deprecations"),
     ("breaking", "Breaking Changes"),
+    ("migration", "Database Migrations"),
     ("contributor", "Contributors"),
 ]
 DEDUPLICATE_SECTIONS = ["contributor"]
