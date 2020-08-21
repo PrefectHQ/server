@@ -29,7 +29,10 @@ class TestCreateCloudHook:
             query=self.mutation,
             variables=dict(
                 input=dict(
-                    tenant_id=tenant_id, type="WEBHOOK", config={"url": "test-url"}
+                    tenant_id=tenant_id,
+                    type="WEBHOOK",
+                    config={"url": "test-url"},
+                    states=["FAILED"],
                 )
             ),
         )
@@ -40,7 +43,7 @@ class TestCreateCloudHook:
         assert hook.tenant_id == tenant_id
         assert hook.config == {"url": "test-url"}
         assert hook.version_group_id is None
-        assert hook.states is None
+        assert hook.states == ["FAILED"]
         assert hook.name is None
         assert hook.type == "WEBHOOK"
 
@@ -52,6 +55,7 @@ class TestCreateCloudHook:
                     tenant_id=tenant_id,
                     type="SLACK_WEBHOOK",
                     config={"url": "test-url"},
+                    states=["FAILED"],
                 )
             ),
         )
@@ -66,7 +70,12 @@ class TestCreateCloudHook:
         result = await run_query(
             query=self.mutation,
             variables=dict(
-                input=dict(tenant_id=tenant_id, type="PREFECT_MESSAGE", config={})
+                input=dict(
+                    tenant_id=tenant_id,
+                    type="PREFECT_MESSAGE",
+                    config={},
+                    states=["FAILED"],
+                )
             ),
         )
 
@@ -88,6 +97,7 @@ class TestCreateCloudHook:
                         "messaging_service_sid": "test_messaging_service_sid",
                         "to": ["+15555555555"],
                     },
+                    states=["FAILED"],
                 )
             ),
         )
@@ -115,6 +125,7 @@ class TestCreateCloudHook:
                         "routing_key": "test_routing_key",
                         "severity": "info",
                     },
+                    states=["FAILED"],
                 )
             ),
         )
@@ -217,7 +228,10 @@ class TestDeleteWebhook:
 
     async def test_delete_hook(self, run_query, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
 
         result = await run_query(
@@ -239,7 +253,10 @@ class TestSetCloudHookActive:
 
     async def test_set_hook_active(self, run_query, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
         await api.cloud_hooks.set_cloud_hook_inactive(hook_id)
 
@@ -263,7 +280,10 @@ class TestSetInactive:
     async def test_set_hook_inactive(self, run_query, tenant_id):
 
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
 
         result = await run_query(
@@ -287,7 +307,10 @@ class TestTestWebhook:
     async def test_testing_invalid_hook_returns_error(self, run_query, tenant_id):
 
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test.test")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test.test"),
+            states=["FAILED"],
         )
 
         result = await run_query(
@@ -303,6 +326,7 @@ class TestTestWebhook:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["FAILED"],
         )
 
         result = await run_query(
@@ -327,6 +351,7 @@ class TestTestWebhook:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["SUCCESS"],
         )
 
         result = await run_query(
@@ -353,6 +378,7 @@ class TestTestWebhook:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["FAILED"],
         )
 
         result = await run_query(
@@ -380,6 +406,7 @@ class TestTestWebhook:
             tenant_id=tenant_id,
             type="SLACK_WEBHOOK",
             config={"url": "http://0.0.0.0:8100/hook"},
+            states=["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"],
         )
 
         await run_query(
@@ -408,6 +435,7 @@ class TestTestWebhook:
             tenant_id=tenant_id,
             type="SLACK_WEBHOOK",
             config={"url": "http://0.0.0.0:8100/hook"},
+            states=["SUCCESS"],
         )
 
         await run_query(
