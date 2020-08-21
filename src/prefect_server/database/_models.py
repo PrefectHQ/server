@@ -136,6 +136,7 @@ class FlowRun(HasuraModel):
     name: str = None
     times_resurrected: int = None
     idempotency_key: str = None
+    agent_run_id: UUIDString = None
 
     # state fields
     state: str = None
@@ -339,6 +340,18 @@ class Agent(HasuraModel):
     created: datetime.datetime = None
     updated: datetime.datetime = None
     tenant_id: UUIDString = None
+    config: dict = None
+
+
+@plugins.register_model("AgentRun")
+class AgentRun(HasuraModel):
+    __hasura_type__ = "agent_run"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    updated: datetime.datetime = None
+    tenant_id: UUIDString = None
+    agent_id: UUIDString = None
     name: str = None
     type: str = None
     core_version: str = None
