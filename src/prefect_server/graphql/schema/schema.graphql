@@ -155,7 +155,7 @@ input create_cloud_hook_input {
   type: cloud_hook_type!
   name: String
   version_group_id: String
-  states: [String!]
+  states: [String!]!
   config: JSON
 }
 
