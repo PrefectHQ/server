@@ -18,4 +18,4 @@
 
 breaking:
   - "Cloud hooks require explicit states - [#51](https://github.com/PrefectHQ/server/pull/51)"
-  - "Cloud hooks do not match state children - [#51](https://github.com/PrefectHQ/server/pull/51)"
+  - "Cloud hooks do not match state parents - [#51](https://github.com/PrefectHQ/server/pull/51)"
