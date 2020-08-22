@@ -22,11 +22,6 @@ user_config_path = "~/.prefect_server/config.toml"
 url = 'http://localhost:4200'
 
 
-[plugins]
-# plugin modules are imported on startup. This must be a list
-modules = "[]"
-
-
 [database]
 
 host = "localhost"
@@ -62,17 +57,6 @@ level = "DEBUG"
 format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
 
 
-[sendgrid]
-
-    api_key = ""
-    send_email = false
-
-    [sendgrid.cloud_hook_email]
-
-    from_email = "cloud-hooks@prefect.io"
-    template_id = "d-b3d7d02beb894c0bad09dd13b10fe7e2"
-    base_url="${api.url}"
-
 [services]
 
     host = "0.0.0.0"
@@ -93,11 +77,6 @@ format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
 
     [services.lazarus]
     resurrection_attempt_limit = 3
-
-    [services.sla]
-    # kill scheduled work if it is 24 hours late
-    late_work_seconds = 86400
-
 
 
 # UI Colors corresponding to run states
