@@ -1,0 +1,13 @@
+apiVersion: v2
+name: prefect-server
+description: Prefect server application bundle
+type: application
+version: "0.1.0"
+appVersion: "2020-08-21"
+dependencies: 
+- name: postgresql
+  version: "~9.3.2"
+  repository: https://charts.bitnami.com/bitnami
+  condition: postgresqlEnabled
+  import-values: # (optional)
+  - postgresql
