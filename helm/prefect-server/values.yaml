@@ -1,0 +1,189 @@
+# Default values for prefect-server.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  # namespace to deploy into
+  namespace: prefect-server
+
+  # labels to merge into all configs
+  labels:
+    app.kubernetes.io/name: prefect-server
+    # app.kubernetes.io/version is set to .Chart.AppVersion by default
+
+  # annotations to merge into all configs
+  annotations: null
+
+  # in accordance with https://hub.helm.sh/charts/bitnami/postgresql
+  # use these whether or not postgres is installed as dependency
+  postgresql:
+    postgresqlDatabase: prefect
+    postgresqlUsername: prefect
+    # see documentation; should include at least:
+    # `postgresql-postgres-password` for `postgresqlUsername` user,
+    # and `postgresql-password` for admin user
+    existingSecret: 
+    servicePort: 5432
+
+  hasura:
+    port: 3000
+  graphql:
+    port: 4201
+  towel:
+    port: 4200
+  ui:
+    port: 8080
+    
+
+
+# whether to use postgres dependency (true) or external postgres (false)
+postgresqlEnabled: true
+
+# postgresql configuration
+# see https://hub.helm.sh/charts/bitnami/postgresql for all options
+postgresql:
+  persistence:
+    enabled: true
+    size: 8Gi
+
+hasura:
+  nameOverride:
+  image:
+    repository: hasura/graphql-engine
+    version: v1.3.0
+    pullPolicy: IfNotPresent
+  options:
+    graphqlQueryPlanCacheSize: "100"
+  service:
+    type: ClusterIP
+    # port set to global.hasura.port
+
+  labels: {}
+  annotations: {}
+  replicaCount: 1
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+
+graphql:
+  image:
+    repository: prefecthq/server
+    version: "{{ .Chart.AppVersion }}"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    # port set to global.graphql.port
+
+  labels: {}
+  annotations: null
+  replicaCount: 1
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+
+towel:
+  image:
+    repository: prefecthq/server
+    version: "{{ .Chart.AppVersion }}"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    # port set to global.towel.port
+
+  labels: {}
+  annotations: null
+  replicaCount: 1
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+
+apollo:
+  image: 
+    repository: prefecthq/apollo
+    version: "0.12.1"
+    pullPolicy: IfNotPresent
+  options:
+    telemetryEnabled: true
+  service:
+    type: ClusterIP
+    # port set to global.apollo.port
+  ingress:
+    enabled: true
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      # - host: 
+      #   paths: []
+    tls: []
+
+  labels: {}
+  annotations: null
+  replicaCount: 1
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+
+ui:
+  image: 
+    repository: prefecthq/ui
+    version: "2020-08-20"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    # port set to global.ui.port
+  ingress:
+    enabled: true
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      # - host: 
+      #   paths: []
+    tls: []
+
+  labels: {}
+  annotations: null
+  replicaCount: 1
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  imagePullSecrets: []
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: null
+
+# podSecurityContext: {}
+#   # fsGroup: 2000
+
+# securityContext: {}
+#   # capabilities:
+#   #   drop:
+#   #   - ALL
+#   # readOnlyRootFilesystem: true
+#   # runAsNonRoot: true
+#   # runAsUser: 1000
+
