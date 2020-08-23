@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prefect-server.fullname" . }}-apollo
+  labels: 
+    {{- include "apollo.labels" . | nindent 6 }}
+  {{- if ( include "apollo.annotations" . ) }}
+  annotations:
+    {{- ( include "apollo.annotations" . ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.apollo.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "apollo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "apollo.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.apollo.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
+      {{- with .Values.apollo.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: apollo
+          {{- with .Values.apollo.securityContext -}}          
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.apollo.image.repository }}:{{ .Values.apollo.image.version }}"
+          imagePullPolicy: {{ .Values.apollo.image.pullPolicy }}
+          command: 
+          - npm
+          - run 
+          - serve
+          env:
+          - name: HASURA_API_URL
+            value: {{ include "hasura.api-url" . }}
+          - name: PREFECT_API_URL
+            value: {{ include "graphql.api-url" . }}
+          - name: PREFECT_API_HEALTH_URL
+            value: {{ include "graphql.health-url" . }}
+          - name: PREFECT_SERVER__TELEMETRY__ENABLED
+            value: "true"
+          ports:
+            - name: http
+              containerPort: {{ .Values.global.apollo.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          {{- with .Values.apollo.resources -}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.apollo.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.apollo.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.apollo.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

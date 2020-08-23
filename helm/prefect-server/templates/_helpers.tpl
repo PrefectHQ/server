@@ -32,6 +32,9 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{- define "prefect-server.otherLabels" }}
+{{- if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end -}}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -53,6 +56,9 @@ Selector labels
 {{- define "prefect-server.selectorLabels" -}}
 app.kubernetes.io/part-of: {{ include "prefect-server.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- if .Values.global.selectorLabels }}
+{{ toYaml .Values.global.selectorLabels }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -64,4 +70,20 @@ Create the name of the service account to use
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
+{{- end -}}
+
+{{/* 
+Postgresl db connect url.
+
+Does not include password, which should be set via
+secret in PGPASSWORD on containers.
+*/}}
+{{- define "postgresql-url" -}}
+{{- "foo" -}}
+{{- end -}}
+{{/*
+Namespace: for the moment, just release namespace.
+*/}}
+{{- define "global.namespace" -}}
+{{- .Release.Namespace -}}
 {{- end -}}
