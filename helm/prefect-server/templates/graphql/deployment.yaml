@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "graphql.fullname" . }}
+  labels: 
+    {{- include "graphql.labels" . | nindent 6 }}
+  {{- if ( include "graphql.annotations" . ) }}
+  annotations:
+    {{- ( include "graphql.annotations" . ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.graphql.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "graphql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "graphql.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.graphql.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
+      {{- with .Values.graphql.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: graphql
+          {{- with .Values.graphql.securityContext -}}          
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.graphql.image.repository }}:{{ .Values.graphql.image.version }}"
+          imagePullPolicy: {{ .Values.graphql.image.pullPolicy }}
+          command: 
+          - bash 
+          - "-c" 
+          - "$PREFECT_SERVER_DB_CMD && python src/prefect_server/services/graphql/server.py"
+          env:
+          - name: PREFECT_SERVER_DB_CMD
+            value: "echo 'DATABASE MIGRATIONS SKIPPED'"
+          - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
+            value: {{ include "postgresql-url" . }}
+          - name: PREFECT_SERVER__HASURA__HOST
+            value: {{ include "hasura.fqdn" . }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.global.graphql.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          {{- with .Values.graphql.resources -}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.graphql.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.graphql.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.graphql.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

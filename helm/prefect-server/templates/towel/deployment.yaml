@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prefect-server.fullname" . }}-towel
+  labels: 
+    {{- include "towel.labels" . | nindent 6 }}
+  {{- if ( include "towel.annotations" . ) }}
+  annotations:
+    {{- ( include "towel.annotations" . ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.towel.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "towel.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "towel.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.towel.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
+      {{- with .Values.towel.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: towel
+          {{- with .Values.towel.securityContext -}}          
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.towel.image.repository }}:{{ .Values.towel.image.version }}"
+          imagePullPolicy: {{ .Values.towel.image.pullPolicy }}
+          command:
+          - python 
+          - src/prefect_server/services/towel/__main__.py
+          env:
+          - name: PREFECT_SERVER__HASURA__HOST
+            value: {{ include "hasura.fqdn" . }}
+          {{/*
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          */}}
+          {{- with .Values.towel.resources -}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.towel.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.towel.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.towel.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

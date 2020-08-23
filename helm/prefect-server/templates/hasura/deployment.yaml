@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "prefect-server.fullname" . }}-hasura
+  name: {{ include "hasura.fullname" . }}
   labels: 
     {{- include "hasura.labels" . | nindent 6 }}
   {{- if ( include "hasura.annotations" . ) }}
@@ -35,6 +35,18 @@ spec:
           {{- end }}
           image: "{{ .Values.hasura.image.repository }}:{{ .Values.hasura.image.version }}"
           imagePullPolicy: {{ .Values.hasura.image.pullPolicy }}
+          command:
+          - "graphql-engine" 
+          - "serve"
+          env:
+          - name: HASURA_GRAPHQL_DATABASE_URL
+            value: {{ include "postgresql-url" . }}
+          - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+            value: "true"
+          - name: HASURA_GRAPHQL_SERVER_PORT
+            value: {{ .Values.global.hasura.port | quote }}
+          - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
+            value: {{ .Values.hasura.options.queryPlanCacheSize | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.global.hasura.port }}
