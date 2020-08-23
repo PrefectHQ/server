@@ -17,34 +17,6 @@ from prefect_server.database import models
 from prefect_server.utilities import exceptions, tests, events
 
 
-@pytest.fixture
-async def state_event(flow_run_id):
-
-    flow_run = await models.FlowRun.where(id=flow_run_id).first(
-        {
-            "id": True,
-            "name": True,
-            "version": True,
-            "flow": {"id", "name", "version_group_id"},
-            "tenant": {"id", "slug"},
-            "state": True,
-            "serialized_state": True,
-            "version": True,
-        }
-    )
-
-    return events.FlowRunStateChange(
-        flow_run=flow_run,
-        tenant=flow_run.tenant,
-        state=dict(
-            state=flow_run.state,
-            serialized_state=flow_run.serialized_state,
-            version=flow_run.version,
-        ),
-        flow=flow_run.flow,
-    )
-
-
 # -----------------------------------------------------------
 # Tests
 # -----------------------------------------------------------
@@ -53,7 +25,10 @@ async def state_event(flow_run_id):
 class TestCreateHook:
     async def test_create_hook(self, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
 
         hook = await models.CloudHook.where(id=hook_id).first(
@@ -62,7 +37,7 @@ class TestCreateHook:
         assert hook.type == "WEBHOOK"
         assert hook.config == {"url": "test-url"}
         assert hook.version_group_id is None
-        assert hook.states is None
+        assert hook.states == ["FAILED"]
         assert hook.name is None
 
     async def test_create_named_hook(self, tenant_id):
@@ -70,6 +45,7 @@ class TestCreateHook:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="test-url"),
+            states=["FAILED"],
             name="test-name",
         )
 
@@ -78,7 +54,10 @@ class TestCreateHook:
 
     async def test_hook_cascades_when_tenant_deleted(self, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
         await models.Tenant.where().delete()
         assert not await models.CloudHook.where(id=hook_id).first()
@@ -86,13 +65,19 @@ class TestCreateHook:
     async def test_create_hook_with_invalid_tenant_id_fails(self, tenant_id):
         with pytest.raises(ValueError, match="Foreign key violation"):
             await api.cloud_hooks.create_cloud_hook(
-                tenant_id=str(uuid.uuid4()), type="WEBHOOK", config=dict(url="test-url")
+                tenant_id=str(uuid.uuid4()),
+                type="WEBHOOK",
+                config=dict(url="test-url"),
+                states=["FAILED"],
             )
 
     async def test_create_hook_with_no_tenant_id_fails(self, tenant_id):
         with pytest.raises(ValueError, match="Invalid tenant ID"):
             await api.cloud_hooks.create_cloud_hook(
-                tenant_id=None, type="WEBHOOK", config=dict(url="test-url")
+                tenant_id=None,
+                type="WEBHOOK",
+                config=dict(url="test-url"),
+                states=["FAILED"],
             )
 
     async def test_create_hook_with_version_group_id(self, tenant_id, flow_id):
@@ -101,6 +86,7 @@ class TestCreateHook:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="test-url"),
+            states=["FAILED"],
             version_group_id=flow.version_group_id,
         )
 
@@ -123,7 +109,7 @@ class TestCreateHook:
         with pytest.raises(ValueError, match="Invalid cloud hook type"):
             hook_id = (
                 await api.cloud_hooks.create_cloud_hook(
-                    tenant_id=tenant_id, type="bad-type", config=None
+                    tenant_id=tenant_id, type="bad-type", config=None, states=["FAILED"]
                 ),
             )
 
@@ -132,7 +118,10 @@ class TestCreateHook:
         with pytest.raises(ValueError, match="Invalid config"):
             hook_id = (
                 await api.cloud_hooks.create_cloud_hook(
-                    tenant_id=tenant_id, type="WEBHOOK", config=config
+                    tenant_id=tenant_id,
+                    type="WEBHOOK",
+                    config=config,
+                    states=["FAILED"],
                 ),
             )
 
@@ -167,7 +156,10 @@ class TestCreateHook:
 class TestCreateSlackWebhook:
     async def test_create_hook(self, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="SLACK_WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="SLACK_WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
 
         hook = await models.CloudHook.where(id=hook_id).first({"type", "config"})
@@ -178,7 +170,10 @@ class TestCreateSlackWebhook:
     async def test_create_hook_bad_config(self, tenant_id, config):
         with pytest.raises(ValueError, match="Invalid config"):
             hook_id = await api.cloud_hooks.create_cloud_hook(
-                tenant_id=tenant_id, type="SLACK_WEBHOOK", config=config
+                tenant_id=tenant_id,
+                type="SLACK_WEBHOOK",
+                config=config,
+                states=["FAILED"],
             )
 
 
@@ -193,6 +188,7 @@ class TestCreateTwilioWebhook:
                 messaging_service_sid="test_messaging_service_sid",
                 to=["+1555555555"],
             ),
+            states=["FAILED"],
         )
 
         hook = await models.CloudHook.where(id=cloud_hook_id).first(
@@ -225,14 +221,14 @@ class TestCreateTwilioWebhook:
     async def test_create_hook_with_bad_config(self, tenant_id, config):
         with pytest.raises(ValueError, match="Invalid config"):
             await api.cloud_hooks.create_cloud_hook(
-                tenant_id=tenant_id, type="TWILIO", config=config
+                tenant_id=tenant_id, type="TWILIO", config=config, states=["FAILED"]
             )
 
 
 class TestCreatePrefectNotificationWebhook:
     async def test_create_hook(self, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="PREFECT_MESSAGE", config={}
+            tenant_id=tenant_id, type="PREFECT_MESSAGE", config={}, states=["FAILED"]
         )
 
         hook = await models.CloudHook.where(id=hook_id).first({"type", "config"})
@@ -248,7 +244,7 @@ class TestCreatePagerDutyWebhook:
             "severity": severity,
         }
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="PAGERDUTY", config=config
+            tenant_id=tenant_id, type="PAGERDUTY", config=config, states=["FAILED"]
         )
 
         hook = await models.CloudHook.where(id=hook_id).first({"type", "config"})
@@ -271,14 +267,17 @@ class TestCreatePagerDutyWebhook:
     async def test_create_hook_bad_config(self, tenant_id, config):
         with pytest.raises(ValueError, match="Invalid config"):
             hook_id = await api.cloud_hooks.create_cloud_hook(
-                tenant_id=tenant_id, type="PAGERDUTY", config=config
+                tenant_id=tenant_id, type="PAGERDUTY", config=config, states=["FAILED"]
             )
 
 
 class TestDeleteHook:
     async def test_delete_hook(self, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
         assert await api.cloud_hooks.delete_cloud_hook(hook_id)
 
@@ -295,7 +294,10 @@ class TestDeleteHook:
 class TestHookStatus:
     async def test_set_hook_inactive(self, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
 
         hook = await models.CloudHook.where(id=hook_id).first({"active"})
@@ -310,7 +312,10 @@ class TestHookStatus:
 
     async def test_set_hook_active(self, tenant_id):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["FAILED"],
         )
 
         # set inactive
@@ -339,42 +344,82 @@ class TestHookStatus:
 
 
 class TestMatchHooks:
-    async def test_matching_hooks(self, tenant_id, flow_run_id, state_event):
+    @pytest.fixture(autouse=True)
+    def matched_hooks(self, monkeypatch):
+        HOOKS = []
+        original_get_matching_hooks = api.cloud_hooks._get_matching_hooks
+
+        async def _get_matching_hooks(event: events.Event):
+            nonlocal HOOKS
+            result = await original_get_matching_hooks(event)
+            HOOKS.extend(result)
+            return result
+
+        monkeypatch.setattr(
+            "prefect_server.api.cloud_hooks._get_matching_hooks", _get_matching_hooks
+        )
+        return HOOKS
+
+    async def test_matching_hooks(self, tenant_id, flow_run_id, matched_hooks):
         hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["Running"],
         )
 
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == {hook_id}
+        await api.states.set_flow_run_state(flow_run_id, prefect.engine.state.Running())
+        # sleep to allow hooks to fire
+        await asyncio.sleep(0.1)
 
-    async def test_matching_multiple_hooks(self, tenant_id, flow_run_id, state_event):
+        assert {h.id for h in matched_hooks} == {hook_id}
+
+    async def test_matching_multiple_hooks(self, tenant_id, flow_run_id, matched_hooks):
         hook_id_1 = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["Running"],
         )
         hook_id_2 = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["Running"],
         )
 
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == {hook_id_1, hook_id_2}
+        await api.states.set_flow_run_state(flow_run_id, prefect.engine.state.Running())
+        # sleep to allow hooks to fire
+        await asyncio.sleep(0.1)
+
+        assert {h.id for h in matched_hooks} == {hook_id_1, hook_id_2}
 
     async def test_matching_multiple_hooks_only_active(
-        self, tenant_id, flow_run_id, state_event
+        self, tenant_id, flow_run_id, matched_hooks
     ):
         hook_id_1 = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["Running"],
         )
         # set inactive
         await api.cloud_hooks.set_cloud_hook_inactive(hook_id_1)
         hook_id_2 = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="WEBHOOK", config=dict(url="test-url")
+            tenant_id=tenant_id,
+            type="WEBHOOK",
+            config=dict(url="test-url"),
+            states=["Running"],
         )
 
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == {hook_id_2}
+        await api.states.set_flow_run_state(flow_run_id, prefect.engine.state.Running())
+        # sleep to allow hooks to fire
+        await asyncio.sleep(0.1)
+
+        assert {h.id for h in matched_hooks} == {hook_id_2}
 
     async def test_matching_respects_version_group_id(
-        self, tenant_id, flow_id, flow_run_id, labeled_flow_id, state_event
+        self, tenant_id, flow_id, flow_run_id, labeled_flow_id, matched_hooks
     ):
         flow = await models.Flow.where(id=flow_id).first({"version_group_id"})
         labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
@@ -384,19 +429,26 @@ class TestMatchHooks:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="test-url"),
+            states=["RUNNING"],
             version_group_id=flow.version_group_id,
         )
         hook_id_2 = await api.cloud_hooks.create_cloud_hook(
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="test-url"),
+            states=["RUNNING"],
             version_group_id=labeled_flow.version_group_id,
         )
 
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == {hook_id_1}
+        await api.states.set_flow_run_state(flow_run_id, prefect.engine.state.Running())
+        # sleep to allow hooks to fire
+        await asyncio.sleep(0.1)
 
-    async def test_matching_respects_states(self, tenant_id, flow_run_id, state_event):
+        assert {h.id for h in matched_hooks} == {hook_id_1}
+
+    async def test_matching_respects_states(
+        self, tenant_id, flow_run_id, matched_hooks
+    ):
         hook_id_1 = await api.cloud_hooks.create_cloud_hook(
             tenant_id=tenant_id,
             type="WEBHOOK",
@@ -410,14 +462,17 @@ class TestMatchHooks:
             states=["Scheduled"],
         )
 
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == {hook_id_2}
+        await api.states.set_flow_run_state(flow_run_id, prefect.engine.state.Running())
+        # sleep to allow hooks to fire
+        await asyncio.sleep(0.1)
 
-    async def test_matching_respects_state_parents(
-        self, tenant_id, flow_run_id, state_event
+        assert {h.id for h in matched_hooks} == {hook_id_1}
+
+    async def test_matching_does_not_respect_state_parents(
+        self, tenant_id, flow_run_id, matched_hooks
     ):
         """
-        Test that a state matches both the state (Scheduled) and its parent (Pending)
+        Test that a state matches exactly and not its parent
         """
         hook_id_1 = await api.cloud_hooks.create_cloud_hook(
             tenant_id=tenant_id,
@@ -432,14 +487,19 @@ class TestMatchHooks:
             states=["Scheduled"],
         )
 
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == {hook_id_1, hook_id_2}
+        await api.states.set_flow_run_state(
+            flow_run_id, prefect.engine.state.Scheduled()
+        )
+        # sleep to allow hooks to fire
+        await asyncio.sleep(0.1)
+
+        assert {h.id for h in matched_hooks} == {hook_id_2}
 
     async def test_matching_does_not_respect_state_children(
-        self, tenant_id, flow_run_id, state_event
+        self, tenant_id, flow_run_id, matched_hooks
     ):
         """
-        Test that a state matches both the state (Scheduled) and its parent (Pending)
+        Test that a state matches exactly and not its children
         """
         hook_id_1 = await api.cloud_hooks.create_cloud_hook(
             tenant_id=tenant_id,
@@ -447,41 +507,13 @@ class TestMatchHooks:
             config=dict(url="test-url"),
             states=["TriggerFailed"],
         )
-        # set the run to failed, which shouldn't trigger the hook because it's a
-        # parent of the requested state
         await api.states.set_flow_run_state(
             flow_run_id=flow_run_id, state=prefect.engine.state.Failed()
         )
+        # sleep to allow hooks to fire
+        await asyncio.sleep(0.1)
 
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == set()
-
-    async def test_matching_respects_state_parents_with_failed_state(
-        self, tenant_id, flow_id, flow_run_id, state_event
-    ):
-        """
-        Test that a state matches both the state (Scheduled) and its parent (Pending)
-        """
-
-        await api.states.set_flow_run_state(
-            flow_run_id=flow_run_id, state=prefect.engine.state.TriggerFailed()
-        )
-        hook_id_1 = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id,
-            type="WEBHOOK",
-            config=dict(url="test-url"),
-            states=["Finished"],
-        )
-        hook_id_2 = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id,
-            type="WEBHOOK",
-            config=dict(url="test-url"),
-            states=["Failed"],
-        )
-
-        state_event.state.state = "TriggerFailed"
-        hooks = await api.cloud_hooks._get_matching_hooks(event=state_event)
-        assert {h.id for h in hooks} == {hook_id_1, hook_id_2}
+        assert {h.id for h in matched_hooks} == set()
 
 
 class TestCallHooks:
@@ -493,10 +525,11 @@ class TestCallHooks:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["FAILED"],
         )
 
         await api.states.set_flow_run_state(
-            flow_run_id=flow_run_id, state=prefect.engine.state.TriggerFailed()
+            flow_run_id=flow_run_id, state=prefect.engine.state.Failed()
         )
 
         # sleep to give the async webhook a chance to fire
@@ -508,7 +541,7 @@ class TestCallHooks:
         assert event["type"] == "FlowRunStateChange"
         assert dt < pendulum.parse(event["timestamp"]) < pendulum.now()
         assert event["flow_run"]["id"] == flow_run_id
-        assert event["state"]["state"] == "TriggerFailed"
+        assert event["state"]["state"] == "Failed"
 
         assert event["id"] == call_args[1]["headers"]["X-PREFECT-EVENT-ID"]
 
@@ -520,6 +553,7 @@ class TestCallHooks:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["SUBMITTED", "RUNNING", "SUCCESS", "FINISHED"],
         )
 
         await api.states.set_flow_run_state(
@@ -586,6 +620,7 @@ class TestCallHooks:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["SUCCESS"],
             version_group_id=flow.version_group_id,
         )
 
@@ -612,6 +647,7 @@ class TestCallHooks:
             tenant_id=tenant_id,
             type="SLACK_WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["RUNNING", "SUCCESS"],
         )
 
         await api.states.set_flow_run_state(flow_run_id, state=state)
@@ -631,7 +667,10 @@ class TestCallHooks:
     async def test_call_prefect_message(self, tenant_id, flow_run_id, state):
         tenant = await models.Tenant.where(id=tenant_id).first({"slug"})
         await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="PREFECT_MESSAGE", config={}
+            tenant_id=tenant_id,
+            type="PREFECT_MESSAGE",
+            config={},
+            states=["RUNNING", "SUCCESS"],
         )
 
         await api.states.set_flow_run_state(flow_run_id, state=state)
@@ -664,6 +703,7 @@ class TestTestHooks:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["FAILED"],
         )
 
         await api.cloud_hooks.test_cloud_hook(cloud_hook_id=hook_id)
@@ -693,6 +733,7 @@ class TestTestHooks:
             tenant_id=tenant_id,
             type="WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["FAILED"],
         )
 
         await api.cloud_hooks.test_cloud_hook(cloud_hook_id=hook_id, state=state)
@@ -728,6 +769,7 @@ class TestTestHooks:
             tenant_id=tenant_id,
             type="SLACK_WEBHOOK",
             config=dict(url="http://0.0.0.0:8100/hook"),
+            states=["FAILED"],
         )
 
         await api.cloud_hooks.test_cloud_hook(
@@ -755,7 +797,10 @@ class TestTestHooks:
     )
     async def test_test_prefect_message(self, tenant_id, flow_id, flow_run_id, state):
         cloud_hook_id = await api.cloud_hooks.create_cloud_hook(
-            tenant_id=tenant_id, type="PREFECT_MESSAGE", config={}
+            tenant_id=tenant_id,
+            type="PREFECT_MESSAGE",
+            config={},
+            states=["RUNNING", "SUCCESS"],
         )
 
         await api.cloud_hooks.test_cloud_hook(
@@ -791,6 +836,7 @@ class TestTestHooks:
                 messaging_service_sid="test_messaging_service_sid",
                 to=["+15555555555"],
             ),
+            states=["RUNNING", "SUCCESS"],
         )
 
         tenant = await models.Tenant.where(id=tenant_id).first({"slug"})
@@ -832,6 +878,7 @@ class TestTestHooks:
                 "routing_key": "test_routing_key",
                 "severity": "info",
             },
+            states=["RUNNING", "SUCCESS"],
         )
 
         await api.cloud_hooks.test_cloud_hook(
