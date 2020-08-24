@@ -5,7 +5,7 @@ tables:
     name: agent
 - table:
     schema: public
-    name: agent_run
+    name: agent_instance
 - table:
     schema: public
     name: cloud_hook

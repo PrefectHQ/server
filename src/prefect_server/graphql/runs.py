@@ -101,8 +101,10 @@ async def resolve_get_runs_in_queue(
     labels.sort()
 
     cloud_context = context.get_context()
-    agent_run_id = cloud_context.get("headers", {}).get("x-prefect-agent-id")
-    await api.agents.update_agent_last_queried(agent_run_id=agent_run_id)
+    agent_instance_id = cloud_context.get("headers", {}).get("x-prefect-agent-id")
+    await api.agents.update_agent_instance_last_queried(
+        agent_instance_id=agent_instance_id
+    )
 
     result = await api.runs.get_runs_in_queue(
         tenant_id=input["tenant_id"], before=input.get("before"), labels=labels,

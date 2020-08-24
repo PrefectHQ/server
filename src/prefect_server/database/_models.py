@@ -343,9 +343,9 @@ class Agent(HasuraModel):
     config: dict = None
 
 
-@plugins.register_model("AgentRun")
-class AgentRun(HasuraModel):
-    __hasura_type__ = "agent_run"
+@plugins.register_model("AgentInstance")
+class AgentInstance(HasuraModel):
+    __hasura_type__ = "agent_instance"
 
     id: UUIDString = None
     created: datetime.datetime = None
