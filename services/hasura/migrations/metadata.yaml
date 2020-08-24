@@ -6,6 +6,18 @@ tables:
 - table:
     schema: public
     name: agent_instance
+  object_relationships:
+  - name: agent
+    using:
+      foreign_key_constraint_on: agent_id
+  array_relationships:
+  - name: flow_runs
+    using:
+      foreign_key_constraint_on:
+        column: agent_instance_id
+        table:
+          schema: public
+          name: flow_run
 - table:
     schema: public
     name: cloud_hook

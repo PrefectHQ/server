@@ -136,7 +136,7 @@ class FlowRun(HasuraModel):
     name: str = None
     times_resurrected: int = None
     idempotency_key: str = None
-    agent_run_id: UUIDString = None
+    agent_instance_id: UUIDString = None
 
     # state fields
     state: str = None

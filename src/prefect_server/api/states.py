@@ -22,7 +22,7 @@ state_schema = prefect.serialization.state.StateSchema()
 
 @register_api("states.set_flow_run_state")
 async def set_flow_run_state(
-    flow_run_id: str, state: State, version: int = None
+    flow_run_id: str, state: State, version: int = None, agent_instance_id: str = None
 ) -> models.FlowRunState:
     """
     Updates a flow run state.
@@ -31,6 +31,7 @@ async def set_flow_run_state(
         - flow_run_id (str): the flow run id to update
         - state (State): the new state
         - version (int): a version to enforce version-locking
+        - agent_instance_id (str): the ID of an agent instance setting the state
 
     Returns:
         - models.FlowRunState
@@ -128,6 +129,12 @@ async def set_flow_run_state(
     #   - update the flow run heartbeat
     if state.is_running() or state.is_submitted():
         await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
+
+    # Set agent instance ID on flow run when submitted by agent
+    if state.is_submitted():
+        await api.runs.update_flow_run_agent_instance(
+            flow_run_id=flow_run_id, agent_instance_id=agent_instance_id
+        )
 
     # --------------------------------------------------------
     # call cloud hooks
