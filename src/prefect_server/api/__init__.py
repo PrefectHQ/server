@@ -7,3 +7,4 @@ import prefect_server.api.states
 import prefect_server.api.cloud_hooks
 import prefect_server.api.runs
 import prefect_server.api.messages
+import prefect_server.api.agents

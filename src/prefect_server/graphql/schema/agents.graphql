@@ -1,0 +1,34 @@
+extend type Mutation {
+  # ------------------------------------------------------
+  # agents
+  # ------------------------------------------------------
+
+  "Register a new agent"
+  register_agent(input: register_agent_input!): agent_id_payload
+
+}
+
+# ------------------------------------------------------
+# agent inputs
+# ------------------------------------------------------
+
+input register_agent_input {
+  "The tenant"
+  tenant_id: UUID!
+  "labels"
+  labels: [String]!
+  "agent id"
+  agent_id: UUID
+  "type"
+  type: String
+  "name"
+  name: String
+}
+
+# ------------------------------------------------------
+# agent payloads
+# ------------------------------------------------------
+
+type agent_id_payload {
+  id: UUID
+}
