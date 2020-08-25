@@ -72,6 +72,30 @@ Create the name of the service account to use
 {{- end -}}
 {{- end -}}
 
+{{/*
+Postgresql FQDN.
+
+Uses subchart "postgreql.fullname" evaluated with subchart values.
+
+Thanks to https://stackoverflow.com/a/61816134/435563, and
+https://stackoverflow.com/a/49604964/435563
+
+TODO: following is not working ... for the moment, hard-coded
+  {{- $name := include "postgresql.fullname" (set (deepCopy .) "Values" .Values.postgresql) -}}
+
+*/}}
+{{- define "postgresql.fqdn" -}}
+{{- if .Values.postgresqlEnabled -}}
+  {{- $name := "prefect-server-postgresql" -}}
+  {{- $ns := include "global.namespace" . }}
+  {{- $suffix := .Values.global.fqdnSuffix }}
+  {{- printf "%s.%s.%s" $name $ns $suffix -}}
+{{- else -}}
+  {{- .Values.postgresqlExternalHost -}}
+{{- end -}}
+{{- end -}}
+
+
 {{/* 
 Postgresl db connect url.
 
@@ -79,11 +103,40 @@ Does not include password, which should be set via
 secret in PGPASSWORD on containers.
 */}}
 {{- define "postgresql-url" -}}
-{{- "foo" -}}
+{{- $user := .Values.global.postgresql.postgresqlUsername -}}
+{{- $host := include "postgresql.fqdn" . -}}
+{{- $port := .Values.global.postgresql.servicePort | toString -}}
+{{- $db := .Values.global.postgresql.postgresqlDatabase -}}
+{{- printf "postgresql://%s@%s:%s/%s" $user $host $port $db -}}
 {{- end -}}
 {{/*
 Namespace: for the moment, just release namespace.
 */}}
 {{- define "global.namespace" -}}
 {{- .Release.Namespace -}}
+{{- end -}}
+
+{{/*
+Name for default postgres secret (if not existing).
+*/}}
+{{- define "postgresql.default-secret-name" -}}
+{{ printf "%s%s" .Release.Name "-postgresql" }}
+{{- end -}}
+
+{{/*
+Secret key reference for postgres database password
+*/}}
+{{- define "postgresql.password-secret-ref" -}}
+{{- $secret := dict "name" "" "key" "postgresql-password" -}}
+{{- if .Values.global.postgresql.existingSecret -}}
+  {{- $_ := set $secret "name" .Values.global.postgresql.existingSecret -}}
+{{- else if .Values.postgresql.existingSecret -}}
+  {{- $_ := set $secret "name" .Values.postgresql.existingSecret -}}
+{{- else -}}
+  {{- $secret_name := include "postgresql.default-secret-name" . -}}
+  {{- $_ := set $secret "name" $secret_name -}}
+{{- end -}}
+secretKeyRef:
+  name: {{ get $secret "name" }}
+  key: {{ get $secret "key" }}
 {{- end -}}

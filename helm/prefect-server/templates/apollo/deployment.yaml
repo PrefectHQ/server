@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "prefect-server.fullname" . }}-apollo
+  name: {{ include "apollo.fullname" . }}
   labels: 
     {{- include "apollo.labels" . | nindent 6 }}
   {{- if ( include "apollo.annotations" . ) }}
@@ -35,10 +35,10 @@ spec:
           {{- end }}
           image: "{{ .Values.apollo.image.repository }}:{{ .Values.apollo.image.version }}"
           imagePullPolicy: {{ .Values.apollo.image.pullPolicy }}
-          command: 
-          - npm
-          - run 
-          - serve
+          command:
+          - bash
+          - "-c"
+          - "/apollo/post-start.sh && npm run serve"
           env:
           - name: HASURA_API_URL
             value: {{ include "hasura.api-url" . }}
@@ -46,19 +46,23 @@ spec:
             value: {{ include "graphql.api-url" . }}
           - name: PREFECT_API_HEALTH_URL
             value: {{ include "graphql.health-url" . }}
-          - name: PREFECT_SERVER__TELEMETRY__ENABLED
-            value: "true"
+          - name: GRAPHQL_SERVICE_HOST
+            value: "http://{{ include "graphql.fqdn" . }}"
+            # value: {{ printf "%s%s" "http://" (include "graphql.fqdn" . ) }}
+          - name: GRAPHQL_SERVICE_PORT
+            value: {{ .Values.global.graphql.port | quote }}
+          {{- (include "prefect.env-config" .) | nindent 10 }}
           ports:
             - name: http
               containerPort: {{ .Values.global.apollo.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /.well-known/apollo/server-health
               port: http
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /.well-known/apollo/server-health
               port: http
           {{- with .Values.apollo.resources -}}
           resources:

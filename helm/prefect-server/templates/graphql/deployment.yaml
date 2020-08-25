@@ -27,25 +27,54 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: db-upgrade
+          {{- with .Values.graphql.securityContext -}}          
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.graphql.image.repository }}:{{ tpl .Values.graphql.image.version . }}"
+          imagePullPolicy: {{ .Values.graphql.image.pullPolicy }}
+          command:
+          - "bash"
+          - "-c"
+          - "/usr/local/bin/prefect-server database upgrade --yes"
+          env:
+          - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
+            value: {{ include "postgresql-url" . }}
+          - name: PGPASSWORD
+            valueFrom:
+            {{- include "postgresql.password-secret-ref" . | nindent 14 }}
+          - name: PREFECT_SERVER__HASURA__HOST
+            value: {{ include "hasura.fqdn" . }}
+          {{- (include "prefect.env-config" .) | nindent 10 }}
+          {{- with .Values.graphql.init.resources -}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       containers:
         - name: graphql
           {{- with .Values.graphql.securityContext -}}          
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.graphql.image.repository }}:{{ .Values.graphql.image.version }}"
+          image: "{{ .Values.graphql.image.repository }}:{{ tpl .Values.graphql.image.version . }}"
           imagePullPolicy: {{ .Values.graphql.image.pullPolicy }}
           command: 
           - bash 
           - "-c" 
-          - "$PREFECT_SERVER_DB_CMD && python src/prefect_server/services/graphql/server.py"
+          - "python src/prefect_server/services/graphql/server.py"
           env:
           - name: PREFECT_SERVER_DB_CMD
             value: "echo 'DATABASE MIGRATIONS SKIPPED'"
           - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
             value: {{ include "postgresql-url" . }}
+          - name: PGPASSWORD
+            valueFrom:
+            {{- include "postgresql.password-secret-ref" . | nindent 14 }}            
           - name: PREFECT_SERVER__HASURA__HOST
             value: {{ include "hasura.fqdn" . }}
+          {{- (include "prefect.env-config" .) | nindent 10 }}
           ports:
             - name: http
               containerPort: {{ .Values.global.graphql.port }}

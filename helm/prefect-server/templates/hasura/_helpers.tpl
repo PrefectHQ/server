@@ -10,13 +10,21 @@
 {{- $name := include "hasura.fullname" . -}}
 {{- $ns := include "global.namespace" . }}
 {{- $suffix := .Values.global.fqdnSuffix }}
-{{- printf "%s%s%s" $name $ns $suffix -}}
+{{- printf "%s.%s.%s" $name $ns $suffix -}}
 {{- end -}}
 
 {{- define "hasura.api-url" -}}
 {{- $host := include "hasura.fqdn" . -}}
-{{- $port := .Values.global.hasura.port -}}
+{{- $port := .Values.global.hasura.port | toString -}}
 {{ printf "http://%s:%s/v1alpha/graphql" $host $port }}
+{{- end -}}
+
+{{/*
+For the moment container port is baked into config loaded
+in Dockerfile... but if that is changed, this can be changed.
+*/}}
+{{- define "hasura.container-port" -}}
+{{- 3000 -}}
 {{- end -}}
 
 {{- define "hasura.labels" -}}

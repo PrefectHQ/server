@@ -16,3 +16,20 @@ of instance.
 ## Options:
 
 See comments in `values.yaml`.
+
+### Database passwords
+
+A password for both db admin user and application user should be supplied. The former is needed to install pgcrypto.
+
+Passwords can either be supplied via:
+
+* `postgresql.global.existingSecret` or `postgresql.global.existingSecret` to specify existing secret.
+
+* Specify both `postgresql.postgresqlPostgresPassword` for
+admin, and `postgresql.postgresqlPassword` for application password.
+
+### Ingresses
+
+If ingresses for apollo and ui are enabled, at least one `hosts` entry
+for each must be provided.
+

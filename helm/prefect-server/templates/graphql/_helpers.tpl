@@ -10,18 +10,18 @@
 {{- $name := include "graphql.fullname" . -}}
 {{- $ns := include "global.namespace" . }}
 {{- $suffix := .Values.global.fqdnSuffix }}
-{{- printf "%s%s%s" $name $ns $suffix -}}
+{{- printf "%s.%s.%s" $name $ns $suffix -}}
 {{- end -}}
 
 {{- define "graphql.api-url" -}}
 {{- $host := include "graphql.fqdn" . -}}
-{{- $port := .Values.global.graphql.port -}}
+{{- $port := .Values.global.graphql.port | toString -}}
 {{ printf "http://%s:%s/graphql/" $host $port }}
 {{- end -}}
 
 {{- define "graphql.health-url" -}}
 {{- $host := include "graphql.fqdn" . -}}
-{{- $port := .Values.global.graphql.port -}}
+{{- $port := .Values.global.graphql.port | toString -}}
 {{ printf "http://%s:%s/health" $host $port }}
 {{- end -}}
 
