@@ -7,7 +7,7 @@ global:
   # namespace: prefect-server
 
   # suffix for service FQDN
-  fqdnSuffix: ".svc.cluster.local"
+  fqdnSuffix: "svc.cluster.local"
 
   # labels to merge into all configs
   labels: {}
@@ -25,11 +25,21 @@ global:
   postgresql:
     postgresqlDatabase: prefect
     postgresqlUsername: prefect
-    # see documentation; should include at least:
-    # `postgresql-postgres-password` for `postgresqlUsername` user,
-    # and `postgresql-password` for admin user
-    existingSecret: 
+
+    # see bitname/postgresql documentation; include at least keys:
+    # * `postgresql-password` for `postgresqlUsername` user,
+    # * `postgresql-postgres-password` for admin user.
+    #
+    # If not set, defaults to "{{ .Release.Name }}-postgresql", which
+    # is secret that bitnami/postgresql will create. For external 
+    # postgres, should either specify `existingSecret` or create
+    # default.
+    existingSecret: null
     servicePort: 5432
+    # if postgres is not enabled, set external host.
+    # NOTE: `servicePort` still defines port; and `existingSecret`
+    # should still contain passwords.
+    postgresqlExternalHost: ""
 
   hasura:
     port: 3000
@@ -40,22 +50,48 @@ global:
     port: 4200
   ui:
     port: 8080
-    
 
+  prefect:
+    # Fed through to config.toml in 
+    # graphql and towel via environment variables. See 
+    # src/prefect_server/config.toml for (a bit of) explanation.
+    #
+    # Any values can be put here, will result in environment
+    # variable definitions starting with "PREFECT_SERVER__"
+    config:
+      env: "local"
+      debug: "false"
+      queued_runs_returned_limit: "25"
+      hasura:
+        execute_retry_seconds: "10"
+      logging:
+        level: "DEBUG"
+        format: "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
+      services:
+        scheduler:
+          scheduler_loop_seconds: "300"
+        lazarus:
+          resurrection_attempt_limit: "3"
+      telemetry:
+        enabled: "true"
 
 # whether to use postgres dependency (true) or external postgres (false)
-postgresqlEnabled: false
-# if postgres is not enabled, set external host. Database, user and 
-# password as in global.postgresql
-postgresqlExternalHost: ""
+postgresqlEnabled: true
 
 # postgresql configuration
 # see https://hub.helm.sh/charts/bitnami/postgresql for all options
 postgresql:
-  enabled: false
   persistence:
     enabled: true
     size: 8Gi
+  initdbUser: postgres
+  # initdbPassword: "$POSTGRESQL_POSTGRES_PASSWORD"
+  initdbScripts:
+    create_pgcrypto.sql: |
+      -- create pgcrypto extension, required for UUID
+      CREATE EXTENSION IF NOT EXISTS pgcrypto;
+      CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+      SET TIME ZONE 'UTC';
 
 hasura:
   nameOverride:
@@ -99,6 +135,8 @@ graphql:
   tolerations: []
   affinity: {}
   imagePullSecrets: []
+  init:
+    resources: {}
 
 towel:
   image:
@@ -123,7 +161,7 @@ towel:
 apollo:
   image: 
     repository: prefecthq/apollo
-    version: "0.12.1"
+    version: "2020-08-21"
     pullPolicy: IfNotPresent
   options:
     telemetryEnabled: true

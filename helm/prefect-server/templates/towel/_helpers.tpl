@@ -2,6 +2,10 @@
 {{- default "towel" .Values.towel.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "towel.fullname" -}}
+{{- printf "%s%s" (include "prefect-server.fullname" . ) "-towel" -}}
+{{- end -}}
+
 {{- define "towel.labels" -}}
 {{ include "towel.selectorLabels" . }}
 {{- include "prefect-server.otherLabels" . }}

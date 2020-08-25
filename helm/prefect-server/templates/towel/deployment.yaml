@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "prefect-server.fullname" . }}-towel
+  name: {{ include "towel.fullname" . }}
   labels: 
     {{- include "towel.labels" . | nindent 6 }}
   {{- if ( include "towel.annotations" . ) }}
@@ -33,7 +33,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.towel.image.repository }}:{{ .Values.towel.image.version }}"
+          image: "{{ .Values.towel.image.repository }}:{{ tpl .Values.towel.image.version . }}"
           imagePullPolicy: {{ .Values.towel.image.pullPolicy }}
           command:
           - python 
@@ -41,6 +41,9 @@ spec:
           env:
           - name: PREFECT_SERVER__HASURA__HOST
             value: {{ include "hasura.fqdn" . }}
+          - name: PGPASSWORD
+            valueFrom:
+            {{- include "postgresql.password-secret-ref" . | nindent 14 }}            
           {{/*
           livenessProbe:
             httpGet:

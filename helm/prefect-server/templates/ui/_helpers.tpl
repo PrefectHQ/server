@@ -2,6 +2,10 @@
 {{- default "ui" .Values.ui.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "ui.fullname" -}}
+{{- printf "%s%s" (include "prefect-server.fullname" . ) "-ui" -}}
+{{- end -}}
+
 {{- define "ui.labels" -}}
 {{ include "ui.selectorLabels" . }}
 {{- include "prefect-server.otherLabels" . }}

@@ -123,7 +123,7 @@ node_modules/
 /prof
 
 # devspace (during helm chart development)
-./devspace.yaml
+devspace.yaml
 
 # Ignore DevSpace cache and log folder
 .devspace/

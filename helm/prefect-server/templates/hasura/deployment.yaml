@@ -41,16 +41,19 @@ spec:
           env:
           - name: HASURA_GRAPHQL_DATABASE_URL
             value: {{ include "postgresql-url" . }}
+          - name: PGPASSWORD
+            valueFrom:
+            {{- include "postgresql.password-secret-ref" . | nindent 14 }}            
           - name: HASURA_GRAPHQL_ENABLE_CONSOLE
             value: "true"
           - name: HASURA_GRAPHQL_SERVER_PORT
-            value: {{ .Values.global.hasura.port | quote }}
+            value: {{ include "hasura.container-port" . | quote }}
           - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
             value: {{ .Values.hasura.options.queryPlanCacheSize | quote }}
           ports:
-            - name: http
-              containerPort: {{ .Values.global.hasura.port }}
-              protocol: TCP
+          - name: http
+            containerPort: {{ include "hasura.container-port" . }}
+            protocol: TCP
           livenessProbe:
             httpGet:
               path: /healthz

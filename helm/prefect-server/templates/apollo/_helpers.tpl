@@ -2,6 +2,10 @@
 {{- default "apollo" .Values.apollo.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "apollo.fullname" -}}
+{{- printf "%s%s" (include "prefect-server.fullname" . ) "-apollo" -}}
+{{- end -}}
+
 {{- define "apollo.labels" -}}
 {{ include "apollo.selectorLabels" . }}
 {{- include "prefect-server.otherLabels" . }}

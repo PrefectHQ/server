@@ -1,6 +1,4 @@
 {{- if .Values.apollo.ingress.enabled -}}
-{{- $gfn := (include "prefect-server.fullname" . ) -}}
-{{- $fullName := (printf "%s%s" $gfn "-apollo") -}}
 {{- $svcPort := .Values.global.apollo.port -}}
 {{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1beta1
@@ -9,7 +7,7 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "apollo.fullname" . }}
   labels:
     {{- include "apollo.labels" . | nindent 4 }}
   {{- with .Values.apollo.ingress.annotations }}
@@ -36,7 +34,7 @@ spec:
         {{- range .paths }}
           - path: {{ . }}
             backend:
-              serviceName: {{ $fullName }}
+              serviceName: {{ include "apollo.fullname" . }}
               servicePort: {{ $svcPort }}
         {{- end }}
     {{- end }}
