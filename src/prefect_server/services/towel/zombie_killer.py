@@ -51,7 +51,7 @@ class ZombieKiller(LoopService):
         )
         flow_runs = await models.FlowRun.where(where_clause).get(
             selection_set={"id", "tenant_id"},
-            limit=1000,
+            limit=5000,
             order_by={"updated": EnumValue("desc")},
         )
 
@@ -145,7 +145,7 @@ class ZombieKiller(LoopService):
                     {"where": {"state": {"_eq": "Retrying"}}},
                 ): {"aggregate": {"count"}},
             },
-            limit=1000,
+            limit=5000,
             order_by={"updated": EnumValue("desc")},
             apply_schema=False,
         )
