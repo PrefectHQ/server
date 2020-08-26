@@ -1,5 +1,6 @@
+import datetime
 import asyncio
-from typing import List
+from typing import List, Dict, Any
 
 import pendulum
 
@@ -35,52 +36,50 @@ class Lazarus(LoopService):
 
         return await self.reschedule_flow_runs()
 
-    async def get_flow_runs(self) -> List[models.FlowRun]:
+    async def get_flow_runs_where_clause(
+        self, heartbeat_cutoff: datetime.datetime
+    ) -> Dict[str, Any]:
         """
-        Helper function for retrieving flow runs that meet lazarus criteria
+        Returns a `where` clause for loading flow runs from the DB
         """
-        heartbeat_cutoff = pendulum.now("utc").subtract(minutes=10)
-
-        return await models.FlowRun.where(
-            {
-                # get runs that are currently running or submitted
-                "state": {"_in": ["Running", "Submitted"]},
-                # that were last updated some time ago
-                "heartbeat": {"_lte": str(heartbeat_cutoff)},
-                # but have no task runs in a near-running state
-                "_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}},
-                # and whose do not have heartbeats or lazarus enabled
-                "_not": {
-                    "flow": {
-                        "flow_group": {
-                            "_or": [
-                                {
-                                    "settings": {
-                                        "_contains": {"heartbeat_enabled": False}
-                                    }
-                                },
-                                {"settings": {"_contains": {"lazarus_enabled": False}}},
-                            ]
-                        }
+        return {
+            # get runs that are currently running or submitted
+            "state": {"_in": ["Running", "Submitted"]},
+            # that were last updated some time ago
+            "heartbeat": {"_lte": str(heartbeat_cutoff)},
+            # but have no task runs in a near-running state
+            "_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}},
+            # and whose do not have heartbeats or lazarus enabled
+            "_not": {
+                "flow": {
+                    "flow_group": {
+                        "_or": [
+                            {"settings": {"_contains": {"heartbeat_enabled": False}}},
+                            {"settings": {"_contains": {"lazarus_enabled": False}}},
+                        ]
                     }
-                },
-            }
-        ).get(
-            selection_set={"id", "version", "tenant_id", "times_resurrected"},
-            order_by={"heartbeat": EnumValue("asc")},
-        )
+                }
+            },
+        }
 
-    async def reschedule_flow_runs(self) -> int:
-        flow_runs = await self.get_flow_runs()
-
-        self.logger.info(
-            f"Found {len(flow_runs)} flow runs to reschedule with a Lazarus process"
-        )
-
-        if not flow_runs:
-            return 0
-
+    async def reschedule_flow_runs(
+        self, heartbeat_cutoff: datetime.datetime = None
+    ) -> int:
+        heartbeat_cutoff = heartbeat_cutoff or pendulum.now("utc").subtract(minutes=10)
         run_count = 0
+
+        where_clause = await self.get_flow_runs_where_clause(
+            heartbeat_cutoff=heartbeat_cutoff
+        )
+        flow_runs = await models.FlowRun.where(where_clause).get(
+            selection_set={"id", "version", "tenant_id", "times_resurrected"},
+            order_by={"updated": EnumValue("asc")},
+        )
+
+        if flow_runs:
+            self.logger.info(
+                f"Found {len(flow_runs)} flow runs to reschedule with a Lazarus process"
+            )
 
         for fr in flow_runs:
             # check how many times it's been resurrected, otherwise it will repeat ad infinitum
@@ -149,7 +148,8 @@ class Lazarus(LoopService):
                     ]
                 )
 
-        self.logger.info(f"Lazarus process rescheduled {run_count} flow runs.")
+        if run_count:
+            self.logger.info(f"Lazarus process rescheduled {run_count} flow runs.")
         return run_count
 
 
