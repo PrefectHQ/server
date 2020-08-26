@@ -74,7 +74,7 @@ class Lazarus(LoopService):
         flow_runs = await models.FlowRun.where(where_clause).get(
             selection_set={"id", "version", "tenant_id", "times_resurrected"},
             order_by={"updated": EnumValue("asc")},
-            limit=5000
+            limit=5000,
         )
 
         if flow_runs:
