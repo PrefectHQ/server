@@ -80,7 +80,7 @@ jobs:
       - checkout
       - run:
           name: Install Black
-          command: pip install black
+          command: pip install "black==19.10b0"
       - run:
           name: Run Black
           command: black --check .
