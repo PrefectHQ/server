@@ -1,5 +1,14 @@
 # Changelog
 
+## August 26, 2020 <Badge text="beta" type="success" />
+
+Released on August 26, 2020.
+
+### Enhancements
+
+- Refactor Lazarus and Zombie Killer for modularity - [#46](https://github.com/PrefectHQ/server/pull/46)
+- Add API mode to queryable reference info - [#59](https://github.com/PrefectHQ/server/pull/59)
+
 ## August 21, 2020 <Badge text="beta" type="success" />
 
 Released on August 21, 2020.
