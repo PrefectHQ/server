@@ -324,7 +324,8 @@ class TestDeleteFlow:
 
     async def test_delete_flow(self, run_query, flow_id):
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_id=flow_id)),
+            query=self.mutation,
+            variables=dict(input=dict(flow_id=flow_id)),
         )
         assert not await models.Flow.exists(flow_id)
 
@@ -342,7 +343,8 @@ class TestArchiveFlow:
         flow = await models.Flow.where(id=flow_id).first({"archived"})
         assert not flow.archived
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_id=flow_id)),
+            query=self.mutation,
+            variables=dict(input=dict(flow_id=flow_id)),
         )
         # confirm the payload is as expected
         assert result.data.archive_flow.success is True
@@ -352,14 +354,16 @@ class TestArchiveFlow:
 
     async def test_archive_nonexistent_flow(self, run_query):
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_id=str(uuid.uuid4()))),
+            query=self.mutation,
+            variables=dict(input=dict(flow_id=str(uuid.uuid4()))),
         )
         # confirm the payload is as expected
         assert result.data.archive_flow.success is False
 
     async def test_archive_flow_with_none_flow_id(self, run_query):
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_id=None)),
+            query=self.mutation,
+            variables=dict(input=dict(flow_id=None)),
         )
         assert (
             "Expected non-nullable type UUID! not to be None."
@@ -477,7 +481,8 @@ class TestUpdateFlowLazarus:
 
     async def test_enable_flow_lazarus_where_flow_id_none(self, run_query):
         result = await run_query(
-            query=self.enable_lazarus_mutation, variables=dict(input={"flow_id": None}),
+            query=self.enable_lazarus_mutation,
+            variables=dict(input={"flow_id": None}),
         )
         # confirm there was an error, and that it was related to flow_id=None
         assert "got invalid value None at 'input.flow_id'" in result.errors[0].message
@@ -507,7 +512,8 @@ class TestUpdateFlowVersionLocking:
         assert flow_group.settings == {}
 
         result = await run_query(
-            query=self.enable_lock_mutation, variables=dict(input={"flow_id": flow_id}),
+            query=self.enable_lock_mutation,
+            variables=dict(input={"flow_id": flow_id}),
         )
 
         assert result.data.enable_flow_version_lock.success is True
@@ -532,14 +538,16 @@ class TestUpdateFlowVersionLocking:
 
     async def test_enable_flow_version_lock_where_flow_id_none(self, run_query):
         result = await run_query(
-            query=self.enable_lock_mutation, variables=dict(input={"flow_id": None}),
+            query=self.enable_lock_mutation,
+            variables=dict(input={"flow_id": None}),
         )
         # confirm there was an error, and that it was related to flow_id=None
         assert "got invalid value None at 'input.flow_id'" in result.errors[0].message
 
     async def test_disable_flow_version_lock_where_flow_id_none(self, run_query):
         result = await run_query(
-            query=self.disable_lock_mutation, variables=dict(input={"flow_id": None}),
+            query=self.disable_lock_mutation,
+            variables=dict(input={"flow_id": None}),
         )
         # confirm there was an error, and that it was related to flow_id=None
         assert "got invalid value None at 'input.flow_id'" in result.errors[0].message
@@ -558,7 +566,8 @@ class TestSetScheduleActive:
         await api.flows.set_schedule_inactive(flow_id=flow_id)
 
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_id=flow_id)),
+            query=self.mutation,
+            variables=dict(input=dict(flow_id=flow_id)),
         )
 
         assert result.data.set_schedule_active.success is True
@@ -580,7 +589,8 @@ class TestSetScheduleInactive:
 
         # set inactive
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_id=flow_id)),
+            query=self.mutation,
+            variables=dict(input=dict(flow_id=flow_id)),
         )
         assert result.data.set_schedule_inactive.success is True
         flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})

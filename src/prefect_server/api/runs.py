@@ -283,7 +283,9 @@ async def get_or_create_mapped_task_run_children(
 
 
 @register_api("runs.update_flow_run_heartbeat")
-async def update_flow_run_heartbeat(flow_run_id: str,) -> None:
+async def update_flow_run_heartbeat(
+    flow_run_id: str,
+) -> None:
     """
     Updates the heartbeat of a flow run.
 
@@ -302,7 +304,9 @@ async def update_flow_run_heartbeat(flow_run_id: str,) -> None:
 
 
 @register_api("runs.update_task_run_heartbeat")
-async def update_task_run_heartbeat(task_run_id: str,) -> None:
+async def update_task_run_heartbeat(
+    task_run_id: str,
+) -> None:
     """
     Updates the heartbeat of a task run. Also sets the corresponding flow run heartbeat.
 

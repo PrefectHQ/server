@@ -523,7 +523,10 @@ class ModelQuery:
         if result:
             return result[0]
 
-    async def count(self, distinct_on: List[str] = None,) -> int:
+    async def count(
+        self,
+        distinct_on: List[str] = None,
+    ) -> int:
         """
         Counts the number of objects corresponding to the query's where clause.
 
@@ -545,7 +548,8 @@ class ModelQuery:
         query = {
             "query": {
                 with_args(
-                    f"count_query: {self.model.__hasura_type__}_aggregate", arguments,
+                    f"count_query: {self.model.__hasura_type__}_aggregate",
+                    arguments,
                 ): {"aggregate": "count"}
             }
         }
