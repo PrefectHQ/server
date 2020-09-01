@@ -16,7 +16,7 @@
 {{- define "hasura.api-url" -}}
 {{- $host := include "hasura.fqdn" . -}}
 {{- $port := .Values.global.hasura.port | toString -}}
-{{ printf "http://%s:%s/v1alpha/graphql" $host $port }}
+{{ printf "http://%s:%s/v1alpha1/graphql" $host $port }}
 {{- end -}}
 
 {{/*
