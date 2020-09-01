@@ -63,7 +63,8 @@ class TestDeleteProject:
 
     async def test_delete_project(self, run_query, project_id):
         result = await run_query(
-            query=self.mutation, variables=dict(input=(dict(project_id=project_id))),
+            query=self.mutation,
+            variables=dict(input=(dict(project_id=project_id))),
         )
         assert result.data.delete_project.success
         assert not await models.Project.exists(project_id)
@@ -95,7 +96,8 @@ class TestSetProjectName:
         assert project.name == "foo-bar"
 
     async def test_set_project_name_with_bad_project_id(
-        self, run_query,
+        self,
+        run_query,
     ):
         result = await run_query(
             query=self.mutation,
@@ -136,7 +138,8 @@ class TestSetProjectDescription:
         assert project.description == "foo-bar"
 
     async def test_set_project_description_with_bad_project_id(
-        self, run_query,
+        self,
+        run_query,
     ):
         result = await run_query(
             query=self.mutation,
