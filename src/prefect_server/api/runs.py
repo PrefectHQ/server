@@ -148,7 +148,7 @@ async def _create_flow_run(
     run = models.FlowRun(
         tenant_id=flow.tenant_id,
         flow_id=flow_id or flow.id,
-        parameters=parameters,
+        parameters=run_parameters,
         context=context or {},
         scheduled_start_time=scheduled_start_time,
         name=flow_run_name or names.generate_slug(2),
