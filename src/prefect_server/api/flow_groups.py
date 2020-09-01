@@ -7,8 +7,8 @@ from prefect_server.database import models
 from prefect.utilities.plugins import register_api
 
 
-@register_api("flow_groups._update_setting")
-async def _update_setting(flow_group_id: str, key: str, value: any) -> None:
+@register_api("flow_groups.update_setting")
+async def update_setting(flow_group_id: str, key: str, value: any) -> None:
     """
     Updates a single setting for a flow group
 
@@ -175,10 +175,10 @@ async def enable_heartbeat_for_flow(flow_group_id: str) -> bool:
     Raises:
         - ValueError: if flow ID is not provided or invalid
     """
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="disable_heartbeat", value=False
     )
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="heartbeat_enabled", value=True
     )
 
@@ -199,10 +199,10 @@ async def disable_heartbeat_for_flow(flow_group_id: str) -> bool:
     Raises:
         - ValueError: if flow ID is not provided or invalid
     """
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="disable_heartbeat", value=True
     )
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="heartbeat_enabled", value=False
     )
     return True
@@ -222,7 +222,7 @@ async def enable_lazarus_for_flow(flow_group_id: str) -> bool:
     Raises:
         - ValueError: if flow ID is not provided or invalid
     """
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="lazarus_enabled", value=True
     )
     return True
@@ -242,7 +242,7 @@ async def disable_lazarus_for_flow(flow_group_id: str) -> bool:
     Raises:
         - ValueError: if flow ID is not provided or invalid
     """
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="lazarus_enabled", value=False
     )
     return True
@@ -262,7 +262,7 @@ async def enable_version_locking_for_flow(flow_group_id: str) -> bool:
     Raises:
         - ValueError: if flow ID is not provided or invalid
     """
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="version_locking_enabled", value=True
     )
     return True
@@ -282,7 +282,7 @@ async def disable_version_locking_for_flow(flow_group_id: str) -> bool:
     Raises:
         - ValueError: if flow ID is not provided or invalid
     """
-    await api.flow_groups._update_setting(
+    await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="version_locking_enabled", value=False
     )
     return True
