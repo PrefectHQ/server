@@ -1,2 +1,0 @@
-fix:
-  - "Fix flow run creation not using default parameters from flow group - [#64](https://github.com/PrefectHQ/server/issues/64)"
