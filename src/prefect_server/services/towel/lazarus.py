@@ -47,19 +47,31 @@ class Lazarus(LoopService):
             "state": {"_in": ["Running", "Submitted"]},
             # that were last updated some time ago
             "heartbeat": {"_lte": str(heartbeat_cutoff)},
-            # but have no task runs in a near-running state
-            "_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}},
-            # and whose do not have heartbeats or lazarus enabled
-            "_not": {
-                "flow": {
-                    "flow_group": {
-                        "_or": [
-                            {"settings": {"_contains": {"heartbeat_enabled": False}}},
-                            {"settings": {"_contains": {"lazarus_enabled": False}}},
-                        ]
+            "_and": [
+                # but have no task runs in a near-running state
+                {"_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}}},
+                # and whose do not have heartbeats or lazarus enabled
+                {
+                    "_not": {
+                        "flow": {
+                            "flow_group": {
+                                "_or": [
+                                    {
+                                        "settings": {
+                                            "_contains": {"heartbeat_enabled": False}
+                                        }
+                                    },
+                                    {
+                                        "settings": {
+                                            "_contains": {"lazarus_enabled": False}
+                                        }
+                                    },
+                                ]
+                            }
+                        }
                     }
-                }
-            },
+                },
+            ],
         }
 
     async def reschedule_flow_runs(

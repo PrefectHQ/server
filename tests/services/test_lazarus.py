@@ -210,7 +210,7 @@ async def test_lazarus_doesnt_restart_flow_run_with_active_tasks(
     await api.states.set_task_run_state(task_run_id, state=task_state)
 
     # set old heartbeat
-    await models.FlowRun.where(id=task_run_id).update(
+    await models.FlowRun.where(id=flow_run_id).update(
         set={"heartbeat": pendulum.now("utc").subtract(hours=1)}
     )
 
