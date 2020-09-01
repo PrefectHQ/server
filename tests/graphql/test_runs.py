@@ -272,7 +272,8 @@ class TestUpdateFlowRunHeartbeat:
     async def test_update_flow_run_heartbeat(self, run_query, flow_run_id):
         dt = pendulum.now()
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_run_id=flow_run_id)),
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=flow_run_id)),
         )
 
         # sleep to give the concurrent update a chance to run
@@ -305,7 +306,8 @@ class TestUpdateTaskRunHeartbeat:
     async def test_update_task_run_heartbeat(self, run_query, task_run_id):
         dt = pendulum.now()
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(task_run_id=task_run_id)),
+            query=self.mutation,
+            variables=dict(input=dict(task_run_id=task_run_id)),
         )
 
         # sleep to give the concurrent update a chance to run
@@ -338,7 +340,8 @@ class TestDeleteFlowRun:
 
     async def test_delete_flow_run(self, run_query, flow_run_id):
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(flow_run_id=flow_run_id)),
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=flow_run_id)),
         )
 
         assert result.data.delete_flow_run.success
@@ -399,7 +402,10 @@ class TestGetRunsInQueue:
     """
 
     async def test_get_runs_in_queue(
-        self, run_query, tenant_id, flow_run_id,
+        self,
+        run_query,
+        tenant_id,
+        flow_run_id,
     ):
         await api.states.set_flow_run_state(
             flow_run_id=flow_run_id,
@@ -412,7 +418,11 @@ class TestGetRunsInQueue:
         assert flow_run_id in result.data.get_runs_in_queue.flow_run_ids
 
     async def test_get_runs_in_queue_uses_labels(
-        self, run_query, tenant_id, flow_run_id, labeled_flow_run_id,
+        self,
+        run_query,
+        tenant_id,
+        flow_run_id,
+        labeled_flow_run_id,
     ):
         await api.states.set_flow_run_state(
             flow_run_id=labeled_flow_run_id,
@@ -427,7 +437,11 @@ class TestGetRunsInQueue:
         assert flow_run_id not in result.data.get_runs_in_queue.flow_run_ids
 
     async def test_get_runs_in_queue_uses_labels_and_filters_for_subset(
-        self, run_query, tenant_id, flow_run_id, labeled_flow_run_id,
+        self,
+        run_query,
+        tenant_id,
+        flow_run_id,
+        labeled_flow_run_id,
     ):
         await api.states.set_flow_run_state(
             flow_run_id=labeled_flow_run_id,
@@ -464,7 +478,10 @@ class TestGetRunsInQueue:
         assert flow_run_id not in result.data.get_runs_in_queue.flow_run_ids
 
     async def test_get_runs_in_queue_before_certain_time(
-        self, run_query, tenant_id, flow_run_id,
+        self,
+        run_query,
+        tenant_id,
+        flow_run_id,
     ):
         await api.states.set_flow_run_state(
             flow_run_id=flow_run_id,
@@ -483,7 +500,10 @@ class TestGetRunsInQueue:
         assert flow_run_id not in result.data.get_runs_in_queue.flow_run_ids
 
     async def test_multiple_runs_in_queue_before_certain_time(
-        self, run_query, tenant_id, flow_id,
+        self,
+        run_query,
+        tenant_id,
+        flow_id,
     ):
         now = pendulum.now("utc")
 

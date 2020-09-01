@@ -22,14 +22,37 @@ async def reset_states(flow_run_id, task_run_id):
 
 class TestFlowRunStateTrigger:
     async def test_inserting_non_running_states_has_no_effect(self, flow_run_id):
-        details = dict(flow_run_id=flow_run_id, serialized_state={},)
+        details = dict(
+            flow_run_id=flow_run_id,
+            serialized_state={},
+        )
         await models.FlowRunState.insert_many(
             [
-                models.FlowRunState(**details, version=0, state="Pending",),
-                models.FlowRunState(**details, version=1, state="Scheduled",),
-                models.FlowRunState(**details, version=2, state="Failed",),
-                models.FlowRunState(**details, version=3, state="Retrying",),
-                models.FlowRunState(**details, version=4, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=1,
+                    state="Scheduled",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=2,
+                    state="Failed",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
@@ -41,14 +64,37 @@ class TestFlowRunStateTrigger:
         assert run.duration is None
 
     async def test_inserting_running_state_has_effect(self, flow_run_id):
-        details = dict(flow_run_id=flow_run_id, serialized_state={},)
+        details = dict(
+            flow_run_id=flow_run_id,
+            serialized_state={},
+        )
         await models.FlowRunState.insert_many(
             [
-                models.FlowRunState(**details, version=0, state="Pending",),
-                models.FlowRunState(**details, version=1, state="Running",),
-                models.FlowRunState(**details, version=2, state="Failed",),
-                models.FlowRunState(**details, version=3, state="Retrying",),
-                models.FlowRunState(**details, version=4, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=1,
+                    state="Running",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=2,
+                    state="Failed",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
@@ -60,18 +106,43 @@ class TestFlowRunStateTrigger:
         assert run.duration is not None
 
     async def test_inserting_running_state_later_has_effect(self, flow_run_id):
-        details = dict(flow_run_id=flow_run_id, serialized_state={},)
+        details = dict(
+            flow_run_id=flow_run_id,
+            serialized_state={},
+        )
         await models.FlowRunState.insert_many(
             [
-                models.FlowRunState(**details, version=0, state="Pending",),
-                models.FlowRunState(**details, version=2, state="Failed",),
-                models.FlowRunState(**details, version=3, state="Retrying",),
-                models.FlowRunState(**details, version=4, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=2,
+                    state="Failed",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
         await models.FlowRunState.insert_many(
-            [models.FlowRunState(**details, version=1, state="Running",),]
+            [
+                models.FlowRunState(
+                    **details,
+                    version=1,
+                    state="Running",
+                ),
+            ]
         )
 
         run = await models.FlowRun.where(id=flow_run_id).first(
@@ -82,20 +153,35 @@ class TestFlowRunStateTrigger:
         assert run.duration is not None
 
     async def test_start_and_end_from_running_state(self, flow_run_id):
-        details = dict(flow_run_id=flow_run_id, serialized_state={},)
+        details = dict(
+            flow_run_id=flow_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
         et = pendulum.now("UTC").add(days=1)
 
         await models.FlowRunState.insert_many(
             [
-                models.FlowRunState(**details, version=0, state="Pending",),
+                models.FlowRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.FlowRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
                 models.FlowRunState(**details, version=2, state="Failed", timestamp=et),
-                models.FlowRunState(**details, version=3, state="Retrying",),
-                models.FlowRunState(**details, version=4, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.FlowRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
@@ -107,13 +193,20 @@ class TestFlowRunStateTrigger:
         assert run.duration == (et - st).as_timedelta()
 
     async def test_no_end_if_running_is_last_state(self, flow_run_id):
-        details = dict(flow_run_id=flow_run_id, serialized_state={},)
+        details = dict(
+            flow_run_id=flow_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
 
         await models.FlowRunState.insert_many(
             [
-                models.FlowRunState(**details, version=0, state="Pending",),
+                models.FlowRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.FlowRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
@@ -128,9 +221,13 @@ class TestFlowRunStateTrigger:
         assert run.duration is None
 
     async def test_start_and_end_from_multiple_running_states(
-        self, flow_run_id,
+        self,
+        flow_run_id,
     ):
-        details = dict(flow_run_id=flow_run_id, serialized_state={},)
+        details = dict(
+            flow_run_id=flow_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
         et = pendulum.now("UTC").add(days=1)
@@ -138,15 +235,27 @@ class TestFlowRunStateTrigger:
 
         await models.FlowRunState.insert_many(
             [
-                models.FlowRunState(**details, version=0, state="Pending",),
+                models.FlowRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.FlowRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
                 models.FlowRunState(**details, version=2, state="Failed"),
-                models.FlowRunState(**details, version=3, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
                 models.FlowRunState(**details, version=4, state="Running"),
                 models.FlowRunState(**details, version=5, state="Failed"),
-                models.FlowRunState(**details, version=6, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=6,
+                    state="Retrying",
+                ),
                 models.FlowRunState(**details, version=7, state="Running"),
                 models.FlowRunState(
                     **details, version=8, state="Success", timestamp=et
@@ -165,9 +274,13 @@ class TestFlowRunStateTrigger:
         assert run.duration == (et - st).as_timedelta()
 
     async def test_version_order_determines_timestamp(
-        self, flow_run_id,
+        self,
+        flow_run_id,
     ):
-        details = dict(flow_run_id=flow_run_id, serialized_state={},)
+        details = dict(
+            flow_run_id=flow_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
         et = pendulum.now("UTC").add(days=1)
@@ -175,15 +288,27 @@ class TestFlowRunStateTrigger:
 
         await models.FlowRunState.insert_many(
             [
-                models.FlowRunState(**details, version=0, state="Pending",),
+                models.FlowRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.FlowRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
                 models.FlowRunState(**details, version=2, state="Failed"),
-                models.FlowRunState(**details, version=3, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
                 models.FlowRunState(**details, version=4, state="Running"),
                 models.FlowRunState(**details, version=6, state="Failed"),
-                models.FlowRunState(**details, version=7, state="Retrying",),
+                models.FlowRunState(
+                    **details,
+                    version=7,
+                    state="Retrying",
+                ),
                 models.FlowRunState(**details, version=8, state="Running"),
                 models.FlowRunState(
                     **details, version=5, state="Success", timestamp=not_et
@@ -204,14 +329,37 @@ class TestFlowRunStateTrigger:
 
 class TestTaskRunStateTrigger:
     async def test_inserting_non_running_states_has_no_effect(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
-                models.TaskRunState(**details, version=1, state="Scheduled",),
-                models.TaskRunState(**details, version=2, state="Failed",),
-                models.TaskRunState(**details, version=3, state="Retrying",),
-                models.TaskRunState(**details, version=4, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=1,
+                    state="Scheduled",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=2,
+                    state="Failed",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
@@ -224,14 +372,37 @@ class TestTaskRunStateTrigger:
         assert run.run_count == 0
 
     async def test_inserting_running_state_has_effect(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
-                models.TaskRunState(**details, version=1, state="Running",),
-                models.TaskRunState(**details, version=2, state="Failed",),
-                models.TaskRunState(**details, version=3, state="Retrying",),
-                models.TaskRunState(**details, version=4, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=1,
+                    state="Running",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=2,
+                    state="Failed",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
@@ -244,18 +415,43 @@ class TestTaskRunStateTrigger:
         assert run.run_count == 1
 
     async def test_inserting_running_state_later_has_effect(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
-                models.TaskRunState(**details, version=2, state="Failed",),
-                models.TaskRunState(**details, version=3, state="Retrying",),
-                models.TaskRunState(**details, version=4, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=2,
+                    state="Failed",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
         await models.TaskRunState.insert_many(
-            [models.TaskRunState(**details, version=1, state="Running",),]
+            [
+                models.TaskRunState(
+                    **details,
+                    version=1,
+                    state="Running",
+                ),
+            ]
         )
 
         run = await models.TaskRun.where(id=task_run_id).first(
@@ -267,20 +463,35 @@ class TestTaskRunStateTrigger:
         assert run.run_count == 1
 
     async def test_start_and_end_from_running_state(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
         et = pendulum.now("UTC").add(days=1)
 
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.TaskRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
                 models.TaskRunState(**details, version=2, state="Failed", timestamp=et),
-                models.TaskRunState(**details, version=3, state="Retrying",),
-                models.TaskRunState(**details, version=4, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
+                models.TaskRunState(
+                    **details,
+                    version=4,
+                    state="Retrying",
+                ),
             ]
         )
 
@@ -293,13 +504,20 @@ class TestTaskRunStateTrigger:
         assert run.run_count == 1
 
     async def test_no_end_if_running_is_last_state(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
 
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.TaskRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
@@ -314,7 +532,10 @@ class TestTaskRunStateTrigger:
         assert run.duration is None
 
     async def test_start_and_end_from_multiple_running_states(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
         et = pendulum.now("UTC").add(days=1)
@@ -322,15 +543,27 @@ class TestTaskRunStateTrigger:
 
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.TaskRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
                 models.TaskRunState(**details, version=2, state="Failed"),
-                models.TaskRunState(**details, version=3, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
                 models.TaskRunState(**details, version=4, state="Running"),
                 models.TaskRunState(**details, version=5, state="Failed"),
-                models.TaskRunState(**details, version=6, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=6,
+                    state="Retrying",
+                ),
                 models.TaskRunState(**details, version=7, state="Running"),
                 models.TaskRunState(
                     **details, version=8, state="Success", timestamp=et
@@ -350,7 +583,10 @@ class TestTaskRunStateTrigger:
         assert run.run_count == 3
 
     async def test_version_order_determines_timestamp(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
         et = pendulum.now("UTC").add(days=1)
@@ -358,15 +594,27 @@ class TestTaskRunStateTrigger:
 
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.TaskRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
                 models.TaskRunState(**details, version=2, state="Failed"),
-                models.TaskRunState(**details, version=3, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
                 models.TaskRunState(**details, version=4, state="Running"),
                 models.TaskRunState(**details, version=6, state="Failed"),
-                models.TaskRunState(**details, version=7, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=7,
+                    state="Retrying",
+                ),
                 models.TaskRunState(**details, version=8, state="Running"),
                 models.TaskRunState(
                     **details, version=5, state="Success", timestamp=not_et
@@ -386,7 +634,10 @@ class TestTaskRunStateTrigger:
         assert run.run_count == 3
 
     async def test_looping_doesnt_inflate_run_count(self, task_run_id):
-        details = dict(task_run_id=task_run_id, serialized_state={},)
+        details = dict(
+            task_run_id=task_run_id,
+            serialized_state={},
+        )
 
         st = pendulum.now("UTC")
         et = pendulum.now("UTC").add(days=1)
@@ -394,12 +645,20 @@ class TestTaskRunStateTrigger:
 
         await models.TaskRunState.insert_many(
             [
-                models.TaskRunState(**details, version=0, state="Pending",),
+                models.TaskRunState(
+                    **details,
+                    version=0,
+                    state="Pending",
+                ),
                 models.TaskRunState(
                     **details, version=1, state="Running", timestamp=st
                 ),
                 models.TaskRunState(**details, version=2, state="Failed"),
-                models.TaskRunState(**details, version=3, state="Retrying",),
+                models.TaskRunState(
+                    **details,
+                    version=3,
+                    state="Retrying",
+                ),
                 models.TaskRunState(**details, version=4, state="Running"),
                 models.TaskRunState(**details, version=5, state="Looped"),
                 models.TaskRunState(**details, version=6, state="Running"),
