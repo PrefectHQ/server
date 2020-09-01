@@ -354,9 +354,6 @@ async def update_flow_run_agent_instance(
     Raises:
         - ValueError: if the flow_run_id is invalid
     """
-    print("HERE")
-    print(agent_instance_id)
-    print("NONONONONONON")
     result = await models.FlowRun.where(id=flow_run_id).update(
         set={"agent_instance_id": agent_instance_id}
     )
