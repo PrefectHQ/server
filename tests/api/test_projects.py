@@ -73,7 +73,8 @@ class TestSetProjectName:
         assert result is False
 
     @pytest.mark.parametrize(
-        "bad_value", [None, ""],
+        "bad_value",
+        [None, ""],
     )
     async def test_set_project_name_fails_if_none(self, bad_value):
         with pytest.raises(ValueError, match="Invalid project ID"):
@@ -99,7 +100,8 @@ class TestSetProjectDescription:
         assert result is False
 
     @pytest.mark.parametrize(
-        "bad_value", [None, ""],
+        "bad_value",
+        [None, ""],
     )
     async def test_set_project_description_fails_if_none(self, bad_value):
         with pytest.raises(ValueError, match="Invalid project ID"):
@@ -121,7 +123,8 @@ class TestDeleteProjects:
         assert result is False
 
     @pytest.mark.parametrize(
-        "bad_value", [None, ""],
+        "bad_value",
+        [None, ""],
     )
     async def test_delete_project_fails_if_none(self, bad_value):
         with pytest.raises(ValueError, match="Invalid project ID"):

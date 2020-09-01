@@ -37,7 +37,13 @@ async def test_create_logs_with_task_run_id(tenant_id, flow_run_id, task_run_id)
     logs_count = await models.Log.where(where_clause).count()
 
     await api.logs.create_logs(
-        [dict(tenant_id=tenant_id, flow_run_id=flow_run_id, task_run_id=task_run_id,)]
+        [
+            dict(
+                tenant_id=tenant_id,
+                flow_run_id=flow_run_id,
+                task_run_id=task_run_id,
+            )
+        ]
     )
 
     assert await models.Log.where(where_clause).count() == logs_count + 1
