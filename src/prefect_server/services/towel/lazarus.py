@@ -1,9 +1,11 @@
+import datetime
 import asyncio
+from typing import List, Dict, Any
 
 import pendulum
 
 import prefect
-from prefect.engine.state import Failed, Running, Scheduled, State
+from prefect.engine.state import Failed, Running, Scheduled
 from prefect.utilities.graphql import EnumValue
 from prefect_server import config
 from prefect_server.database import models
@@ -22,7 +24,7 @@ class Lazarus(LoopService):
 
     loop_seconds_default = 600
 
-    async def run_once(self) -> int:
+    async def run_once(self) -> None:
         """
         The Lazarus process revives any flow runs that are submitted or running but have no tasks in
         a running or scheduled state. The heartbeat must be stale in order to avoid race conditions
@@ -31,44 +33,66 @@ class Lazarus(LoopService):
         Returns:
             - int: the number of flow runs that were scheduled
         """
-        time = pendulum.now("utc").subtract(minutes=10)
 
-        flow_runs = await models.FlowRun.where(
-            {
-                # get runs that are currently running or submitted
-                "state": {"_in": ["Running", "Submitted"]},
-                # that were last updated some time ago
-                "heartbeat": {"_lte": str(time)},
+        return await self.reschedule_flow_runs()
+
+    async def get_flow_runs_where_clause(
+        self, heartbeat_cutoff: datetime.datetime
+    ) -> Dict[str, Any]:
+        """
+        Returns a `where` clause for loading flow runs from the DB
+        """
+        return {
+            # get runs that are currently running or submitted
+            "state": {"_in": ["Running", "Submitted"]},
+            # that were last updated some time ago
+            "heartbeat": {"_lte": str(heartbeat_cutoff)},
+            "_and": [
                 # but have no task runs in a near-running state
-                "_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}},
+                {"_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}}},
                 # and whose do not have heartbeats or lazarus enabled
-                "_not": {
-                    "flow": {
-                        "flow_group": {
-                            "_or": [
-                                {
-                                    "settings": {
-                                        "_contains": {"heartbeat_enabled": False}
-                                    }
-                                },
-                                {"settings": {"_contains": {"lazarus_enabled": False}}},
-                            ]
+                {
+                    "_not": {
+                        "flow": {
+                            "flow_group": {
+                                "_or": [
+                                    {
+                                        "settings": {
+                                            "_contains": {"heartbeat_enabled": False}
+                                        }
+                                    },
+                                    {
+                                        "settings": {
+                                            "_contains": {"lazarus_enabled": False}
+                                        }
+                                    },
+                                ]
+                            }
                         }
                     }
                 },
-            }
-        ).get(
-            selection_set={"id", "version", "tenant_id", "times_resurrected"},
-            order_by={"heartbeat": EnumValue("asc")},
-        )
-        self.logger.info(
-            f"Found {len(flow_runs)} flow runs to reschedule with a Lazarus process"
-        )
+            ],
+        }
 
-        if not flow_runs:
-            return 0
-
+    async def reschedule_flow_runs(
+        self, heartbeat_cutoff: datetime.datetime = None
+    ) -> int:
+        heartbeat_cutoff = heartbeat_cutoff or pendulum.now("utc").subtract(minutes=10)
         run_count = 0
+
+        where_clause = await self.get_flow_runs_where_clause(
+            heartbeat_cutoff=heartbeat_cutoff
+        )
+        flow_runs = await models.FlowRun.where(where_clause).get(
+            selection_set={"id", "version", "tenant_id", "times_resurrected"},
+            order_by={"updated": EnumValue("asc")},
+            limit=5000,
+        )
+
+        if flow_runs:
+            self.logger.info(
+                f"Found {len(flow_runs)} flow runs to reschedule with a Lazarus process"
+            )
 
         for fr in flow_runs:
             # check how many times it's been resurrected, otherwise it will repeat ad infinitum
@@ -122,7 +146,8 @@ class Lazarus(LoopService):
                 )
                 # Set flow run state to failed
                 await prefect.api.states.set_flow_run_state(
-                    flow_run_id=fr.id, state=Failed(message=message),
+                    flow_run_id=fr.id,
+                    state=Failed(message=message),
                 )
                 # log flow run state change
                 await prefect.api.logs.create_logs(
@@ -137,7 +162,8 @@ class Lazarus(LoopService):
                     ]
                 )
 
-        self.logger.info(f"Lazarus process rescheduled {run_count} flow runs.")
+        if run_count:
+            self.logger.info(f"Lazarus process rescheduled {run_count} flow runs.")
         return run_count
 
 

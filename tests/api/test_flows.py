@@ -346,7 +346,9 @@ class TestCreateFlow:
         assert flow_id
 
     async def test_create_flow_assigns_description(
-        self, project_id, flow,
+        self,
+        project_id,
+        flow,
     ):
         description = "test"
         flow_id = await api.flows.create_flow(
@@ -672,7 +674,8 @@ class TestDeleteFlow:
 
     async def test_delete_flow_deletes_flow_runs(self, flow_id, flow_run_id):
         await api.states.set_flow_run_state(
-            flow_run_id=flow_run_id, state=prefect.engine.state.Scheduled(),
+            flow_run_id=flow_run_id,
+            state=prefect.engine.state.Scheduled(),
         )
 
         assert await models.FlowRun.exists(flow_run_id)
@@ -732,102 +735,6 @@ class TestUpdateFlowProject:
             await api.flows.update_flow_project(flow_id=None, project_id=project_id)
         flow = await models.Flow.where(id=flow_id).first({"project_id"})
         assert flow.project_id == project_id
-
-
-class TestUpdateFlowHeartbeat:
-    async def test_disable_heartbeat_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update({"settings": {}})
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-
-        assert flow_group.settings == {}
-        assert await api.flows.disable_heartbeat_for_flow(flow_id=flow_id)
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings["heartbeat_enabled"] is False
-        assert flow_group.settings["disable_heartbeat"] is True
-
-    async def test_enable_heartbeat_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update({"settings": {}})
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-
-        assert flow_group.settings == {}
-        assert await api.flows.enable_heartbeat_for_flow(flow_id=flow_id)
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings["heartbeat_enabled"] is True
-        assert flow_group.settings["disable_heartbeat"] is False
-
-    async def test_disable_heartbeat_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow ID"):
-            await api.flows.disable_heartbeat_for_flow(flow_id=None)
-
-    async def test_enable_heartbeat_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow ID"):
-            await api.flows.enable_heartbeat_for_flow(flow_id=None)
-
-
-class TestUpdateLazarusForFlow:
-    async def test_disable_lazarus_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            {"settings": {"lazarus_enabled": True}}
-        )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings.get("lazarus_enabled", False) is True
-        assert await api.flows.disable_lazarus_for_flow(flow_id=flow_id)
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings == {"lazarus_enabled": False}
-
-    async def test_enable_lazarus_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            {"settings": {"lazarus_enabled": False}}
-        )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings.get("lazarus_enabled", True) is False
-        assert await api.flows.enable_lazarus_for_flow(flow_id=flow_id)
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings == {"lazarus_enabled": True}
-
-    async def test_disable_lazarus_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow ID"):
-            await api.flows.disable_lazarus_for_flow(flow_id=None)
-
-    async def test_enable_lazarus_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow ID"):
-            await api.flows.enable_lazarus_for_flow(flow_id=None)
-
-
-class TestUpdateVersionLockingForFlow:
-    async def test_disable_version_locking_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            {"settings": {"version_locking_enabled": True}}
-        )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings.get("version_locking_enabled", False) is True
-        assert await api.flows.disable_version_locking_for_flow(flow_id=flow_id)
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings == {"version_locking_enabled": False}
-
-    async def test_enable_version_locking_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            {"settings": {"version_locking_enabled": False}}
-        )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings.get("version_locking_enabled", True) is False
-        assert await api.flows.enable_version_locking_for_flow(flow_id=flow_id)
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings == {"version_locking_enabled": True}
-
-    async def test_disable_version_locking_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow ID"):
-            await api.flows.disable_version_locking_for_flow(flow_id=None)
-
-    async def test_enable_version_locking_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow ID"):
-            await api.flows.enable_version_locking_for_flow(flow_id=None)
 
 
 class TestSetScheduleActive:
@@ -1033,14 +940,16 @@ class TestScheduleRuns:
         assert await api.flows.schedule_flow_runs(flow_id) == []
 
     async def test_schedule_runs_doesnt_run_for_archived_flow(
-        self, flow_id,
+        self,
+        flow_id,
     ):
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         await api.flows.archive_flow(flow_id)
         assert await api.flows.schedule_flow_runs(flow_id) == []
 
     async def test_schedule_runs_twice_doesnt_create_new_runs(
-        self, flow_id,
+        self,
+        flow_id,
     ):
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert len(await api.flows.schedule_flow_runs(flow_id)) == 10

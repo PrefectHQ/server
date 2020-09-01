@@ -6,6 +6,7 @@
 #   - fix
 #   - deprecation
 #   - breaking (for breaking changes)
+#   - migration (for database migrations)
 #
 # 2. Fill in one (or more) bullet points under the heading, describing the change.
 #    Markdown syntax may be used.
@@ -15,5 +16,5 @@
 #
 # Here's an example of a PR that adds an enhancement
 
-migration:
-  - "Remove unused `state_id` column - [#35](https://github.com/PrefectHQ/server/pull/35)"
+fix:
+  - "Fix __init__.py for deprecated API module - [#71](https://github.com/PrefectHQ/server/pull/71)"

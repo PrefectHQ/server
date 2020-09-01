@@ -25,23 +25,16 @@ CLOUD_HOOK_TYPES = {
     "PAGERDUTY",
 }
 
-STATE_PARENTS = {}
-for obj in prefect.engine.state.__dict__.values():
-    if isinstance(obj, type) and issubclass(obj, prefect.engine.state.State):
-        for parent in obj.mro():
-            if issubclass(parent, prefect.engine.state.State):
-                STATE_PARENTS.setdefault(obj.__name__.upper(), []).append(
-                    parent.__name__.upper()
-                )
+ALL_STATES = [s.__name__.upper() for s in prefect.engine.state.State.children()]
 
 
 @register_api("cloud_hooks.create_cloud_hook")
 async def create_cloud_hook(
     tenant_id: str,
     type: str,
+    states: List[str],
     config: dict = None,
     version_group_id: str = None,
-    states: List[str] = None,
     name=None,
 ) -> str:
     """
@@ -50,10 +43,10 @@ async def create_cloud_hook(
     Args:
         - tenant_id (str): the tenant ID
         - type (str): the cloud hook type
+        - states (List[str]): a list of states to monitor
         - config (str): the URL to which the webhook payload will be posted
         - version_group_id (str): the version group ID to monitor; if None, all flows
             from all version groups will trigger the webhook
-        - states (List[str]): a list of states to monitor; if None, all states are monitored
         - name (str): an optional name for the hook
 
     Returns:
@@ -67,6 +60,13 @@ async def create_cloud_hook(
     if not tenant_id:
         raise ValueError("Invalid tenant ID")
 
+    if not states:
+        raise ValueError("Invalid states")
+
+    states = list({s.upper() for s in states})
+    if not all(s in ALL_STATES for s in states):
+        raise ValueError("Invalid states")
+
     if type not in CLOUD_HOOK_TYPES:
         raise ValueError("Invalid cloud hook type")
     elif type == "WEBHOOK":
@@ -76,17 +76,25 @@ async def create_cloud_hook(
         if set(config or {}) != {"url"}:
             raise ValueError("Invalid config; expected `url`")
     elif type == "TWILIO":
-        if set(config or {}) != {
-            "account_sid",
-            "auth_token",
-            "messaging_service_sid",
-            "to",
-        } or not config.get("to"):
+        if (
+            set(config or {})
+            != {
+                "account_sid",
+                "auth_token",
+                "messaging_service_sid",
+                "to",
+            }
+            or not config.get("to")
+        ):
             raise ValueError(
                 "Invalid config; expected `account_sid`, `auth_token`, `messaging_service_sid`, and `to`"
             )
     elif type == "PAGERDUTY":
-        if set(config or {}) != {"api_token", "routing_key", "severity"}:
+        if set(config or {}) != {
+            "api_token",
+            "routing_key",
+            "severity",
+        }:
             raise ValueError(
                 "Invalid config; expected `api_token`, `routing_key`, & `severity`"
             )
@@ -94,10 +102,6 @@ async def create_cloud_hook(
             raise ValueError(
                 "Invalid config; severity must be one of {info, warning, error, critical}"
             )
-    if states is not None:
-        states = list({s.upper() for s in states})
-        if not states or not all(state in STATE_PARENTS for state in states):
-            raise ValueError("Invalid states")
     return await models.CloudHook(
         tenant_id=tenant_id,
         version_group_id=version_group_id,
@@ -225,29 +229,21 @@ async def _get_matching_hooks(event: events.FlowRunStateChange) -> List[Box]:
     Retrieves cloud hooks that match either the flow or states of the supplied event.
     """
     state = event.state.state.upper()
+
     hooks = await models.CloudHook.where(
         {
+            "tenant_id": {"_eq": event.tenant.id},
             # the hook is active
             "active": {"_eq": True},
-            "tenant_id": {"_eq": event.tenant.id},
-            "_and": [
-                {
-                    # the hook either matches this version group id or all flows from all
-                    # version group IDs
-                    "_or": [
-                        {"version_group_id": {"_eq": event.flow.version_group_id}},
-                        {"version_group_id": {"_is_null": True}},
-                    ]
-                },
-                {
-                    # the hook either matches this state or all states
-                    "_or": [
-                        {"states": {"_has_keys_any": STATE_PARENTS.get(state, [])}},
-                        {"states": {"_is_null": True}},
-                    ]
-                },
+            # the hook matches the provided state
+            "states": {"_has_keys_any": event.state.state.upper()},
+            # the hook either matches this version group id or all flows from all
+            # version group IDs
+            "_or": [
+                {"version_group_id": {"_eq": event.flow.version_group_id}},
+                {"version_group_id": {"_is_null": True}},
             ],
-        }
+        },
     ).get({"id", "type", "config"})
 
     return hooks
