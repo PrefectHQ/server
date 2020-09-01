@@ -19,7 +19,7 @@ async def flow_id(project_id):
              7 -> 8 -> 9 -> 10
            /
         6
-
+    
                  11
     """
 
@@ -49,9 +49,7 @@ async def flow_id(project_id):
     )
 
 
-async def query_downstream(
-    *ids,
-):
+async def query_downstream(*ids,):
     return await prefect.plugins.hasura.client.execute(
         {
             "query": {
@@ -70,9 +68,7 @@ async def query_downstream(
     )
 
 
-async def query_upstream(
-    *ids,
-):
+async def query_upstream(*ids,):
     return await prefect.plugins.hasura.client.execute(
         {
             "query": {

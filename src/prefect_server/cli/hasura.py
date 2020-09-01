@@ -32,8 +32,7 @@ def apply_hasura_metadata(endpoint=None, metadata_path=None, verbose=True):
         metadata = yaml.load(f, Loader=yaml.SafeLoader)
 
     response = requests.post(
-        endpoint,
-        json={"type": "replace_metadata", "args": metadata},
+        endpoint, json={"type": "replace_metadata", "args": metadata},
     )
     try:
         response.raise_for_status()
@@ -104,8 +103,7 @@ def export_metadata(endpoint, metadata_path):
         click.secho("\nExporting Hasura metadata...")
         endpoint = os.path.join(endpoint, "v1", "query")
         response = requests.post(
-            endpoint,
-            json={"type": "export_metadata", "args": {}},
+            endpoint, json={"type": "export_metadata", "args": {}},
         )
         response.raise_for_status()
 
@@ -136,8 +134,7 @@ def drop_inconsistent_metadata(endpoint):
         click.secho("\nDropping inconsistent Hasura metadata...")
         endpoint = os.path.join(endpoint, "v1", "query")
         response = requests.post(
-            endpoint,
-            json={"type": "drop_inconsistent_metadata", "args": {}},
+            endpoint, json={"type": "drop_inconsistent_metadata", "args": {}},
         )
         response.raise_for_status()
 
@@ -166,10 +163,7 @@ def clear_metadata(endpoint):
     try:
         click.secho("\nClearing Hasura metadata...")
         endpoint = os.path.join(endpoint, "v1", "query")
-        response = requests.post(
-            endpoint,
-            json={"type": "clear_metadata", "args": {}},
-        )
+        response = requests.post(endpoint, json={"type": "clear_metadata", "args": {}},)
         response.raise_for_status()
         click.secho("\nFinished!", fg="green")
     except Exception as exc:
@@ -197,8 +191,7 @@ def reload_metadata(endpoint):
         click.secho("\nReloading Hasura metadata...")
         endpoint = os.path.join(endpoint, "v1", "query")
         response = requests.post(
-            endpoint,
-            json={"type": "reload_metadata", "args": {}},
+            endpoint, json={"type": "reload_metadata", "args": {}},
         )
         response.raise_for_status()
         click.secho("\nFinished!", fg="green")

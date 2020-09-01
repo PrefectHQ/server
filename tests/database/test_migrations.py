@@ -23,10 +23,7 @@ def test_alembic_single_head():
 
 
 async def test_full_migration_downgrade_works_with_data_in_db(
-    flow_id,
-    task_run_id,
-    task_run_id_2,
-    task_run_id_3,
+    flow_id, task_run_id, task_run_id_2, task_run_id_3,
 ):
     """
     Tests that downgrade migrations work when the database has data in it
@@ -40,11 +37,7 @@ async def test_full_migration_downgrade_works_with_data_in_db(
 
 @pytest.mark.parametrize("n", [1, 2, 3])
 async def test_recent_migration_upgrades_work_with_data_in_db(
-    flow_id,
-    task_run_id,
-    task_run_id_2,
-    task_run_id_3,
-    n,
+    flow_id, task_run_id, task_run_id_2, task_run_id_3, n,
 ):
     """
     Tests that the last N upgrades work with data in the database. Note that this isn't

@@ -346,9 +346,7 @@ class TestCreateFlow:
         assert flow_id
 
     async def test_create_flow_assigns_description(
-        self,
-        project_id,
-        flow,
+        self, project_id, flow,
     ):
         description = "test"
         flow_id = await api.flows.create_flow(
@@ -674,8 +672,7 @@ class TestDeleteFlow:
 
     async def test_delete_flow_deletes_flow_runs(self, flow_id, flow_run_id):
         await api.states.set_flow_run_state(
-            flow_run_id=flow_run_id,
-            state=prefect.engine.state.Scheduled(),
+            flow_run_id=flow_run_id, state=prefect.engine.state.Scheduled(),
         )
 
         assert await models.FlowRun.exists(flow_run_id)
@@ -1036,16 +1033,14 @@ class TestScheduleRuns:
         assert await api.flows.schedule_flow_runs(flow_id) == []
 
     async def test_schedule_runs_doesnt_run_for_archived_flow(
-        self,
-        flow_id,
+        self, flow_id,
     ):
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         await api.flows.archive_flow(flow_id)
         assert await api.flows.schedule_flow_runs(flow_id) == []
 
     async def test_schedule_runs_twice_doesnt_create_new_runs(
-        self,
-        flow_id,
+        self, flow_id,
     ):
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert len(await api.flows.schedule_flow_runs(flow_id)) == 10

@@ -149,8 +149,7 @@ class TestSetFlowGroupSchedule:
             query=self.mutation,
             variables=dict(
                 input=dict(
-                    flow_group_id=flow_group_id,
-                    interval_clocks=[{"interval": 60}],
+                    flow_group_id=flow_group_id, interval_clocks=[{"interval": 60}],
                 )
             ),
         )

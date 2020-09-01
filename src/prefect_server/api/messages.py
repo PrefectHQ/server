@@ -12,10 +12,7 @@ async def create_message(
         raise ValueError("Invalid message type.")
 
     return await models.Message(
-        tenant_id=tenant_id,
-        type=type,
-        text=text,
-        content=content,
+        tenant_id=tenant_id, type=type, text=text, content=content,
     ).insert()
 
 
@@ -48,9 +45,7 @@ async def create_requires_approval_message(task_run: models.TaskRun) -> None:
     }
 
     await create_message(
-        tenant_id=tenant_id,
-        type="REQUIRES_APPROVAL",
-        content=message_content,
+        tenant_id=tenant_id, type="REQUIRES_APPROVAL", content=message_content,
     )
 
 
