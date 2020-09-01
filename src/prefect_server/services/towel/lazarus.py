@@ -47,18 +47,30 @@ class Lazarus(LoopService):
             "state": {"_in": ["Running", "Submitted"]},
             # that were last updated some time ago
             "heartbeat": {"_lte": str(heartbeat_cutoff)},
-            # but have no task runs in a near-running state
-            "_not": {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}},
-            # and whose do not have heartbeats or lazarus enabled
             "_not": {
-                "flow": {
-                    "flow_group": {
-                        "_or": [
-                            {"settings": {"_contains": {"heartbeat_enabled": False}}},
-                            {"settings": {"_contains": {"lazarus_enabled": False}}},
-                        ]
-                    }
-                }
+                "_or": [
+                    # but have no task runs in a near-running state
+                    {"task_runs": {"state": {"_in": LAZARUS_EXCLUDE}}},
+                    # and whose do not have heartbeats or lazarus enabled
+                    {
+                        "flow": {
+                            "flow_group": {
+                                "_or": [
+                                    {
+                                        "settings": {
+                                            "_contains": {"heartbeat_enabled": False}
+                                        }
+                                    },
+                                    {
+                                        "settings": {
+                                            "_contains": {"lazarus_enabled": False}
+                                        }
+                                    },
+                                ]
+                            }
+                        }
+                    },
+                ]
             },
         }
 
@@ -71,6 +83,7 @@ class Lazarus(LoopService):
         where_clause = await self.get_flow_runs_where_clause(
             heartbeat_cutoff=heartbeat_cutoff
         )
+        breakpoint()
         flow_runs = await models.FlowRun.where(where_clause).get(
             selection_set={"id", "version", "tenant_id", "times_resurrected"},
             order_by={"updated": EnumValue("asc")},
