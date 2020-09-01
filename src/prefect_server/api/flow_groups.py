@@ -47,7 +47,7 @@ async def _update_setting(flow_group_id: str, key: str, value: any) -> None:
 async def set_flow_group_default_parameters(
     flow_group_id: str, parameters: dict
 ) -> bool:
-    """ Sets default value(s) for parameter(s) on a flow group
+    """Sets default value(s) for parameter(s) on a flow group
 
     Args:
         - flow_group_id (str): the ID of the flow group to update
