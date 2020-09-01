@@ -1,5 +1,22 @@
 # Changelog
 
+## September 1, 2020 <Badge text="beta" type="success" />
+
+Released on September 1, 2020.
+
+### Enhancements
+
+- Automatically upgrade local database - [#69](https://github.com/PrefectHQ/server/pull/69)
+
+### Fixes
+
+- Fix flow run creation not using default parameters from flow group - [#64](https://github.com/PrefectHQ/server/issues/64)
+- Ensure Lazarus ignores flow runs with active tasks - [#67](https://github.com/PrefectHQ/server/pull/67)
+
+### Deprecations
+
+- Deprecate flow settings that are actually flow group settings - [#63](https://github.com/PrefectHQ/server/pull/63)
+
 ## August 26, 2020 <Badge text="beta" type="success" />
 
 Released on August 26, 2020.
