@@ -405,7 +405,9 @@ class TestGetTaskRunInfo:
         )
         await api.states.set_task_run_state(tr_id, state=Success())
 
-        tr = await models.TaskRun.where(id=tr_id).first({"state", "serialized_state"},)
+        tr = await models.TaskRun.where(id=tr_id).first(
+            {"state", "serialized_state"},
+        )
         assert tr.state == "Success"
         assert tr.serialized_state["type"] == "Success"
 
@@ -724,7 +726,8 @@ class TestDeleteFlowRuns:
         assert result is False
 
     @pytest.mark.parametrize(
-        "bad_value", [None, ""],
+        "bad_value",
+        [None, ""],
     )
     async def test_delete_flow_run_fails_if_none(self, bad_value):
         with pytest.raises(ValueError, match="Invalid flow run ID"):

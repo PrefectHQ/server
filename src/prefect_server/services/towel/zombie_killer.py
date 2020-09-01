@@ -63,7 +63,8 @@ class ZombieKiller(LoopService):
             try:
                 message = "No heartbeat detected from the flow run; marking the run as failed."
                 await prefect.api.states.set_flow_run_state(
-                    flow_run_id=fr.id, state=Failed(message=message),
+                    flow_run_id=fr.id,
+                    state=Failed(message=message),
                 )
 
                 # log the state change to the flow run
@@ -179,7 +180,8 @@ class ZombieKiller(LoopService):
                 else:
                     message = "No heartbeat detected from the remote task; marking the run as failed."
                     await prefect.api.states.set_task_run_state(
-                        task_run_id=tr.id, state=Failed(message=message),
+                        task_run_id=tr.id,
+                        state=Failed(message=message),
                     )
 
                 # log the state change to the task run
