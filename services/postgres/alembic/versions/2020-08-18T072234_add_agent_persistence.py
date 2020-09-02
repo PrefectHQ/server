@@ -68,12 +68,6 @@ def upgrade():
             server_default=sa.func.now(),
         ),
         sa.Column(
-            "updated",
-            sa.TIMESTAMP(timezone=True),
-            nullable=False,
-            server_default=sa.func.now(),
-        ),
-        sa.Column(
             "tenant_id",
             UUID(),
             sa.ForeignKey("tenant.id", ondelete="CASCADE"),
@@ -92,20 +86,11 @@ def upgrade():
         sa.Column("core_version", sa.String),
         sa.Column("labels", JSONB, nullable=False, server_default="[]"),
         sa.Column(
-            "last_query",
+            "last_queried",
             sa.TIMESTAMP(timezone=True),
             nullable=True,
             server_default=sa.func.now(),
         ),
-    )
-
-    op.execute(
-        f"""
-        CREATE TRIGGER update_timestamp
-        BEFORE UPDATE ON agent_instance
-        FOR EACH ROW
-        EXECUTE PROCEDURE set_updated_timestamp();
-        """
     )
 
     op.add_column(

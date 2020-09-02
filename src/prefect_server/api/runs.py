@@ -434,7 +434,7 @@ async def get_runs_in_queue(
         counter += 1
 
     if agent_instance_id:
-        await api.agents.update_agent_instance_last_query(
+        await api.agents.update_agent_instance_last_queried(
             agent_instance_id=agent_instance_id
         )
 

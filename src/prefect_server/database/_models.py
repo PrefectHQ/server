@@ -357,7 +357,7 @@ class AgentInstance(HasuraModel):
     type: str = None
     core_version: str = None
     labels: List[str] = None
-    last_query: datetime.datetime = None
+    last_queried: datetime.datetime = None
 
 
 # process forward references for all Pydantic models (meaning string class names)
