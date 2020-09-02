@@ -131,7 +131,7 @@ async def set_flow_run_state(
         await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
 
     # Set agent instance ID on flow run when submitted by agent
-    if state.is_submitted():
+    if state.is_submitted() and agent_instance_id:
         await api.runs.update_flow_run_agent_instance(
             flow_run_id=flow_run_id, agent_instance_id=agent_instance_id
         )
