@@ -28,11 +28,11 @@ input register_agent_instance_input {
   "the tenant"
   tenant_id: UUID!
   "instance labels"
-  labels: [String]!
+  labels: [String!]!
   "agent id"
   agent_id: UUID
   "instance type"
-  type: String
+  type: String!
   "instance name"
   name: String
 }
@@ -60,7 +60,7 @@ input set_agent_config_input {
   "The ID of the agent to update"
   agent_id: UUID!
   "A config to set for this agent"
-  config: JSON
+  config: JSON!
 }
 
 # ------------------------------------------------------
