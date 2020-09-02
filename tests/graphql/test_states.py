@@ -542,7 +542,8 @@ class TestCancelFlowRun:
         )
 
         result = await run_query(
-            query=self.mutation, variables={"input": {"flow_run_id": flow_run_id}},
+            query=self.mutation,
+            variables={"input": {"flow_run_id": flow_run_id}},
         )
 
         assert result.data.cancel_flow_run.state == res_state

@@ -78,7 +78,10 @@ async def delete_agent_instance(agent_instance_id: str) -> bool:
 
 
 @register_api("agents.create_agent")
-async def create_agent(tenant_id: str, config: dict,) -> str:
+async def create_agent(
+    tenant_id: str,
+    config: dict,
+) -> str:
     """
     Creates an agent, returning its id
 

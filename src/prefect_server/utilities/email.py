@@ -19,7 +19,11 @@ def send_email(from_email: str, to_emails: List[str], subject: str, body: str) -
         - body (str): the body of the email - supports HTML
 
     """
-    message = Mail(from_email=from_email, to_emails=to_emails, subject=subject,)
+    message = Mail(
+        from_email=from_email,
+        to_emails=to_emails,
+        subject=subject,
+    )
     message.content = Content(MimeType.text, body)
     if config.sendgrid.send_email:
         sendgrid_client.send(message)

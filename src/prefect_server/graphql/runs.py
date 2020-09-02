@@ -107,6 +107,8 @@ async def resolve_get_runs_in_queue(
     )
 
     result = await api.runs.get_runs_in_queue(
-        tenant_id=input["tenant_id"], before=input.get("before"), labels=labels,
+        tenant_id=input["tenant_id"],
+        before=input.get("before"),
+        labels=labels,
     )
     return {"flow_run_ids": result}

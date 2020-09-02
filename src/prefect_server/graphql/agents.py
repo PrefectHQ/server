@@ -36,7 +36,8 @@ async def resolve_delete_agent_instance(
 async def resolve_create_agent(obj: Any, info: GraphQLResolveInfo, input: dict) -> dict:
     return {
         "id": await api.agents.create_agent(
-            tenant_id=input["tenant_id"], config=input.get("config"),
+            tenant_id=input["tenant_id"],
+            config=input.get("config"),
         )
     }
 

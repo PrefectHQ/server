@@ -15,7 +15,7 @@ async def create_logs(logs: List[Dict[str, Any]]) -> str:
     Args:
         - logs (list): a list of log records represented as dictionaries, containing the following keys:
             `tenant_id` and `flow_run_id` and optionally containing task_run_id, timestamp, message, name, level and info.
-        
+
     Returns:
         - None
     """
