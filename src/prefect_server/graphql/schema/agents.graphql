@@ -45,6 +45,8 @@ input delete_agent_instance_input {
 input create_agent_input {
   "The tenant"
   tenant_id: UUID!
+  "Agent name"
+  name: String
   "Optional agent configuration"
   config: JSON
 }

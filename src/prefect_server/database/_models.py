@@ -340,6 +340,7 @@ class Agent(HasuraModel):
     created: datetime.datetime = None
     updated: datetime.datetime = None
     tenant_id: UUIDString = None
+    name: str = None
     config: dict = None
 
 

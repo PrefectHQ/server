@@ -80,6 +80,7 @@ async def delete_agent_instance(agent_instance_id: str) -> bool:
 @register_api("agents.create_agent")
 async def create_agent(
     tenant_id: str,
+    name: str,
     config: dict,
 ) -> str:
     """
@@ -87,12 +88,13 @@ async def create_agent(
 
     Args:
         - tenant_id (str): the tenant id
+        - name(str): the agent name
         - config (dict): agent configuration
 
     Returns:
         - str: the agent id
     """
-    return await models.Agent(tenant_id=tenant_id, config=config).insert()
+    return await models.Agent(tenant_id=tenant_id, name=name, config=config).insert()
 
 
 @register_api("agents.delete_agent")

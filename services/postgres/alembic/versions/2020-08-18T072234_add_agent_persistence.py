@@ -43,6 +43,7 @@ def upgrade():
             nullable=False,
             index=True,
         ),
+        sa.Column("name", sa.String),
         sa.Column("config", JSONB, nullable=False, server_default="{}"),
     )
 
