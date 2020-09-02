@@ -41,10 +41,10 @@ async def register_agent_instance(
     ).insert()
 
 
-@register_api("agents.update_agent_instance_last_queried")
-async def update_agent_instance_last_queried(agent_instance_id: str) -> bool:
+@register_api("agents.update_agent_instance_last_query")
+async def update_agent_instance_last_query(agent_instance_id: str) -> bool:
     """
-    Update an agent instance's last_queried value
+    Update an agent instance's last_query value
 
     Args:
         - agent_instance_id (str): the id of the agent instance to update
@@ -55,7 +55,7 @@ async def update_agent_instance_last_queried(agent_instance_id: str) -> bool:
     if agent_instance_id is None:
         raise ValueError("Must supply an agent instance ID to update.")
     result = await models.AgentInstance.where(id=agent_instance_id).update(
-        set={"last_query_time": pendulum.now("utc")}
+        set={"last_query": pendulum.now("utc")}
     )
     return bool(result.affected_rows)  # type: ignore
 

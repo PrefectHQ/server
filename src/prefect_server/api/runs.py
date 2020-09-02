@@ -367,7 +367,10 @@ async def update_flow_run_agent_instance(
 
 @register_api("runs.get_runs_in_queue")
 async def get_runs_in_queue(
-    tenant_id: str, before: datetime = None, labels: Iterable[str] = None
+    tenant_id: str,
+    before: datetime = None,
+    labels: Iterable[str] = None,
+    agent_instance_id: str = None,
 ) -> List[str]:
 
     if tenant_id is None:
@@ -429,5 +432,10 @@ async def get_runs_in_queue(
 
         final_flow_runs.append(flow_run.id)
         counter += 1
+
+    if agent_instance_id:
+        await api.agents.update_agent_instance_last_query(
+            agent_instance_id=agent_instance_id
+        )
 
     return final_flow_runs

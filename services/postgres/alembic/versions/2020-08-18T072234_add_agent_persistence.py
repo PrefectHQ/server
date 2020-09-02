@@ -92,7 +92,7 @@ def upgrade():
         sa.Column("core_version", sa.String),
         sa.Column("labels", JSONB, nullable=False, server_default="[]"),
         sa.Column(
-            "last_query_time",
+            "last_query",
             sa.TIMESTAMP(timezone=True),
             nullable=True,
             server_default=sa.func.now(),
