@@ -8,3 +8,5 @@ import prefect_server.api.cloud_hooks
 import prefect_server.api.runs
 import prefect_server.api.messages
 import prefect_server.api.agents
+
+import prefect_server.api.deprecated.flows

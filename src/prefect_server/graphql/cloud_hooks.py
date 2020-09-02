@@ -15,9 +15,9 @@ async def resolve_create_cloud_hook(
     hook_id = await api.cloud_hooks.create_cloud_hook(
         tenant_id=input["tenant_id"],
         type=input["type"],
+        states=input["states"],
         config=input.get("config"),
         version_group_id=input.get("version_group_id"),
-        states=input.get("states"),
         name=input.get("name"),
     )
 

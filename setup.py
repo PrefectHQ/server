@@ -18,7 +18,6 @@ install_requires = [
     # pin below 1.6 pending https://github.com/samuelcolvin/pydantic/issues/1710
     "pydantic >= 1.5, < 1.6",
     "python-slugify >= 1.2,< 5.0",
-    "sendgrid >= 6.0, < 6.5",
     "starlette >= 0.13, < 0.14",
     "toml >= 0.9.0, < 0.11",
     "uvicorn >= 0.11.4, < 0.12",

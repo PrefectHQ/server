@@ -9,7 +9,8 @@ import time
 from pathlib import Path
 
 import click
-import toml
+import sqlalchemy
+from click.testing import CliRunner
 
 import prefect
 import prefect_server
@@ -73,7 +74,12 @@ def make_env(fname=None):
     help="Pass this flag to skip pulling new images (if available)",
     is_flag=True,
 )
-def infrastructure(tag, skip_pull):
+@click.option(
+    "--skip-upgrade",
+    help="Pass this flag to skip upgrading the database to the most current version",
+    is_flag=True,
+)
+def infrastructure(tag, skip_pull, skip_upgrade):
     """
     This command:
         - starts a PostgreSQL database
@@ -90,7 +96,27 @@ def infrastructure(tag, skip_pull):
         if not skip_pull:
             subprocess.check_call(["docker-compose", "pull"], cwd=docker_dir, env=env)
         proc = subprocess.Popen(["docker-compose", "up"], cwd=docker_dir, env=env)
-        # if not initialize, just run hasura (and dependencies), which will skip the init step
+
+        # wait for db and then upgrade it to latest version
+        if not skip_upgrade:
+            engine = sqlalchemy.create_engine(config.database.connection_url)
+
+            while True:
+                try:
+                    # simple query to see if database is alive
+                    engine.execute("SELECT 1")
+                    CliRunner().invoke(prefect_server.cli.database.upgrade, args=["-y"])
+                    click.secho("Database upgraded.", fg="green")
+                    break
+                # trap error during the SELECT 1
+                except sqlalchemy.exc.OperationalError:
+                    click.secho(
+                        "Database not ready yet. Waiting 1 second to retry upgrade."
+                    )
+                    time.sleep(1)
+
+        click.echo(ascii_welcome())
+
         while True:
             time.sleep(0.5)
     except:
@@ -257,3 +283,23 @@ def generate_migration(migration_message):
         subprocess.check_output(["alembic", "revision", "-m", migration_message])
     )
     click.secho("Prefect Server migration generated!", fg="green")
+
+
+def ascii_welcome():
+    title = r"""
+  _____  _____  ______ ______ ______ _____ _______    _____ ______ _______      ________ _____
+ |  __ \|  __ \|  ____|  ____|  ____/ ____|__   __|  / ____|  ____|  __ \ \    / /  ____|  __ \
+ | |__) | |__) | |__  | |__  | |__ | |       | |    | (___ | |__  | |__) \ \  / /| |__  | |__) |
+ |  ___/|  _  /|  __| |  __| |  __|| |       | |     \___ \|  __| |  _  / \ \/ / |  __| |  _  /
+ | |    | | \ \| |____| |    | |___| |____   | |     ____) | |____| | \ \  \  /  | |____| | \ \
+ |_|    |_|  \_\______|_|    |______\_____|  |_|    |_____/|______|_|  \_\  \/   |______|_|  \_\
+    """.lstrip(
+        "\n"
+    )
+
+    message = f"""
+{click.style(title, bold=True)}
+{click.style(' | LOCAL INFRASTRUCTURE RUNNING', fg='blue', bold=True)}
+    """
+
+    return message

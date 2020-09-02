@@ -163,6 +163,24 @@ class TestCreateRun:
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"parameters"})
         assert flow_run.parameters == dict(x=1)
 
+    async def test_create_run_uses_default_flow_group_parameters(self, project_id):
+        flow_id = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=prefect.Flow(
+                name="test", tasks=[prefect.Parameter("x", default=1)]
+            ).serialize(),
+        )
+
+        flow = await models.Flow.where(id=flow_id).first({"flow_group_id"})
+        await prefect.api.flow_groups.set_flow_group_default_parameters(
+            flow_group_id=flow.flow_group_id, parameters=dict(x=2)
+        )
+
+        flow_run_id = await api.runs.create_flow_run(flow_id=flow_id)
+
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"parameters"})
+        assert flow_run.parameters == dict(x=2)
+
     async def test_create_run_passes_start_time_to_flow_run_record(
         self, simple_flow_id
     ):
