@@ -2,8 +2,8 @@ from typing import List
 
 import pendulum
 
-from prefect_server.database import models
 from prefect_server.utilities import context
+from prefect import api
 from prefect.utilities.plugins import register_api
 
 
@@ -31,7 +31,7 @@ async def register_agent_instance(
     server_context = context.get_context()
     core_version = server_context.get("headers", {}).get("x-prefect-core-version")
 
-    return await models.AgentInstance(
+    return await api.models.AgentInstance(
         tenant_id=tenant_id,
         agent_id=agent_id,
         labels=labels,
@@ -54,7 +54,7 @@ async def update_agent_instance_last_queried(agent_instance_id: str) -> bool:
     """
     if agent_instance_id is None:
         raise ValueError("Must supply an agent instance ID to update.")
-    result = await models.AgentInstance.where(id=agent_instance_id).update(
+    result = await api.models.AgentInstance.where(id=agent_instance_id).update(
         set={"last_queried": pendulum.now("utc")}
     )
     return bool(result.affected_rows)  # type: ignore
@@ -73,7 +73,7 @@ async def delete_agent_instance(agent_instance_id: str) -> bool:
     """
     if agent_instance_id is None:
         raise ValueError("Must supply an agent instance ID to delete.")
-    result = await models.AgentInstance.where(id=agent_instance_id).delete()
+    result = await api.models.AgentInstance.where(id=agent_instance_id).delete()
     return bool(result.affected_rows)  # type: ignore
 
 
@@ -94,7 +94,9 @@ async def create_agent(
     Returns:
         - str: the agent id
     """
-    return await models.Agent(tenant_id=tenant_id, name=name, config=config).insert()
+    return await api.models.Agent(
+        tenant_id=tenant_id, name=name, config=config
+    ).insert()
 
 
 @register_api("agents.delete_agent")
@@ -110,7 +112,7 @@ async def delete_agent(agent_id: str) -> bool:
     """
     if agent_id is None:
         raise ValueError("Must supply an agent ID to delete.")
-    result = await models.Agent.where(id=agent_id).delete()
+    result = await api.models.Agent.where(id=agent_id).delete()
     return bool(result.affected_rows)  # type: ignore
 
 
@@ -129,5 +131,5 @@ async def set_agent_config(agent_id: str, config: dict) -> str:
     if not agent_id:
         raise ValueError("Invalid agent ID.")
 
-    result = await models.Agent.where(id=agent_id).update(set={"config": config})
+    result = await api.models.Agent.where(id=agent_id).update(set={"config": config})
     return bool(result.affected_rows)  # type: ignore
