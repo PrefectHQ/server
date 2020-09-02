@@ -350,7 +350,6 @@ class AgentInstance(HasuraModel):
 
     id: UUIDString = None
     created: datetime.datetime = None
-    updated: datetime.datetime = None
     tenant_id: UUIDString = None
     agent_id: UUIDString = None
     name: str = None
