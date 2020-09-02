@@ -38,7 +38,7 @@ def upgrade():
         ),
         sa.Column(
             "tenant_id",
-            UUID(),
+            UUID,
             sa.ForeignKey("tenant.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
@@ -48,7 +48,7 @@ def upgrade():
     )
 
     op.execute(
-        f"""
+        """
         CREATE TRIGGER update_timestamp
         BEFORE UPDATE ON agent
         FOR EACH ROW
@@ -69,7 +69,7 @@ def upgrade():
         ),
         sa.Column(
             "tenant_id",
-            UUID(),
+            UUID,
             sa.ForeignKey("tenant.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
