@@ -235,6 +235,17 @@ def clear_data():
 @dev.command()
 @click.option("-m", "--migration-message", required=True)
 def generate_migration(migration_message):
+    """
+    Generates two files:
+        - an alembic migration file that can be filled out to create a database migration
+        - a hasura metadata archive that represents the hasura metadata at the START
+            of the migration
+
+    If the alembic migration ID is 'abcxyz' then the hasura migration will be named
+    'metadata-abcxyz.py'. Note that this is a copy of the metadata PRIOR to running
+    the migration, and will be used when DOWNGRADING through this alembic migration,
+    or UPGRADING through the previous alembic migration.
+    """
     # ensure this is called from the root server directory
     if Path(prefect_server.__file__).parents[2] != Path(os.getcwd()):
         raise click.ClickException(
@@ -254,14 +265,19 @@ def generate_migration(migration_message):
     hasura_migrations_path = "../../../services/hasura/migrations"
     backup_metadata_file = f"metadata-{revision}.yaml"
     backup_metadata_destination = os.path.abspath(
-        os.path.join(prefect_server.__file__,
+        os.path.join(
+            prefect_server.__file__,
             hasura_migrations_path,
             "versions",
             backup_metadata_file,
         )
     )
     shutil.copy(
-        os.path.abspath(os.path.join(prefect_server.__file__,hasura_migrations_path, "metadata.yaml")),
+        os.path.abspath(
+            os.path.join(
+                prefect_server.__file__, hasura_migrations_path, "metadata.yaml"
+            )
+        ),
         backup_metadata_destination,
     )
     click.echo(f"Copied Hasura metadata to {backup_metadata_destination}")

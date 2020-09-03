@@ -60,8 +60,12 @@ def apply_hasura_metadata(context):
     if not script:
         return
 
+    # if the requestied alembic migration is `head`, use `metadata.yaml`
     if script.revision == context.script.get_current_head():
         hasura_revision = None
+
+    # otherwise, we need to load the hasura metadata that was archived when
+    # the NEXT alembic migration was created.
     else:
         hasura_revision = list(script.nextrev)[0]
 
