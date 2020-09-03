@@ -4,6 +4,7 @@ import pendulum
 import pytest
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import (
     Failed,
     Finished,
@@ -14,9 +15,7 @@ from prefect.engine.state import (
     Success,
 )
 from prefect.utilities.graphql import EnumValue, with_args
-from prefect import api
 from prefect_server import config
-from prefect import models
 from prefect_server.utilities.exceptions import NotFound
 
 

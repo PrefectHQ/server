@@ -4,9 +4,8 @@ import uuid
 import pendulum
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import Pending, Scheduled
-from prefect import api
-from prefect import models
 
 
 class TestCreateFlowRun:

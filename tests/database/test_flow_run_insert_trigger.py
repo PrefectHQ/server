@@ -1,8 +1,7 @@
 import pytest
 
 import prefect
-from prefect import api
-from prefect import models
+from prefect import api, models
 
 
 @pytest.fixture

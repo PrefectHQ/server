@@ -6,9 +6,8 @@ import pydantic
 import pytest
 
 import prefect
+from prefect import api, models
 from prefect.utilities.graphql import EnumValue
-from prefect import api
-from prefect import models
 
 
 @pytest.fixture

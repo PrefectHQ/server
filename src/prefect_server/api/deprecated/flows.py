@@ -1,5 +1,4 @@
-from prefect import api
-from prefect import models
+from prefect import api, models
 from prefect.utilities.plugins import register_api
 
 

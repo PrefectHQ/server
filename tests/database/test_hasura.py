@@ -7,8 +7,8 @@ from asynctest import CoroutineMock
 from box import Box
 from graphql.error import GraphQLSyntaxError
 
-import prefect_server
 import prefect
+import prefect_server
 from prefect.utilities.graphql import EnumValue, parse_graphql
 from prefect_server.database.hasura import Variable
 from prefect_server.utilities import exceptions

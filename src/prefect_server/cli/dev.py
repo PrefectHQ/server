@@ -14,8 +14,8 @@ from click.testing import CliRunner
 
 import prefect
 import prefect_server
-from prefect_server import config
 from prefect import models
+from prefect_server import config
 
 
 @click.group()
