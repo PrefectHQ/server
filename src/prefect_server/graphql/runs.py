@@ -49,9 +49,9 @@ async def resolve_mapped_children(
     state_counts = {r["state"]: r["count"] for r in records}
 
     return {
-        'min_start_time': min_start_time,
-        'max_end_time': max_end_time,
-        'state_counts': state_counts,
+        "min_start_time": min_start_time,
+        "max_end_time": max_end_time,
+        "state_counts": state_counts,
     }
 
 
