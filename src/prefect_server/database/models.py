@@ -5,6 +5,7 @@ import pendulum
 import pydantic
 
 import prefect
+from prefect.utilities import plugins
 from prefect_server.database.orm import HasuraModel, UUIDString
 
 
