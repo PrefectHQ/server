@@ -40,26 +40,9 @@ class TestTaskRunStates:
             {"version", "state", "serialized_state"}
         )
 
-        assert query.version == 1
+        assert query.version == 2
         assert query.state == "Failed"
         assert query.serialized_state["type"] == "Failed"
-
-    async def test_set_task_run_state_does_not_increment_run_count_when_looping(
-        self, task_run_id, flow_run_id
-    ):
-        # ensure the flow run is running
-        await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=Running())
-
-        # simulate some looping
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=Running())
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=Looped())
-        result = await api.states.set_task_run_state(
-            task_run_id=task_run_id, state=Running()
-        )
-
-        assert result.task_run_id == task_run_id
-        task_run = await models.TaskRun.where(id=task_run_id).first({"run_count"})
-        assert task_run.run_count == 1
 
     @pytest.mark.parametrize("state", [Failed(), Success()])
     async def test_set_task_run_state_fails_with_wrong_task_run_id(self, state):
@@ -226,7 +209,7 @@ class TestFlowRunStates:
             {"version", "state", "serialized_state"}
         )
 
-        assert query.version == 2
+        assert query.version == 3
         assert query.state == "Running"
         assert query.serialized_state["type"] == "Running"
 
@@ -335,12 +318,12 @@ class TestTaskRunVersionLocking:
         self, task_run_id
     ):
         result = await api.states.set_task_run_state(
-            task_run_id=task_run_id, state=Failed(), version=0
+            task_run_id=task_run_id, state=Failed(), version=1
         )
 
         query = await models.TaskRun.where(id=task_run_id).first({"version", "state"})
 
-        assert query.version == 1
+        assert query.version == 2
         assert query.state == "Failed"
 
     async def test_set_task_run_state_with_version_fails_if_version_doesnt_match(
@@ -368,7 +351,7 @@ class TestTaskRunVersionLocking:
         )
 
         # confirm the version still increments
-        assert task_run.version == 1
+        assert task_run.version == 2
         assert task_run.state == "Failed"
 
     async def test_version_locking_disabled_if_version_locking_flag_not_set(
@@ -387,12 +370,12 @@ class TestTaskRunVersionLocking:
         await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=Running())
 
         await api.states.set_task_run_state(
-            task_run_id=task_run_id, state=Running(), flow_run_version=2
+            task_run_id=task_run_id, state=Running(), flow_run_version=3
         )
 
         query = await models.TaskRun.where(id=task_run_id).first({"version", "state"})
 
-        assert query.version == 1
+        assert query.version == 2
         assert query.state == "Running"
 
     async def test_set_task_run_state_with_wrong_flow_run_version_fails(
@@ -407,7 +390,7 @@ class TestTaskRunVersionLocking:
 
         query = await models.TaskRun.where(id=task_run_id).first({"version", "state"})
 
-        assert query.version == 0
+        assert query.version == 1
         assert query.state == "Pending"
 
 
@@ -424,12 +407,12 @@ class TestFlowRunVersionLocking:
         self, flow_run_id
     ):
         result = await api.states.set_flow_run_state(
-            flow_run_id=flow_run_id, state=Failed(), version=1
+            flow_run_id=flow_run_id, state=Failed(), version=2
         )
 
         query = await models.FlowRun.where(id=flow_run_id).first({"version", "state"})
 
-        assert query.version == 2
+        assert query.version == 3
         assert query.state == "Failed"
 
     async def test_set_flow_run_state_with_version_fails_if_version_doesnt_match(
@@ -458,7 +441,7 @@ class TestFlowRunVersionLocking:
         )
 
         # confirm the version still increments
-        assert flow_run.version == 2
+        assert flow_run.version == 3
         assert flow_run.state == "Failed"
 
     async def test_version_locking_disabled_if_version_locking_flag_not_set(

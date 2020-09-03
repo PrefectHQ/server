@@ -131,7 +131,6 @@ class FlowRun(HasuraModel):
     scheduled_start_time: datetime.datetime = None
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
-    duration: datetime.timedelta = None
     auto_scheduled: bool = None
     name: str = None
     times_resurrected: int = None
@@ -169,8 +168,6 @@ class TaskRun(HasuraModel):
     heartbeat: datetime.datetime = None
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
-    duration: datetime.timedelta = None
-    run_count: int = None
     cache_key: str = None
 
     # state fields
