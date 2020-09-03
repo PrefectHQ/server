@@ -12,11 +12,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 
 # revision identifiers, used by Alembic.
-revision = '6611fd0ccc73'
-down_revision = 'c1f317aa658c'
+revision = "6611fd0ccc73"
+down_revision = "c1f317aa658c"
 branch_labels = None
 depends_on = None
-
 
 
 def upgrade():
