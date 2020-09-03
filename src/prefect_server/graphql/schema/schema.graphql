@@ -24,42 +24,6 @@ type Mutation {
   set_schedule_inactive(input: set_schedule_inactive_input!): success_payload
 
   # ------------------------------------------------------
-  # runs
-  # ------------------------------------------------------
-
-  "Create a new flow run."
-  create_flow_run(input: create_flow_run_input!): flow_run_id_payload
-
-  """
-  Create a new task run, if it doesn't exist already. This is useful when dealing with dynamic
-  task runs, such as those created by mapping, when it is not known if the task run has been
-  attempted already.
-  """
-  get_or_create_task_run(
-    input: get_or_create_task_run_input!
-  ): task_run_id_payload
-
-  "Gets or creates all mapped task run children for a parent task run."
-  get_or_create_mapped_task_run_children(
-    input: get_or_create_mapped_task_run_children_input!
-  ): get_or_create_mapped_task_run_children_payload
-
-  "Update a flow run's heartbeat. This indicates the flow run is alive and is called automatically by Prefect Core."
-  update_flow_run_heartbeat(
-    input: update_flow_run_heartbeat_input!
-  ): success_payload
-
-  "Update a task run's heartbeat. This indicates the task run is alive and is called automatically by Prefect Core."
-  update_task_run_heartbeat(
-    input: update_task_run_heartbeat_input!
-  ): success_payload
-
-  "Delete a flow run."
-  delete_flow_run(input: delete_flow_run_input!): success_payload
-
-  get_runs_in_queue(input: get_runs_in_queue_input!): runs_in_queue_payload
-
-  # ------------------------------------------------------
   # cloud hooks
   # ------------------------------------------------------
 
@@ -93,57 +57,6 @@ input set_schedule_active_input {
 input set_schedule_inactive_input {
   "A flow ID whose schedule will be set to active"
   flow_id: UUID!
-}
-
-# ------------------------------------------------------
-# run inputs
-# ------------------------------------------------------
-
-input create_flow_run_input {
-  "The ID of the flow to schedule a run for"
-  flow_id: UUID
-  "A JSON payload specifying parameter values for any parameters in this flow"
-  parameters: JSON
-  "A JSON payload of key / value pairs to be placed in Prefect context for this run"
-  context: JSON
-  "An optional start time to schedule this run for - if not provided, will be scheduled immediately"
-  scheduled_start_time: DateTime
-  "An optional idempotency key for this run - if provided, multiple calls with this same key will not produce additional runs"
-  idempotency_key: String
-  "An optional name to provide this run - useful for searching in the UI or crafting GraphQL queries"
-  flow_run_name: String
-  "The version group to schedule a run for - if provided, the unique unarchived version in this version group will be run; this input is useful as a stable API for running a regularly updated flow"
-  version_group_id: String
-}
-
-input get_or_create_task_run_input {
-  flow_run_id: UUID!
-  task_id: UUID!
-  map_index: Int
-}
-
-input get_or_create_mapped_task_run_children_input {
-  flow_run_id: UUID!
-  task_id: UUID!
-  max_map_index: Int!
-}
-
-input update_flow_run_heartbeat_input {
-  flow_run_id: UUID!
-}
-
-input update_task_run_heartbeat_input {
-  task_run_id: UUID!
-}
-
-input get_runs_in_queue_input {
-  tenant_id: UUID!
-  before: DateTime
-  labels: [String!]
-}
-
-input delete_flow_run_input {
-  flow_run_id: UUID!
 }
 
 # ------------------------------------------------------
@@ -190,22 +103,6 @@ type success_payload {
 
 type flow_id_payload {
   id: UUID
-}
-
-type flow_run_id_payload {
-  id: UUID
-}
-
-type task_run_id_payload {
-  id: UUID
-}
-
-type get_or_create_mapped_task_run_children_payload {
-  ids: [UUID!]
-}
-
-type runs_in_queue_payload {
-  flow_run_ids: [String!]
 }
 
 type cloud_hook_id_payload {

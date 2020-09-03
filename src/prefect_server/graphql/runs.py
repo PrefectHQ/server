@@ -5,9 +5,54 @@ from graphql import GraphQLResolveInfo
 
 import prefect
 from prefect import api
-from prefect_server.utilities.graphql import mutation
+from prefect_server.database import postgres
+from prefect_server.utilities.graphql import mutation, query
 
 state_schema = prefect.serialization.state.StateSchema()
+
+
+@query.field("mapped_children")
+async def resolve_mapped_children(
+    obj: Any, info: GraphQLResolveInfo, task_run_id: str
+) -> dict:
+    """
+    Retrieve details about a task run's mapped children
+    """
+    query = r"""
+        SELECT 
+            min(task_run.start_time) AS min_start_time,
+            max(task_run.end_time) AS max_end_time,
+            task_run.state,
+            count(*) AS count
+        FROM task_run
+        JOIN task_run AS reference
+            ON task_run.flow_run_id = reference.flow_run_id
+            AND task_run.task_id = reference.task_id
+        WHERE 
+            reference.id = $1
+            AND reference.map_index < 0
+            AND task_run.map_index >= 0
+        GROUP BY task_run.state;
+    """
+
+    async with postgres.get_pool_connection() as connection:
+        records = await connection.fetch(query, task_run_id, timeout=0.5)
+
+    min_start_time = min(
+        [r["min_start_time"] for r in records if r["min_start_time"] is not None],
+        default=None,
+    )
+    max_end_time = max(
+        [r["max_end_time"] for r in records if r["max_end_time"] is not None],
+        default=None,
+    )
+    state_counts = {r["state"]: r["count"] for r in records}
+
+    return {
+        'min_start_time': min_start_time,
+        'max_end_time': max_end_time,
+        'state_counts': state_counts,
+    }
 
 
 @mutation.field("create_flow_run")
