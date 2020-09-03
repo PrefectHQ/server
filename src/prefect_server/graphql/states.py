@@ -22,7 +22,7 @@ async def resolve_set_flow_run_states(
     """
 
     server_context = context.get_context()
-    agent_instance_id = server_context.get("headers", {}).get("x-prefect-agent-id")
+    agent_id = server_context.get("headers", {}).get("x-prefect-agent-id")
 
     async def check_size_and_set_state(state_input: dict) -> str:
         state_size = sys.getsizeof(json.dumps(state_input["state"]))
@@ -36,7 +36,7 @@ async def resolve_set_flow_run_states(
             flow_run_id=flow_run_id,
             version=state_input.get("version"),
             state=state,
-            agent_instance_id=agent_instance_id,
+            agent_id=agent_id,
         )
 
         return {"id": flow_run_id, "status": "SUCCESS", "message": None}

@@ -20,7 +20,7 @@ depends_on = None
 
 def upgrade():
     op.create_table(
-        "agent",
+        "agent_config",
         sa.Column(
             "id", UUID, primary_key=True, server_default=sa.func.gen_random_uuid()
         ),
@@ -50,14 +50,14 @@ def upgrade():
     op.execute(
         """
         CREATE TRIGGER update_timestamp
-        BEFORE UPDATE ON agent
+        BEFORE UPDATE ON agent_config
         FOR EACH ROW
         EXECUTE PROCEDURE set_updated_timestamp();
         """
     )
 
     op.create_table(
-        "agent_instance",
+        "agent",
         sa.Column(
             "id", UUID, primary_key=True, server_default=sa.func.gen_random_uuid()
         ),
@@ -75,9 +75,9 @@ def upgrade():
             index=True,
         ),
         sa.Column(
-            "agent_id",
+            "agent_config_id",
             UUID(),
-            sa.ForeignKey("agent.id", ondelete="SET NULL"),
+            sa.ForeignKey("agent_config.id", ondelete="SET NULL"),
             nullable=True,
             index=True,
         ),
@@ -96,14 +96,14 @@ def upgrade():
     op.add_column(
         "flow_run",
         sa.Column(
-            "agent_instance_id",
+            "agent_id",
             UUID,
-            sa.ForeignKey("agent_instance.id", ondelete="SET NULL"),
+            sa.ForeignKey("agent.id", ondelete="SET NULL"),
         ),
     )
 
 
 def downgrade():
-    op.drop_column("flow_run", "agent_instance_id")
-    op.drop_table("agent_instance")
+    op.drop_column("flow_run", "agent_id")
     op.drop_table("agent")
+    op.drop_table("agent_config")

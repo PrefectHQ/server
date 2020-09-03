@@ -136,7 +136,7 @@ class FlowRun(HasuraModel):
     name: str = None
     times_resurrected: int = None
     idempotency_key: str = None
-    agent_instance_id: UUIDString = None
+    agent_id: UUIDString = None
 
     # state fields
     state: str = None
@@ -332,9 +332,9 @@ class Message(HasuraModel):
     content: dict = None
 
 
-@plugins.register_model("Agent")
-class Agent(HasuraModel):
-    __hasura_type__ = "agent"
+@plugins.register_model("AgentConfig")
+class AgentConfig(HasuraModel):
+    __hasura_type__ = "agent_config"
 
     id: UUIDString = None
     created: datetime.datetime = None
@@ -344,14 +344,14 @@ class Agent(HasuraModel):
     config: dict = None
 
 
-@plugins.register_model("AgentInstance")
-class AgentInstance(HasuraModel):
-    __hasura_type__ = "agent_instance"
+@plugins.register_model("Agent")
+class Agent(HasuraModel):
+    __hasura_type__ = "agent"
 
     id: UUIDString = None
     created: datetime.datetime = None
     tenant_id: UUIDString = None
-    agent_id: UUIDString = None
+    agent_config_id: UUIDString = None
     name: str = None
     type: str = None
     core_version: str = None
