@@ -38,6 +38,28 @@ async def resolve_create_flow_run(
     return result
 
 
+@mutation.field("set_flow_run_name")
+async def resolve_set_flow_run_name(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    return {
+        "success": await api.runs.set_flow_run_name(
+            flow_run_id=input["flow_run_id"], name=input["name"]
+        )
+    }
+
+
+@mutation.field("set_task_run_name")
+async def resolve_set_task_run_name(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    return {
+        "success": await api.runs.set_task_run_name(
+            task_run_id=input["task_run_id"], name=input["name"]
+        )
+    }
+
+
 @mutation.field("get_or_create_task_run")
 async def resolve_get_or_create_task_run(
     obj: Any, info: GraphQLResolveInfo, input: dict

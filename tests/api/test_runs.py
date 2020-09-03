@@ -1072,3 +1072,53 @@ class TestGetRunsInQueueFlowGroupLabels:
         )
         flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
         assert labeled_flow_run_id not in flow_runs
+
+
+class TestSetFlowRunName:
+    async def test_set_flow_run_name(self, flow_run_id):
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name != "hello"
+
+        await api.runs.set_flow_run_name(flow_run_id=flow_run_id, name="hello")
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name == "hello"
+
+    @pytest.mark.parametrize("name", [None, ""])
+    async def test_set_flow_run_name_must_have_value(self, flow_run_id, name):
+        with pytest.raises(ValueError, match="Invalid name"):
+            await api.runs.set_flow_run_name(flow_run_id=flow_run_id, name=name)
+
+    async def test_set_flow_run_id_invalid(self):
+        assert not await api.runs.set_flow_run_name(
+            flow_run_id=str(uuid.uuid4()), name="hello"
+        )
+
+    async def test_set_flow_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid flow run ID"):
+            assert not await api.runs.set_flow_run_name(flow_run_id=None, name="hello")
+
+
+class TestSetTaskRunName:
+    async def test_set_task_run_name(self, task_run_id):
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name != "hello"
+
+        await api.runs.set_task_run_name(task_run_id=task_run_id, name="hello")
+
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name == "hello"
+
+    @pytest.mark.parametrize("name", [None, ""])
+    async def test_set_task_run_name_must_have_value(self, task_run_id, name):
+        with pytest.raises(ValueError, match="Invalid name"):
+            await api.runs.set_task_run_name(task_run_id=task_run_id, name=name)
+
+    async def test_set_task_run_id_invalid(self):
+        assert not await api.runs.set_task_run_name(
+            task_run_id=str(uuid.uuid4()), name="hello"
+        )
+
+    async def test_set_task_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid task run ID"):
+            assert not await api.runs.set_task_run_name(task_run_id=None, name="hello")
