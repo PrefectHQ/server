@@ -1,15 +1,13 @@
-FROM node:10.15.0
+FROM node:12-slim
+
 ARG VERSION
 ENV PREFECT_SERVER_VERSION=${VERSION}
 
-COPY . /apollo
-
-RUN \
-  cd /apollo \
-  && npm ci && npm run build
-
 WORKDIR /apollo
-COPY post-start.sh .
-RUN chmod +x post-start.sh
+COPY . .
+
+RUN npm install && \
+    npm run build && \
+    chmod +x post-start.sh
 
 CMD ["npm", "run", "serve"]
