@@ -44,23 +44,6 @@ class TestTaskRunStates:
         assert query.state == "Failed"
         assert query.serialized_state["type"] == "Failed"
 
-    async def test_set_task_run_state_does_not_increment_run_count_when_looping(
-        self, task_run_id, flow_run_id
-    ):
-        # ensure the flow run is running
-        await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=Running())
-
-        # simulate some looping
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=Running())
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=Looped())
-        result = await api.states.set_task_run_state(
-            task_run_id=task_run_id, state=Running()
-        )
-
-        assert result.task_run_id == task_run_id
-        task_run = await models.TaskRun.where(id=task_run_id).first({"run_count"})
-        assert task_run.run_count == 1
-
     @pytest.mark.parametrize("state", [Failed(), Success()])
     async def test_set_task_run_state_fails_with_wrong_task_run_id(self, state):
         with pytest.raises(ValueError, match="State update failed"):
