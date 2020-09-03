@@ -9,8 +9,8 @@ ENV PREFECT_VERSION=${PREFECT_VERSION:-master}
 ARG PREFECT_SERVER_VERSION
 ENV PREFECT_SERVER_VERSION=${PREFECT_SERVER_VERSION:-master}
 
-ARG RELEASE_TIMESTAMP
-ENV RELEASE_TIMESTAMP=$RELEASE_TIMESTAMP
+ARG BUILD_DATE
+ENV BUILD_DATE=$BUILD_DATE
 
 # Image Labels
 LABEL maintainer="help@prefect.io"
@@ -18,7 +18,7 @@ LABEL org.label-schema.schema-version = "1.0"
 LABEL org.label-schema.name="apollo"
 LABEL org.label-schema.url="https://www.prefect.io/"
 LABEL org.label-schema.version=${PREFECT_VERSION}
-LABEL org.label-schema.build-date=${RELEASE_TIMESTAMP}
+LABEL org.label-schema.build-date=${BUILD_DATE}
 
 WORKDIR /apollo
 COPY . .
