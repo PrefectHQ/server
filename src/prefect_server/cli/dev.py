@@ -238,50 +238,34 @@ def generate_migration(migration_message):
     # ensure this is called from the root server directory
     if Path(prefect_server.__file__).parents[2] != Path(os.getcwd()):
         raise click.ClickException(
-            "generate-migration must be run from the server root directory."
+            "generate-migration must be run from the root directory."
         )
-    # find the most recent revision
-    alembic_migrations_path = "../../../services/postgres/alembic/versions"
-    versions = glob.glob(
-        os.path.join(os.path.dirname(__file__), alembic_migrations_path, "*.py")
-    )
-    if versions:
-        versions.sort()
-        most_recent_migration = versions[-1]
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                alembic_migrations_path,
-                most_recent_migration,
-            )
-        ) as migration:
-            for line in migration.readlines():
-                if line.startswith("Revision ID:"):
-                    revision = line.split(": ")[1].strip()
-        click.echo(f"Most recent Alembic revision is {revision}")
-        # copy metadata to a backup for corresponding revision
-        hasura_migrations_path = "../../../services/hasura/migrations"
-        backup_metadata_file = f"metadata-{revision}.yaml"
-        backup_metadata_destination = os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__),
-                hasura_migrations_path,
-                "versions",
-                backup_metadata_file,
-            )
-        )
-        shutil.copy(
-            os.path.join(
-                os.path.dirname(__file__), hasura_migrations_path, "metadata.yaml"
-            ),
-            backup_metadata_destination,
-        )
-        click.echo(f"Copied metadata to {backup_metadata_destination}")
 
     # create a new revision
     click.echo(
         subprocess.check_output(["alembic", "revision", "-m", migration_message])
     )
+
+    # get the new revision id
+    heads_output = subprocess.check_output(["alembic", "heads"])
+    revision = heads_output.decode().split(" ", 1)[0]
+
+    # copy metadata to a backup for corresponding revision
+    hasura_migrations_path = "../../../services/hasura/migrations"
+    backup_metadata_file = f"metadata-{revision}.yaml"
+    backup_metadata_destination = os.path.abspath(
+        os.path.join(prefect_server.__file__,
+            hasura_migrations_path,
+            "versions",
+            backup_metadata_file,
+        )
+    )
+    shutil.copy(
+        os.path.abspath(os.path.join(prefect_server.__file__,hasura_migrations_path, "metadata.yaml")),
+        backup_metadata_destination,
+    )
+    click.echo(f"Copied Hasura metadata to {backup_metadata_destination}")
+
     click.secho("Prefect Server migration generated!", fg="green")
 
 
