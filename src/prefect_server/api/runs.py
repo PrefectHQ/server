@@ -344,22 +344,20 @@ async def delete_flow_run(flow_run_id: str) -> bool:
     return bool(result.affected_rows)  # type: ignore
 
 
-@register_api("runs.update_flow_run_agent_instance")
-async def update_flow_run_agent_instance(
-    flow_run_id: str, agent_instance_id: str
-) -> None:
+@register_api("runs.update_flow_run_agent")
+async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> None:
     """
     Updates the agent instance of a flow run
 
     Args:
         - flow_run_id (str): the flow run id
-        - agent_instance_id (str): the id of an agent instance submitting the flow run
+        - agent_id (str): the id of an agent instance submitting the flow run
 
     Raises:
         - ValueError: if the flow_run_id is invalid
     """
     result = await models.FlowRun.where(id=flow_run_id).update(
-        set={"agent_instance_id": agent_instance_id}
+        set={"agent_id": agent_id}
     )
     if not result.affected_rows:
         raise ValueError("Invalid flow run ID")
@@ -370,7 +368,7 @@ async def get_runs_in_queue(
     tenant_id: str,
     before: datetime = None,
     labels: Iterable[str] = None,
-    agent_instance_id: str = None,
+    agent_id: str = None,
 ) -> List[str]:
 
     if tenant_id is None:
@@ -433,9 +431,7 @@ async def get_runs_in_queue(
         final_flow_runs.append(flow_run.id)
         counter += 1
 
-    if agent_instance_id:
-        await api.agents.update_agent_instance_last_queried(
-            agent_instance_id=agent_instance_id
-        )
+    if agent_id:
+        await api.agents.update_agent_last_queried(agent_id=agent_id)
 
     return final_flow_runs

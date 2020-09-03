@@ -101,12 +101,12 @@ async def resolve_get_runs_in_queue(
     labels.sort()
 
     cloud_context = context.get_context()
-    agent_instance_id = cloud_context.get("headers", {}).get("x-prefect-agent-id")
+    agent_id = cloud_context.get("headers", {}).get("x-prefect-agent-id")
 
     result = await api.runs.get_runs_in_queue(
         tenant_id=input["tenant_id"],
         before=input.get("before"),
         labels=labels,
-        agent_instance_id=agent_instance_id,
+        agent_id=agent_id,
     )
     return {"flow_run_ids": result}
