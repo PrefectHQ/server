@@ -6,9 +6,6 @@ import pydantic
 
 import prefect
 from prefect_server.database.orm import HasuraModel, UUIDString
-from prefect.utilities import plugins
-
-models = plugins.MODELS
 
 
 @plugins.register_model("Tenant")

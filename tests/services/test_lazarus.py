@@ -4,7 +4,7 @@ import pytest
 import prefect
 from prefect import api
 from prefect_server import config
-from prefect_server.database import models
+from prefect import models
 from prefect_server.services.towel.lazarus import Lazarus
 
 

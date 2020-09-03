@@ -2,7 +2,7 @@ import pendulum
 import pytest
 
 from prefect import api
-from prefect_server.database import models
+from prefect import models
 
 
 class TestCreateUpdate:

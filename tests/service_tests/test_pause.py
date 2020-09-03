@@ -14,7 +14,7 @@ from prefect.engine.state import (
     Success,
 )
 from prefect import api
-from prefect_server.database import models
+from prefect import models
 from prefect_server.utilities.tests import set_temporary_config
 
 state_schema = prefect.serialization.state.StateSchema()

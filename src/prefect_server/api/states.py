@@ -8,12 +8,11 @@ import pendulum
 from box import Box
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import Cancelled, Cancelling, State
-from prefect import api
-from prefect_server.database import models
+from prefect.utilities.plugins import register_api
 from prefect_server.utilities import events
 from prefect_server.utilities.logging import get_logger
-from prefect.utilities.plugins import register_api
 
 logger = get_logger("api")
 

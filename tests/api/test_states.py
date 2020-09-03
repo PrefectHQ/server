@@ -25,7 +25,7 @@ from prefect.engine.state import (
     _MetaState,
 )
 from prefect import api
-from prefect_server.database import models
+from prefect import models
 
 
 class TestTaskRunStates:

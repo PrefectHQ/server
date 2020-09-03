@@ -3,7 +3,7 @@ import uuid
 import prefect
 from prefect.utilities.graphql import compress
 from prefect import api
-from prefect_server.database import models
+from prefect import models
 
 
 class TestCreateFlow:

@@ -8,7 +8,7 @@ from prefect.engine.state import Pending, Queued, Scheduled
 from prefect.utilities.graphql import EnumValue
 from prefect import api
 from prefect_server import config
-from prefect_server.database import models
+from prefect import models
 from prefect_server.utilities import exceptions, names
 from prefect.utilities.plugins import register_api
 

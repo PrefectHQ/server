@@ -6,7 +6,7 @@ import pendulum
 import prefect
 from prefect.engine.state import Pending, Scheduled
 from prefect import api
-from prefect_server.database import models
+from prefect import models
 
 
 class TestCreateFlowRun:

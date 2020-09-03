@@ -3,7 +3,7 @@ import pytest
 import prefect
 import prefect_server
 from prefect.utilities.graphql import EnumValue, with_args
-from prefect_server.database import models
+from prefect import models
 
 
 # FIXME this will be in Prefect Core

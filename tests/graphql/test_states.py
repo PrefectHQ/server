@@ -6,7 +6,7 @@ from prefect.engine.result import Result, SafeResult
 from prefect.engine.result_handlers import JSONResultHandler
 from prefect.engine.state import Retrying, Running, Submitted, Success
 from prefect import api
-from prefect_server.database import models
+from prefect import models
 
 
 @pytest.fixture

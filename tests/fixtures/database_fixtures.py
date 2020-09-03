@@ -7,7 +7,7 @@ import prefect
 from prefect.engine.state import Running, Submitted, Success
 from prefect import api
 from prefect_server import config
-from prefect_server.database import models
+from prefect import models
 
 START_TIME = pendulum.now()
 

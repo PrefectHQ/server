@@ -4,7 +4,7 @@ import pendulum
 import pytest
 
 from prefect import api
-from prefect_server.database import models
+from prefect import models
 
 
 async def test_create_logs(flow_run_id, tenant_id):
