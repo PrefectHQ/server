@@ -17,16 +17,30 @@ of instance.
 
 See comments in `values.yaml`.
 
-### Database passwords
+### Database & database passwords
 
-A password for both db admin user and application user should be supplied. The former is needed to install pgcrypto.
+The database can be either external or internal (via `postgresqlEnabled`, default internal). 
+If it is external, the following db  setup must either already be done, or the application 
+database user should have necessary permissions to execute it (as it is in the hasura init 
+container startup script):
+```sql
+      -- create pgcrypto extension, required for UUID
+      CREATE EXTENSION IF NOT EXISTS pgcrypto;
+      CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+      SET TIME ZONE 'UTC';
+```
 
-Passwords can either be supplied via:
+For internal use, this is executed on database creation by the `postgres` user. Because of this, 
+a password for both the postgres user and the application user should be supplied.
+
+Passwords can either be supplied either via an existing secret in the form required by [bitnami/postgresql](https://hub.helm.sh/charts/bitnami/postgresql), or via explicitly specified secrets:
 
 * `postgresql.global.existingSecret` or `postgresql.global.existingSecret` to specify existing secret.
 
 * Specify both `postgresql.postgresqlPostgresPassword` for
 admin, and `postgresql.postgresqlPassword` for application password.
+
+By default, the internal database creates a PVC for 8Gi storage.
 
 ### Ingresses
 
