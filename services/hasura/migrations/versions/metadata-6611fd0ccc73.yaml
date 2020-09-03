@@ -1,0 +1,265 @@
+version: 2
+tables:
+- table:
+    schema: public
+    name: agent
+  object_relationships:
+  - name: agent_config
+    using:
+      foreign_key_constraint_on: agent_config_id
+  array_relationships:
+  - name: flow_runs
+    using:
+      foreign_key_constraint_on:
+        column: agent_id
+        table:
+          schema: public
+          name: flow_run
+- table:
+    schema: public
+    name: agent_config
+  array_relationships:
+  - name: agents
+    using:
+      foreign_key_constraint_on:
+        column: agent_config_id
+        table:
+          schema: public
+          name: agent
+- table:
+    schema: public
+    name: cloud_hook
+- table:
+    schema: public
+    name: edge
+  object_relationships:
+  - name: downstream_task
+    using:
+      foreign_key_constraint_on: downstream_task_id
+  - name: flow
+    using:
+      foreign_key_constraint_on: flow_id
+  - name: upstream_task
+    using:
+      foreign_key_constraint_on: upstream_task_id
+- table:
+    schema: public
+    name: flow
+  object_relationships:
+  - name: flow_group
+    using:
+      foreign_key_constraint_on: flow_group_id
+  - name: project
+    using:
+      foreign_key_constraint_on: project_id
+  - name: tenant
+    using:
+      foreign_key_constraint_on: tenant_id
+  array_relationships:
+  - name: edges
+    using:
+      foreign_key_constraint_on:
+        column: flow_id
+        table:
+          schema: public
+          name: edge
+  - name: flow_runs
+    using:
+      foreign_key_constraint_on:
+        column: flow_id
+        table:
+          schema: public
+          name: flow_run
+  - name: tasks
+    using:
+      foreign_key_constraint_on:
+        column: flow_id
+        table:
+          schema: public
+          name: task
+- table:
+    schema: public
+    name: flow_group
+  object_relationships:
+  - name: tenant
+    using:
+      foreign_key_constraint_on: tenant_id
+  array_relationships:
+  - name: flows
+    using:
+      foreign_key_constraint_on:
+        column: flow_group_id
+        table:
+          schema: public
+          name: flow
+- table:
+    schema: public
+    name: flow_run
+  object_relationships:
+  - name: agent
+    using:
+      foreign_key_constraint_on: agent_id
+  - name: flow
+    using:
+      foreign_key_constraint_on: flow_id
+  - name: tenant
+    using:
+      foreign_key_constraint_on: tenant_id
+  array_relationships:
+  - name: logs
+    using:
+      foreign_key_constraint_on:
+        column: flow_run_id
+        table:
+          schema: public
+          name: log
+  - name: states
+    using:
+      foreign_key_constraint_on:
+        column: flow_run_id
+        table:
+          schema: public
+          name: flow_run_state
+  - name: task_runs
+    using:
+      foreign_key_constraint_on:
+        column: flow_run_id
+        table:
+          schema: public
+          name: task_run
+- table:
+    schema: public
+    name: flow_run_state
+  object_relationships:
+  - name: flow_run
+    using:
+      foreign_key_constraint_on: flow_run_id
+- table:
+    schema: public
+    name: log
+- table:
+    schema: public
+    name: message
+- table:
+    schema: public
+    name: project
+  object_relationships:
+  - name: tenant
+    using:
+      foreign_key_constraint_on: tenant_id
+  array_relationships:
+  - name: flows
+    using:
+      foreign_key_constraint_on:
+        column: project_id
+        table:
+          schema: public
+          name: flow
+- table:
+    schema: public
+    name: task
+  object_relationships:
+  - name: flow
+    using:
+      foreign_key_constraint_on: flow_id
+  array_relationships:
+  - name: downstream_edges
+    using:
+      foreign_key_constraint_on:
+        column: upstream_task_id
+        table:
+          schema: public
+          name: edge
+  - name: task_runs
+    using:
+      foreign_key_constraint_on:
+        column: task_id
+        table:
+          schema: public
+          name: task_run
+  - name: upstream_edges
+    using:
+      foreign_key_constraint_on:
+        column: downstream_task_id
+        table:
+          schema: public
+          name: edge
+- table:
+    schema: public
+    name: task_run
+  object_relationships:
+  - name: flow_run
+    using:
+      foreign_key_constraint_on: flow_run_id
+  - name: task
+    using:
+      foreign_key_constraint_on: task_id
+  - name: tenant
+    using:
+      foreign_key_constraint_on: tenant_id
+  array_relationships:
+  - name: logs
+    using:
+      foreign_key_constraint_on:
+        column: task_run_id
+        table:
+          schema: public
+          name: log
+  - name: states
+    using:
+      foreign_key_constraint_on:
+        column: task_run_id
+        table:
+          schema: public
+          name: task_run_state
+- table:
+    schema: public
+    name: task_run_state
+  object_relationships:
+  - name: task_run
+    using:
+      foreign_key_constraint_on: task_run_id
+- table:
+    schema: public
+    name: tenant
+  array_relationships:
+  - name: flow_groups
+    using:
+      foreign_key_constraint_on:
+        column: tenant_id
+        table:
+          schema: public
+          name: flow_group
+  - name: flows
+    using:
+      foreign_key_constraint_on:
+        column: tenant_id
+        table:
+          schema: public
+          name: flow
+  - name: projects
+    using:
+      foreign_key_constraint_on:
+        column: tenant_id
+        table:
+          schema: public
+          name: project
+- table:
+    schema: utility
+    name: traversal
+  object_relationships:
+  - name: task
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: task
+        column_mapping:
+          task_id: id
+functions:
+- function:
+    schema: utility
+    name: downstream_tasks
+- function:
+    schema: utility
+    name: upstream_tasks

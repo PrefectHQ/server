@@ -1,9 +1,9 @@
 """
 Add agent persistence
 
-Revision ID: 37e7552ab316
-Revises: c1f317aa658c
-Create Date: 2020-08-18 07:22:34.527630
+Revision ID: 4d189bc25279
+Revises: 6611fd0ccc73
+Create Date: 2020-09-03 16:34:24.932488
 
 """
 from alembic import op
@@ -12,8 +12,8 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 
 # revision identifiers, used by Alembic.
-revision = "37e7552ab316"
-down_revision = "c1f317aa658c"
+revision = "4d189bc25279"
+down_revision = "6611fd0ccc73"
 branch_labels = None
 depends_on = None
 
