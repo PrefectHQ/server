@@ -117,7 +117,9 @@ async def delete_agent_config(agent_config_id: str) -> bool:
 
 
 @register_api("agents.update_agent_config")
-async def update_agent_config(agent_config_id: str, name: str, settings: dict) -> str:
+async def update_agent_config(
+    agent_config_id: str, name: str = None, settings: dict = None
+) -> str:
     """
     Update an agent config
 
@@ -133,9 +135,9 @@ async def update_agent_config(agent_config_id: str, name: str, settings: dict) -
         raise ValueError("Invalid agent config ID.")
 
     update = {}
-    if name:
+    if name is not None:
         update["name"] = name
-    if settings:
+    if settings is not None:
         update["settings"] = settings
 
     result = await api.models.AgentConfig.where(id=agent_config_id).update(set=update)
