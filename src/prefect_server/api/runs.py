@@ -353,14 +353,14 @@ async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> None:
         - flow_run_id (str): the flow run id
         - agent_id (str): the id of an agent instance submitting the flow run
 
-    Raises:
-        - ValueError: if the flow_run_id is invalid
+    Returns:
+        bool: if the update was successful
     """
     result = await models.FlowRun.where(id=flow_run_id).update(
         set={"agent_id": agent_id}
     )
-    if not result.affected_rows:
-        raise ValueError("Invalid flow run ID")
+    return bool(result.affected_rows)
+
 
 
 @register_api("runs.get_runs_in_queue")
