@@ -362,7 +362,6 @@ async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> None:
     return bool(result.affected_rows)
 
 
-
 @register_api("runs.get_runs_in_queue")
 async def get_runs_in_queue(
     tenant_id: str,
