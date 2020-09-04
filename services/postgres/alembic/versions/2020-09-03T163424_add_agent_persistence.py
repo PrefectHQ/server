@@ -44,7 +44,7 @@ def upgrade():
             index=True,
         ),
         sa.Column("name", sa.String),
-        sa.Column("config", JSONB, nullable=False, server_default="{}"),
+        sa.Column("settings", JSONB, nullable=False, server_default="{}"),
     )
 
     op.execute(
@@ -63,6 +63,12 @@ def upgrade():
         ),
         sa.Column(
             "created",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.Column(
+            "updated",
             sa.TIMESTAMP(timezone=True),
             nullable=False,
             server_default=sa.func.now(),
@@ -91,6 +97,15 @@ def upgrade():
             nullable=True,
             server_default=sa.func.now(),
         ),
+    )
+
+    op.execute(
+        """
+        CREATE TRIGGER update_timestamp
+        BEFORE UPDATE ON agent
+        FOR EACH ROW
+        EXECUTE PROCEDURE set_updated_timestamp();
+        """
     )
 
     op.add_column(

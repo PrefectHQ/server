@@ -81,7 +81,7 @@ async def delete_agent(agent_id: str) -> bool:
 async def create_agent_config(
     tenant_id: str,
     name: str,
-    config: dict,
+    settings: dict,
 ) -> str:
     """
     Creates an agent config, returning its id
@@ -89,13 +89,13 @@ async def create_agent_config(
     Args:
         - tenant_id (str): the tenant id
         - name(str): the agent config name
-        - config (dict): agent config configuration
+        - settings (dict): agent config settings
 
     Returns:
         - str: the agent config id
     """
     return await api.models.AgentConfig(
-        tenant_id=tenant_id, name=name, config=config
+        tenant_id=tenant_id, name=name, settings=settings
     ).insert()
 
 
@@ -116,14 +116,15 @@ async def delete_agent_config(agent_config_id: str) -> bool:
     return bool(result.affected_rows)  # type: ignore
 
 
-@register_api("agents.set_agent_config")
-async def set_agent_config(agent_config_id: str, config: dict) -> str:
+@register_api("agents.update_agent_config")
+async def update_agent_config(agent_config_id: str, name: str, settings: dict) -> str:
     """
-    Update an agent config config
+    Update an agent config
 
     Args:
         - agent_config_id (str): the agent config ID
-        - config (dict): the config to set on the agent config
+        - name (str): the agent config name
+        - settings (dict): the settings to set on the agent config
 
     Returns:
         - bool: whether the update was successful
@@ -131,7 +132,11 @@ async def set_agent_config(agent_config_id: str, config: dict) -> str:
     if not agent_config_id:
         raise ValueError("Invalid agent config ID.")
 
-    result = await api.models.AgentConfig.where(id=agent_config_id).update(
-        set={"config": config}
-    )
+    update = {}
+    if name:
+        update["name"] = name
+    if settings:
+        update["settings"] = settings
+
+    result = await api.models.AgentConfig.where(id=agent_config_id).update(set=update)
     return bool(result.affected_rows)  # type: ignore

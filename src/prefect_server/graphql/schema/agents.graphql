@@ -16,7 +16,7 @@ extend type Mutation {
   delete_agent_config(input: delete_agent_config_input!): success_payload
 
   "Update an agent config's config"
-  set_agent_config(input: set_agent_config_input!): success_payload
+  update_agent_config(input: update_agent_config_input!): success_payload
 
 }
 
@@ -47,8 +47,8 @@ input create_agent_config_input {
   tenant_id: UUID!
   "Agent config name"
   name: String
-  "Optional agent configuration"
-  config: JSON
+  "Optional agent settings"
+  settings: JSON
 }
 
 input delete_agent_config_input {
@@ -56,11 +56,13 @@ input delete_agent_config_input {
   agent_id: UUID!
 }
 
-input set_agent_config_input {
+input update_agent_config_input {
   "The ID of the agent config to update"
   agent_config_id: UUID!
-  "A config to set for this agent config"
-  config: JSON!
+  "A new name for this agent config"
+  name: String
+  "A settings to set for this agent config"
+  settings: JSON
 }
 
 # ------------------------------------------------------

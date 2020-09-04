@@ -338,7 +338,7 @@ class AgentConfig(HasuraModel):
     updated: datetime.datetime = None
     tenant_id: UUIDString = None
     name: str = None
-    config: dict = None
+    settings: dict = None
 
 
 @plugins.register_model("Agent")

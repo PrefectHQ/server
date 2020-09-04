@@ -34,7 +34,7 @@ async def resolve_create_agent_config(
         "id": await api.agents.create_agent_config(
             tenant_id=input["tenant_id"],
             agent=input.get("name"),
-            config=input.get("config"),
+            settings=input.get("settings"),
         )
     }
 
@@ -50,14 +50,16 @@ async def resolve_delete_agent_config(
     }
 
 
-@mutation.field("set_agent_config")
-async def resolve_set_agent_config(
+@mutation.field("update_agent_config")
+async def resolve_update_agent_config(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
     agent_config_id = input["agent_config_id"]
 
     return {
-        "success": await api.agents.set_agent_config(
-            agent_config_id=agent_config_id, config=input["config"]
+        "success": await api.agents.update_agent_config(
+            agent_config_id=agent_config_id,
+            name=input.get("name"),
+            settings=input.get("settings"),
         )
     }
