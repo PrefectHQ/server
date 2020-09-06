@@ -10,8 +10,8 @@ ENV PREFECT_SERVER_VERSION=${PREFECT_SERVER_VERSION:-master}
 ARG PREFECT_VERSION
 ENV PREFECT_VERSION=${PREFECT_VERSION:-master}
 
-ARG BUILD_DATE
-ENV BUILD_DATE=$BUILD_DATE
+ARG RELEASE_TIMESTAMP
+ENV RELEASE_TIMESTAMP=$RELEASE_TIMESTAMP
 
 # Set system locale
 ENV LC_ALL C.UTF-8
@@ -24,7 +24,7 @@ LABEL org.label-schema.schema-version = "1.0"
 LABEL org.label-schema.name="prefect_server"
 LABEL org.label-schema.url="https://www.prefect.io/"
 LABEL org.label-schema.version=${PREFECT_SERVER_VERSION}
-LABEL org.label-schema.build-date=${BUILD_DATE}
+LABEL org.label-schema.build-date=${RELEASE_TIMESTAMP}
 
 RUN apt update && \
     apt install -y gcc git && \
