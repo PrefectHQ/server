@@ -16,6 +16,5 @@
 #
 # Here's an example of a PR that adds an enhancement
 
-breaking:
-  - "Cloud hooks require explicit states - [#51](https://github.com/PrefectHQ/server/pull/51)"
-  - "Cloud hooks do not match state parents - [#51](https://github.com/PrefectHQ/server/pull/51)"
+fix:
+  - "Fix __init__.py for deprecated API module - [#71](https://github.com/PrefectHQ/server/pull/71)"

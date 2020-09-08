@@ -16,6 +16,8 @@
 #
 # Here's an example of a PR that adds an enhancement
 
-enhancement:
-  - "Upgrade Hasura to 1.3.1 - [#52](https://github.com/PrefectHQ/server/pull/52)"
-  - "Use Hasura default cache size - [#52](https://github.com/PrefectHQ/server/pull/52)"
+migration:
+  - "Increase performance of state update triggers - [#72](https://github.com/PrefectHQ/server/pull/72)"
+
+breaking:
+  - "Remove `run_count` and `duration` columns - [#72](https://github.com/PrefectHQ/server/pull/72)"

@@ -8,6 +8,7 @@ QUERY = """
     query {
         api {
             backend
+            mode
             version
             release_timestamp
         }
@@ -18,6 +19,11 @@ QUERY = """
 async def test_backend(run_query):
     result = await run_query(query=QUERY)
     assert result.data.api.backend == "SERVER"
+
+
+async def test_mode(run_query):
+    result = await run_query(query=QUERY)
+    assert result.data.api.mode == "normal"
 
 
 async def test_server_version_picks_up_dunder_version_if_no_server_env_var(

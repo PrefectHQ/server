@@ -53,7 +53,7 @@ class TestSetFlowRunStates:
         assert result.data.set_flow_run_states.states[0].message is None
 
         fr = await models.FlowRun.where(id=flow_run_id).first({"state", "version"})
-        assert fr.version == 2
+        assert fr.version == 3
         assert fr.state == "Running"
 
     async def test_set_flow_run_state_with_version(self, run_query, flow_run_id):
@@ -77,7 +77,7 @@ class TestSetFlowRunStates:
         assert result.data.set_flow_run_states.states[0].message is None
 
         fr = await models.FlowRun.where(id=flow_run_id).first({"state", "version"})
-        assert fr.version == 2
+        assert fr.version == 3
         assert fr.state == "Running"
 
     async def test_set_flow_run_state_with_bad_version(
@@ -103,7 +103,7 @@ class TestSetFlowRunStates:
         fr = await models.FlowRun.where(id=locked_flow_run_id).first(
             {"state", "version"}
         )
-        assert fr.version == 1
+        assert fr.version == 2
         assert fr.state == "Scheduled"
 
     async def test_set_multiple_flow_run_states(
@@ -130,19 +130,19 @@ class TestSetFlowRunStates:
         fr1 = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[0].id
         ).first({"state", "version"})
-        assert fr1.version == 2
+        assert fr1.version == 3
         assert fr1.state == "Running"
 
         fr2 = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[1].id
         ).first({"state", "version"})
-        assert fr2.version == 3
+        assert fr2.version == 4
         assert fr2.state == "Success"
 
         fr3 = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[2].id
         ).first({"state", "version"})
-        assert fr3.version == 4
+        assert fr3.version == 5
         assert fr3.state == "Retrying"
 
     async def test_set_multiple_flow_run_states_with_one_failed(
@@ -161,7 +161,7 @@ class TestSetFlowRunStates:
                         ),
                         dict(
                             flow_run_id=flow_run_id_3,
-                            version=3,
+                            version=4,
                             state=Retrying().serialize(),
                         ),
                     ]
@@ -179,7 +179,7 @@ class TestSetFlowRunStates:
         fr2 = await models.FlowRun.where(id=locked_flow_run_id).first(
             {"state", "version"}
         )
-        assert fr2.version == 1
+        assert fr2.version == 2
         assert fr2.state == "Scheduled"
 
     async def test_set_flow_run_state_with_result(self, run_query, flow_run_id):
@@ -198,7 +198,7 @@ class TestSetFlowRunStates:
         fr = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[0].id
         ).first({"state", "version"})
-        assert fr.version == 2
+        assert fr.version == 3
         assert fr.state == "Success"
 
     async def test_set_flow_run_state_with_saferesult(self, run_query, flow_run_id):
@@ -216,7 +216,7 @@ class TestSetFlowRunStates:
         fr = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[0].id
         ).first({"state", "version"})
-        assert fr.version == 2
+        assert fr.version == 3
         assert fr.state == "Success"
 
     async def test_set_flow_run_states_rejects_states_with_large_payloads(
@@ -279,7 +279,7 @@ class TestSetTaskRunStates:
 
         assert result.data.set_task_run_states.states[0].id == task_run_id
         tr = await models.TaskRun.where(id=task_run_id).first({"state", "version"})
-        assert tr.version == 1
+        assert tr.version == 2
         assert tr.state == "Running"
 
     async def test_set_task_run_state_with_version(
@@ -302,7 +302,7 @@ class TestSetTaskRunStates:
 
         assert result.data.set_task_run_states.states[0].id == task_run_id
         tr = await models.TaskRun.where(id=task_run_id).first({"state", "version"})
-        assert tr.version == 1
+        assert tr.version == 2
         assert tr.state == "Running"
 
     async def test_set_task_run_state_bad_version(self, run_query, locked_task_run_id):
@@ -351,19 +351,19 @@ class TestSetTaskRunStates:
         tr1 = await models.TaskRun.where(
             id=result.data.set_task_run_states.states[0].id
         ).first({"state", "version"})
-        assert tr1.version == 1
+        assert tr1.version == 2
         assert tr1.state == "Running"
 
         tr2 = await models.TaskRun.where(
             id=result.data.set_task_run_states.states[1].id
         ).first({"state", "version"})
-        assert tr2.version == 2
+        assert tr2.version == 3
         assert tr2.state == "Success"
 
         tr3 = await models.TaskRun.where(
             id=result.data.set_task_run_states.states[2].id
         ).first({"state", "version"})
-        assert tr3.version == 2
+        assert tr3.version == 3
         assert tr3.state == "Retrying"
 
     async def test_set_multiple_task_run_states_with_one_failed(
@@ -396,7 +396,7 @@ class TestSetTaskRunStates:
         tr2 = await models.TaskRun.where(id=locked_task_run_id).first(
             {"state", "version"}
         )
-        assert tr2.version == 0
+        assert tr2.version == 1
         assert tr2.state == "Pending"
 
     async def test_set_task_run_state_with_result(self, run_query, task_run_id):
@@ -415,7 +415,7 @@ class TestSetTaskRunStates:
         tr = await models.TaskRun.where(
             id=result.data.set_task_run_states.states[0].id
         ).first({"state", "version"})
-        assert tr.version == 1
+        assert tr.version == 2
         assert tr.state == "Success"
 
     async def test_set_task_run_state_with_safe_result(self, run_query, task_run_id):
@@ -433,7 +433,7 @@ class TestSetTaskRunStates:
         tr = await models.TaskRun.where(
             id=result.data.set_task_run_states.states[0].id
         ).first({"state", "version"})
-        assert tr.version == 1
+        assert tr.version == 2
         assert tr.state == "Success"
 
     async def test_set_task_run_state_with_correct_flow_run_state(
@@ -460,7 +460,7 @@ class TestSetTaskRunStates:
         tr = await models.TaskRun.where(
             id=result.data.set_task_run_states.states[0].id
         ).first({"state", "version"})
-        assert tr.version == 1
+        assert tr.version == 2
         assert tr.state == "Running"
 
     async def test_set_task_run_state_fails_with_wrong_flow_run_state(
@@ -486,7 +486,7 @@ class TestSetTaskRunStates:
         )
         assert "State update failed" in str(result.errors[0].message)
         tr = await models.TaskRun.where(id=task_run_id).first({"state", "version"})
-        assert tr.version == 0
+        assert tr.version == 1
         assert tr.state == "Pending"
 
     async def test_set_task_run_states_rejects_states_with_large_payloads(
@@ -529,9 +529,9 @@ class TestCancelFlowRun:
     @pytest.mark.parametrize(
         "state,res_state,version",
         [
-            (Running(), "Cancelling", 3),
-            (Success(), "Success", 2),
-            (Submitted(), "Cancelled", 3),
+            (Running(), "Cancelling", 4),
+            (Success(), "Success", 3),
+            (Submitted(), "Cancelled", 4),
         ],
     )
     async def test_cancel_flow_run(
@@ -542,7 +542,8 @@ class TestCancelFlowRun:
         )
 
         result = await run_query(
-            query=self.mutation, variables={"input": {"flow_run_id": flow_run_id}},
+            query=self.mutation,
+            variables={"input": {"flow_run_id": flow_run_id}},
         )
 
         assert result.data.cancel_flow_run.state == res_state

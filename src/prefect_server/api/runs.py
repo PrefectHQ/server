@@ -148,7 +148,7 @@ async def _create_flow_run(
     run = models.FlowRun(
         tenant_id=flow.tenant_id,
         flow_id=flow_id or flow.id,
-        parameters=parameters,
+        parameters=run_parameters,
         context=context or {},
         scheduled_start_time=scheduled_start_time,
         name=flow_run_name or names.generate_slug(2),
@@ -283,7 +283,9 @@ async def get_or_create_mapped_task_run_children(
 
 
 @register_api("runs.update_flow_run_heartbeat")
-async def update_flow_run_heartbeat(flow_run_id: str,) -> None:
+async def update_flow_run_heartbeat(
+    flow_run_id: str,
+) -> None:
     """
     Updates the heartbeat of a flow run.
 
@@ -302,7 +304,9 @@ async def update_flow_run_heartbeat(flow_run_id: str,) -> None:
 
 
 @register_api("runs.update_task_run_heartbeat")
-async def update_task_run_heartbeat(task_run_id: str,) -> None:
+async def update_task_run_heartbeat(
+    task_run_id: str,
+) -> None:
     """
     Updates the heartbeat of a task run. Also sets the corresponding flow run heartbeat.
 
