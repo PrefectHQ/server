@@ -10,3 +10,4 @@ import prefect_server.graphql.states
 import prefect_server.graphql.tenants
 import prefect_server.graphql.messages
 import prefect_server.graphql.cloud_hooks
+import prefect_server.graphql.agents

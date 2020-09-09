@@ -1,0 +1,78 @@
+extend type Mutation {
+  # ------------------------------------------------------
+  # agents
+  # ------------------------------------------------------
+
+  "Register an agent"
+  register_agent(input: register_agent_input!): agent_id_payload
+
+  "Delete an agent"
+  delete_agent(input: delete_agent_input!): success_payload
+
+  "Create a new agent config"
+  create_agent_config(input: create_agent_config_input!): agent_config_id_payload
+
+  "Delete an agent config"
+  delete_agent_config(input: delete_agent_config_input!): success_payload
+
+  "Update an agent config's config"
+  update_agent_config(input: update_agent_config_input!): success_payload
+
+}
+
+# ------------------------------------------------------
+# agent inputs
+# ------------------------------------------------------
+
+input register_agent_input {
+  "the tenant"
+  tenant_id: UUID!
+  "instance labels"
+  labels: [String!]!
+  "agent config id"
+  agent_config_id: UUID
+  "instance type"
+  type: String!
+  "instance name"
+  name: String
+}
+
+input delete_agent_input {
+  "The ID of the agent to delete"
+  agent_id: UUID!
+}
+
+input create_agent_config_input {
+  "The tenant"
+  tenant_id: UUID!
+  "Agent config name"
+  name: String
+  "Optional agent settings"
+  settings: JSON
+}
+
+input delete_agent_config_input {
+  "The ID of the agent config to delete"
+  agent_id: UUID!
+}
+
+input update_agent_config_input {
+  "The ID of the agent config to update"
+  agent_config_id: UUID!
+  "A new name for this agent config"
+  name: String
+  "A settings to set for this agent config"
+  settings: JSON
+}
+
+# ------------------------------------------------------
+# agent payloads
+# ------------------------------------------------------
+
+type agent_id_payload {
+  id: UUID
+}
+
+type agent_config_id_payload {
+  id: UUID
+}
