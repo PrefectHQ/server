@@ -40,7 +40,7 @@ async def register_agent(
     return await api.models.Agent(
         tenant_id=tenant_id,
         agent_config_id=agent_config_id,
-        labels=labels,
+        labels=labels or [],
         name=name,
         type=type,
         core_version=core_version,
