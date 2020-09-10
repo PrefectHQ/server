@@ -253,13 +253,6 @@ tables:
   table:
     name: task_run_state
     schema: public
-- object_relationships:
-  - name: tenant
-    using:
-      foreign_key_constraint_on: tenant_id
-  table:
-    name: flow_concurrency_limit
-    schema: public
 - table:
     name: cloud_hook
     schema: public

@@ -356,6 +356,18 @@ class Agent(HasuraModel):
     last_queried: datetime.datetime = None
 
 
+@plugins.register_model("FlowConcurrencyLimit")
+class FlowConcurrencyLimit(HasuraModel):
+    __hasura_type__ = "flow_concurrency_limit"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    updated: datetime.datetime = None
+    tenant_id: UUIDString = None
+    name: str = None
+    limit: int = None
+
+
 # process forward references for all Pydantic models (meaning string class names)
 for obj in list(locals().values()):
     if isinstance(obj, type) and issubclass(obj, pydantic.BaseModel):
