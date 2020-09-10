@@ -135,6 +135,7 @@ class FlowRun(HasuraModel):
     name: str = None
     times_resurrected: int = None
     idempotency_key: str = None
+    agent_id: UUIDString = None
 
     # state fields
     state: str = None
@@ -326,6 +327,33 @@ class Message(HasuraModel):
     type: str = None
     text: str = None
     content: dict = None
+
+
+@plugins.register_model("AgentConfig")
+class AgentConfig(HasuraModel):
+    __hasura_type__ = "agent_config"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    updated: datetime.datetime = None
+    tenant_id: UUIDString = None
+    name: str = None
+    settings: dict = None
+
+
+@plugins.register_model("Agent")
+class Agent(HasuraModel):
+    __hasura_type__ = "agent"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    tenant_id: UUIDString = None
+    agent_config_id: UUIDString = None
+    name: str = None
+    type: str = None
+    core_version: str = None
+    labels: List[str] = None
+    last_queried: datetime.datetime = None
 
 
 # process forward references for all Pydantic models (meaning string class names)

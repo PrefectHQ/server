@@ -6,6 +6,7 @@ from graphql import GraphQLResolveInfo
 import prefect
 from prefect import api
 from prefect_server.database import postgres
+from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation, query
 
 state_schema = prefect.serialization.state.StateSchema()
@@ -143,9 +144,14 @@ async def resolve_get_runs_in_queue(
 ) -> dict:
     labels = input.get("labels", [])
     labels.sort()
+
+    cloud_context = context.get_context()
+    agent_id = cloud_context.get("headers", {}).get("x-prefect-agent-id")
+
     result = await api.runs.get_runs_in_queue(
         tenant_id=input["tenant_id"],
         before=input.get("before"),
         labels=labels,
+        agent_id=agent_id,
     )
     return {"flow_run_ids": result}

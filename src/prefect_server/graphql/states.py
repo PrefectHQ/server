@@ -7,6 +7,7 @@ from graphql import GraphQLResolveInfo
 
 import prefect
 from prefect import api
+from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation
 
 state_schema = prefect.serialization.state.StateSchema()
@@ -20,6 +21,9 @@ async def resolve_set_flow_run_states(
     Sets the flow run state, first deserializing a State from the provided input.
     """
 
+    server_context = context.get_context()
+    agent_id = server_context.get("headers", {}).get("x-prefect-agent-id")
+
     async def check_size_and_set_state(state_input: dict) -> str:
         state_size = sys.getsizeof(json.dumps(state_input["state"]))
         if state_size > 1000000:  # 1 mb max
@@ -29,7 +33,10 @@ async def resolve_set_flow_run_states(
 
         flow_run_id = state_input.get("flow_run_id")
         await api.states.set_flow_run_state(
-            flow_run_id=flow_run_id, version=state_input.get("version"), state=state
+            flow_run_id=flow_run_id,
+            version=state_input.get("version"),
+            state=state,
+            agent_id=agent_id,
         )
 
         return {"id": flow_run_id, "status": "SUCCESS", "message": None}

@@ -264,7 +264,7 @@ async def create_flow(
 
     # schedule runs
     if set_schedule_active:
-        await schedule_flow_runs(flow_id=flow_id)
+        await api.flows.schedule_flow_runs(flow_id=flow_id)
 
     return flow_id
 
@@ -403,7 +403,7 @@ async def set_schedule_active(flow_id: str) -> bool:
     if not result.affected_rows:
         return False
 
-    await schedule_flow_runs(flow_id=flow_id)
+    await api.flows.schedule_flow_runs(flow_id=flow_id)
     return True
 
 
