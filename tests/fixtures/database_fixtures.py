@@ -230,3 +230,42 @@ async def excess_submitted_task_runs(project_id):
             flow_run_id=flow_run, task_id=task.id, map_index=None
         )
         await api.states.set_task_run_state(task_run_id=task_run, state=Submitted())
+
+
+@pytest.fixture
+async def flow_concurrency_limit_id(tenant_id) -> str:
+    concurrency_limit_id = await api.concurrency_limits.update_flow_concurrency_limit(
+        name="foo", limit=1, tenant_id=tenant_id
+    )
+
+    return concurrency_limit_id
+
+
+async def flow_concurrency_limit_id_2(tenant_id) -> str:
+    concurrency_limit_id = await api.concurrency_limits.update_flow_concurrency_limit(
+        name="bar", limit=1, tenant_id=tenant_id
+    )
+
+    return concurrency_limit_id
+
+
+@pytest.fixture
+async def flow_concurrency_limit(
+    flow_concurrency_limit_id,
+) -> models.FlowConcurrencyLimit:
+
+    populated_concurrency_limit = await models.FlowConcurrencyLimit.where(
+        id=flow_concurrency_limit_id
+    ).first({"id", "name", "tenant_id", "limit"})
+    return populated_concurrency_limit
+
+
+@pytest.fixture
+async def flow_concurrency_limit_2(
+    flow_concurrency_limit_id_2,
+) -> models.FlowConcurrencyLimit:
+
+    populated_concurrency_limit = await models.FlowConcurrencyLimit.where(
+        id=flow_concurrency_limit_id_2
+    ).first({"id", "name", "tenant_id", "limit"})
+    return populated_concurrency_limit
