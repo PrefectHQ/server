@@ -6,8 +6,9 @@ import versioneer
 
 install_requires = [
     "prefect >= 0.13.0",
-    "ariadne >= 0.8.0, < 0.12.0",
     "alembic >= 1.2, < 2.0",
+    "ariadne >= 0.8.0, < 0.12.0",
+    "asyncpg >= 0.20, < 0.21",
     "click >= 6.7, <8.0",
     "coolname >= 1.1, < 2.0",
     "docker >= 3.4,< 5.0",
