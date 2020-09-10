@@ -344,9 +344,30 @@ async def delete_flow_run(flow_run_id: str) -> bool:
     return bool(result.affected_rows)  # type: ignore
 
 
+@register_api("runs.update_flow_run_agent")
+async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> None:
+    """
+    Updates the agent instance of a flow run
+
+    Args:
+        - flow_run_id (str): the flow run id
+        - agent_id (str): the id of an agent instance submitting the flow run
+
+    Returns:
+        bool: if the update was successful
+    """
+    result = await models.FlowRun.where(id=flow_run_id).update(
+        set={"agent_id": agent_id}
+    )
+    return bool(result.affected_rows)
+
+
 @register_api("runs.get_runs_in_queue")
 async def get_runs_in_queue(
-    tenant_id: str, before: datetime = None, labels: Iterable[str] = None
+    tenant_id: str,
+    before: datetime = None,
+    labels: Iterable[str] = None,
+    agent_id: str = None,
 ) -> List[str]:
 
     if tenant_id is None:
@@ -408,5 +429,8 @@ async def get_runs_in_queue(
 
         final_flow_runs.append(flow_run.id)
         counter += 1
+
+    if agent_id:
+        await api.agents.update_agent_last_queried(agent_id=agent_id)
 
     return final_flow_runs
