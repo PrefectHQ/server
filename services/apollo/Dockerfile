@@ -23,7 +23,7 @@ LABEL org.label-schema.build-date=${RELEASE_TIMESTAMP}
 WORKDIR /apollo
 COPY . .
 
-RUN npm install && \
+RUN npm ci && \
     npm run build && \
     chmod +x post-start.sh
 
