@@ -12,8 +12,8 @@ async def resolve_register_agent(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
     agent_id = await api.agents.register_agent(
-        tenant_id=input["tenant_id"],
-        labels=input["labels"],
+        tenant_id=input.get("tenant_id"),
+        labels=input.get("labels"),
         agent_config_id=input.get("agent_config_id"),
         type=input["type"],
         name=input.get("name"),

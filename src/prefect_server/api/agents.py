@@ -2,6 +2,7 @@ from typing import List
 
 import pendulum
 
+from prefect_server.database import models
 from prefect_server.utilities import context
 from prefect import api
 from prefect.utilities.plugins import register_api
@@ -31,10 +32,15 @@ async def register_agent(
     server_context = context.get_context()
     core_version = server_context.get("headers", {}).get("x-prefect-core-version")
 
+    if not tenant_id:
+        try:
+            tenant_id = await models.Tenant.where({"id": {"_eq": None}}).first().id
+        except:
+            raise ValueError("No tenant found.")
     return await api.models.Agent(
         tenant_id=tenant_id,
         agent_config_id=agent_config_id,
-        labels=labels,
+        labels=labels or [],
         name=name,
         type=type,
         core_version=core_version,
