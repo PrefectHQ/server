@@ -607,6 +607,4 @@ class TestMappedChildren:
         result = await run_query(
             self.query, variables=dict(task_run_id=str(uuid.uuid4()))
         )
-        assert result.data.mapped_children.min_start_time is None
-        assert result.data.mapped_children.max_end_time is None
-        assert result.data.mapped_children.state_counts == {}
+        assert result.data.mapped_children is None

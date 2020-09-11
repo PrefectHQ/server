@@ -5,7 +5,7 @@ from graphql import GraphQLResolveInfo
 
 import prefect
 from prefect import api
-from prefect_server.database import postgres
+from prefect_server.database import models, postgres
 from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation, query
 
@@ -20,7 +20,7 @@ async def resolve_mapped_children(
     Retrieve details about a task run's mapped children
     """
     query = r"""
-        SELECT 
+        SELECT
             min(task_run.start_time) AS min_start_time,
             max(task_run.end_time) AS max_end_time,
             task_run.state,
@@ -29,12 +29,16 @@ async def resolve_mapped_children(
         JOIN task_run AS reference
             ON task_run.flow_run_id = reference.flow_run_id
             AND task_run.task_id = reference.task_id
-        WHERE 
+        WHERE
             reference.id = $1
             AND reference.map_index < 0
             AND task_run.map_index >= 0
         GROUP BY task_run.state;
     """
+
+    task_run = await models.TaskRun.where({"id": {"_eq": task_run_id}}).first()
+    if not task_run:
+        return None
 
     async with postgres.get_pool_connection() as connection:
         records = await connection.fetch(query, task_run_id, timeout=0.5)
