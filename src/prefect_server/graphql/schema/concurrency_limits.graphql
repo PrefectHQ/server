@@ -1,0 +1,33 @@
+extend type Mutation {
+  # ------------------------------------------------------
+  # flow concurrency limits
+  # ------------------------------------------------------
+  "Creates or updates an execution environment's flow concurrency limit"
+  update_flow_concurrency_limit(
+    input: update_flow_concurrency_limit_input!
+  ): flow_concurrency_limit_id_payload
+
+  "Deletes an execution environment's flow concurrency limit"
+  delete_flow_concurrency_limit(
+    input: delete_flow_concurrency_limit_input!
+  ): success_payload
+}
+
+# ------------------------------------------------------
+# flow concurrency inputs
+# ------------------------------------------------------
+input update_flow_concurrency_limit_input {
+  "Execution environment label to limit"
+  name: String!
+  "The number of concurrent flows allowed"
+  limit: Int!
+  "Tenant owning the flow concurrency limit"
+  tenant_id: UUID!
+}
+input delete_flow_concurrency_limit_input {
+  limit_id: UUID!
+}
+
+type flow_concurrency_limit_id_payload {
+  id: UUID!
+}
