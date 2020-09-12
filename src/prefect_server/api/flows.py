@@ -153,17 +153,6 @@ async def create_flow(
         raise ValueError("Invalid project.")
     tenant_id = project.tenant_id  # type: ignore
 
-    # check required parameters - can't load a flow that has required params and a shcedule
-    # NOTE: if we allow schedules to be set via UI in the future, we might skip or
-    # refactor this check
-    required_parameters = [p for p in flow.parameters if p.required]
-    if flow.schedule is not None and required_parameters:
-        required_names = {p.name for p in required_parameters}
-        if not all(
-            [required_names <= set(c.parameter_defaults) for c in flow.schedule.clocks]
-        ):
-            raise ValueError("Can not schedule a flow that has required parameters.")
-
     # set up task detail info
     task_lookup = {t.slug: t for t in flow.tasks}
     tasks_with_upstreams = {e.downstream_task for e in flow.edges}
@@ -229,7 +218,7 @@ async def create_flow(
         flow_group_id=flow_group_id,
         description=description,
         schedule=serialized_flow.get("schedule"),
-        is_schedule_active=set_schedule_active,
+        is_schedule_active=False,
         tasks=[
             models.Task(
                 id=t.id,
@@ -264,7 +253,7 @@ async def create_flow(
 
     # schedule runs
     if set_schedule_active:
-        await api.flows.schedule_flow_runs(flow_id=flow_id)
+        await api.flows.set_schedule_active(flow_id=flow_id)
 
     return flow_id
 
@@ -396,6 +385,30 @@ async def set_schedule_active(flow_id: str) -> bool:
     """
     if flow_id is None:
         raise ValueError("Invalid flow id.")
+
+    flow = await models.Flow.where(id=flow_id).first(
+        {
+            "schedule": True,
+            "parameters": True,
+            "flow_group": {"schedule": True, "default_parameters": True},
+        }
+    )
+
+    if not flow:
+        return False
+
+    # logic for determining if it's appropriate to turn on the schedule for this flow
+    required_parameters = {p.get("name") for p in flow.parameters if p.get("required")}
+    if flow.schedule is not None and required_parameters:
+        required_names = required_parameters.difference(
+            flow.flow_group.default_parameters or {}
+        )
+        clock_params = [
+            set(c.get("parameter_defaults", {}).keys())
+            for c in flow.schedule.get("clocks", [])
+        ]
+        if not all([required_names <= c for c in clock_params]):
+            raise ValueError("Can not schedule a flow that has required parameters.")
 
     result = await models.Flow.where(id=flow_id).update(
         set={"is_schedule_active": True}
