@@ -345,6 +345,27 @@ class TestCreateFlow:
         )
         assert flow_id
 
+    async def test_create_flow_registers_flow_even_when_required_params(
+        self, project_id
+    ):
+        """
+        We allow Flow registration to proceed even when there are required
+        params, but we don't set the schedule to active.
+        """
+        a, b = prefect.Parameter("a"), prefect.Parameter("b", default=1)
+        clock = prefect.schedules.clocks.CronClock(cron=f"* * * * *")
+        schedule = prefect.schedules.Schedule(clocks=[clock])
+
+        flow = prefect.Flow("test-params", tasks=[a, b], schedule=schedule)
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+        assert flow_id
+
+        db_flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
+        assert db_flow.is_schedule_active is False
+
     async def test_create_flow_assigns_description(
         self,
         project_id,

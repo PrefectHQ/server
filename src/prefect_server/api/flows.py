@@ -253,7 +253,12 @@ async def create_flow(
 
     # schedule runs
     if set_schedule_active:
-        await api.flows.set_schedule_active(flow_id=flow_id)
+        # we don't want to error the Flow creation call as it would prevent other archiving logic
+        # from kicking in
+        try:
+            await api.flows.set_schedule_active(flow_id=flow_id)
+        except ValueError:
+            pass
 
     return flow_id
 
@@ -398,6 +403,10 @@ async def set_schedule_active(flow_id: str) -> bool:
         return False
 
     # logic for determining if it's appropriate to turn on the schedule for this flow
+    # we can set a flow run schedule to active if any required parameters are provided by:
+    # - the Flow's own clocks
+    # - the Flow Group's default parameters
+    # - some combination of the above two
     required_parameters = {p.get("name") for p in flow.parameters if p.get("required")}
     if flow.schedule is not None and required_parameters:
         required_names = required_parameters.difference(
