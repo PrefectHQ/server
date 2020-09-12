@@ -751,6 +751,17 @@ class TestSetScheduleActive:
         with pytest.raises(ValueError, match="Invalid flow id"):
             await api.flows.set_schedule_active(flow_id=None)
 
+    async def test_set_schedule_active_with_required_parameters(self, project_id):
+        flow = prefect.Flow(
+            name="test",
+            tasks=[prefect.Parameter("p", required=True)]
+        )
+        flow_id = await api.flows.create_flow(
+            serialized_flow=flow.serialize(), project_id=project_id
+        )
+        with pytest.raises(ValueError):
+            await api.flows.set_schedule_active(flow_id=flow_id)
+
     async def test_set_schedule_active_with_bad_id(self):
         assert not await api.flows.set_schedule_active(flow_id=str(uuid.uuid4()))
 
