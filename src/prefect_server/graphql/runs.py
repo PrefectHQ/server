@@ -38,10 +38,10 @@ async def resolve_mapped_children(
 
     task_run = await models.TaskRun.where({"id": {"_eq": task_run_id}}).first()
     if not task_run:
-        return None
-
-    async with postgres.get_pool_connection() as connection:
-        records = await connection.fetch(query, task_run_id, timeout=0.5)
+        records = []
+    else:
+        async with postgres.get_pool_connection() as connection:
+            records = await connection.fetch(query, task_run_id, timeout=0.5)
 
     min_start_time = min(
         [r["min_start_time"] for r in records if r["min_start_time"] is not None],
