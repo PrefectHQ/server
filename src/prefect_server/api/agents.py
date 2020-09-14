@@ -2,7 +2,7 @@ from typing import List
 
 import pendulum
 
-from prefect_server.database import models
+from prefect import models
 from prefect_server.utilities import context
 from prefect.utilities.plugins import register_api
 

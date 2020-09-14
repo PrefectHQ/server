@@ -8,9 +8,8 @@ from pydantic import BaseModel, Field, validator
 
 from prefect.serialization.schedule import ScheduleSchema
 from prefect.utilities.graphql import with_args
-from prefect import api
+from prefect import api, models
 from prefect_server import config
-from prefect_server.database import models
 from prefect_server.utilities import logging
 from prefect.utilities.plugins import register_api
 
