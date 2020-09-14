@@ -241,6 +241,7 @@ async def flow_concurrency_limit_id(tenant_id) -> str:
     return concurrency_limit_id
 
 
+@pytest.fixture
 async def flow_concurrency_limit_id_2(tenant_id) -> str:
     concurrency_limit_id = await api.concurrency_limits.update_flow_concurrency_limit(
         name="bar", limit=1, tenant_id=tenant_id
