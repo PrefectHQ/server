@@ -1,5 +1,16 @@
+import asyncio
+from typing import Dict, List
+
+import prefect
+from prefect.engine.state import Running
 from prefect_server.database import models
 from prefect.utilities.plugins import register_api
+
+RUNNING_STATES = [
+    state.__name__
+    for state in prefect.engine.state.__dict__.values()
+    if isinstance(state, type) and issubclass(state, Running)
+]
 
 
 @register_api("concurrency_limits.update_flow_concurrency_limit")
@@ -70,4 +81,111 @@ async def delete_flow_concurrency_limit(flow_concurrency_limit_id: str) -> bool:
         id=flow_concurrency_limit_id
     ).delete()
     return bool(result.affected_rows)
+
+
+@register_api("concurrency_limits.get_available_flow_run_concurrency")
+async def get_available_flow_run_concurrency(
+    tenant_id: str, labels: List[str]
+) -> Dict[str, int]:
+    """
+    Determines the number of open flow concurrency slots are available
+    given a certain flow label.
+
+    A `Flow` is allocated a slot of concurrency when it exists in
+    the `Running` state for the Execution Environment / Flow Group, and will
+    continue to occupy that slot until it transitions out of
+    the `Running` state.
+
+    Args:
+        - tenant_id (str): Tenant owning the flow runs and labels
+        - labels (List[str]): Flow labels to get their concurrency availability.
+
+    Returns:
+        - Dict[str, int]: Number of available concurrency slots for each
+            label that's passed in. If a concurrency limit is not found, 
+            the label won't be present in the output dictionary.
+    """
+
+    concurrency_limits = await models.FlowConcurrencyLimit.where(
+        {"name": {"_in": labels}, "tenant_id": {"_eq": tenant_id}}
+    ).get({"name", "limit"})
+    if not concurrency_limits:
+        return {}
+
+    limits = {limit.name: limit.limit for limit in concurrency_limits}
+
+    # These queries are done individually because Hasura doesn't
+    # handle {"labels": [name, name, name]} in a way that's
+    # easily able to be sent as one query. There are tests
+    # verifying how Hasura handles these nested arrays in JSONB fields
+    # due to how it doesn't behave how you'd expect at first glance.
+
+    # Splitting the queries for labels that are on _either_ an environment
+    # or a flow group & those with matching labels on both to avoid
+    # double counting flow runs
+
+    async def get_overlapping_label_slots(tenant_id: str, limit: str) -> Dict[str, int]:
+        # Overlapping label slots meaning a flow has the same label
+        # on the environment & the flow group.
+        utilized_slots = {
+            limit: await models.FlowRun.where(
+                where={
+                    "tenant_id": {"_eq": tenant_id},
+                    "state": {"_in": RUNNING_STATES},
+                    "flow": {
+                        "environment": {"_contains": {"labels": [limit]}},
+                        "flow_group": {"labels": {"_contains": [limit]}},
+                    },
+                }
+            ).count()
+        }
+        return utilized_slots
+
+    async def get_unique_label_slots(tenant_id: str, limit: str) -> Dict[str, int]:
+        # Unique label slots meaning where a label is _either_
+        # on a flow group or an environment, but *not* both.
+
+        utilized_slots = {
+            limit: await models.FlowRun.where(
+                {
+                    "tenant_id": {"_eq": tenant_id},
+                    "state": {"_in": RUNNING_STATES},
+                    "_or": [
+                        {"flow": {"environment": {"_contains": {"labels": [limit]}}}},
+                        {"flow": {"flow_group": {"labels": {"_contains": [limit]}}}},
+                    ],
+                    "_not": {
+                        "flow": {
+                            "environment": {"_contains": {"labels": [limit]}},
+                            "flow_group": {"labels": {"_contains": [limit]}},
+                        },
+                    },
+                }
+            ).count()
+        }
+
+        return utilized_slots
+
+    # 2 different functions (one execution per label) so we can await them
+    # independently sending all queries at once instead of potentially
+    # executing each batch ~synchronously
+
+    futures = [
+        get_overlapping_label_slots(tenant_id=tenant_id, limit=limit)
+        for limit in limits.keys()
+    ] + [
+        get_unique_label_slots(tenant_id=tenant_id, limit=limit)
+        for limit in limits.keys()
+    ]
+
+    used_flow_slots = await asyncio.gather(*futures)
+
+    # Combining all the single key, value pairs into one holding
+    # the total number of flow runs used
+    used_slots: Dict[str, int] = {}
+    for used_flow_slot in used_flow_slots:
+        limit = list(used_flow_slot.keys())[0]
+        used_slots[limit] = used_slots.get(limit, 0) + used_flow_slot[limit]
+
+    return {label: limit - used_slots[label] for label, limit in limits.items()}
 
