@@ -4,7 +4,6 @@ import pendulum
 
 from prefect_server.database import models
 from prefect_server.utilities import context
-from prefect import api
 from prefect.utilities.plugins import register_api
 
 
@@ -37,7 +36,7 @@ async def register_agent(
             tenant_id = await models.Tenant.where({"id": {"_eq": None}}).first().id
         except:
             raise ValueError("No tenant found.")
-    return await api.models.Agent(
+    return await models.Agent(
         tenant_id=tenant_id,
         agent_config_id=agent_config_id,
         labels=labels or [],
@@ -60,7 +59,7 @@ async def update_agent_last_queried(agent_id: str) -> bool:
     """
     if agent_id is None:
         raise ValueError("Must supply an agent ID to update.")
-    result = await api.models.Agent.where(id=agent_id).update(
+    result = await models.Agent.where(id=agent_id).update(
         set={"last_queried": pendulum.now("utc")}
     )
     return bool(result.affected_rows)  # type: ignore
@@ -79,7 +78,7 @@ async def delete_agent(agent_id: str) -> bool:
     """
     if agent_id is None:
         raise ValueError("Must supply an agent ID to delete.")
-    result = await api.models.Agent.where(id=agent_id).delete()
+    result = await models.Agent.where(id=agent_id).delete()
     return bool(result.affected_rows)  # type: ignore
 
 
@@ -100,7 +99,7 @@ async def create_agent_config(
     Returns:
         - str: the agent config id
     """
-    return await api.models.AgentConfig(
+    return await models.AgentConfig(
         tenant_id=tenant_id, name=name, settings=settings
     ).insert()
 
@@ -118,7 +117,7 @@ async def delete_agent_config(agent_config_id: str) -> bool:
     """
     if agent_config_id is None:
         raise ValueError("Must supply an agent ID to delete.")
-    result = await api.models.AgentConfig.where(id=agent_config_id).delete()
+    result = await models.AgentConfig.where(id=agent_config_id).delete()
     return bool(result.affected_rows)  # type: ignore
 
 
@@ -146,5 +145,5 @@ async def update_agent_config(
     if settings is not None:
         update["settings"] = settings
 
-    result = await api.models.AgentConfig.where(id=agent_config_id).update(set=update)
+    result = await models.AgentConfig.where(id=agent_config_id).update(set=update)
     return bool(result.affected_rows)  # type: ignore
