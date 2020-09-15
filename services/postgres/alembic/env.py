@@ -56,19 +56,18 @@ def run_migrations_offline():
 
 
 def apply_hasura_metadata(context):
-    # load the current revision (if we're upgrading) or the prior revision
-    # (if we're downgrading), because hasura metadata is tagged with the
-    # alembic migration AFTER it can be applied. In other words, when we generate
-    # alembic migration #3, we create a file called hasura_3 that was actually
-    # valid UNTIL migration #3, but not after it.
     script = context.script.get_revision(context.get_context().get_current_revision())
     if not script:
         return
 
+    # if the requestied alembic migration is `head`, use `metadata.yaml`
     if script.revision == context.script.get_current_head():
         hasura_revision = None
+
+    # otherwise, we need to load the hasura metadata that was archived when
+    # the NEXT alembic migration was created.
     else:
-        hasura_revision = script.revision
+        hasura_revision = list(script.nextrev)[0]
 
     # attempt to load the corresponding hasura metadata
     metadata_path = os.path.join(__file__, "../../../hasura/migrations")

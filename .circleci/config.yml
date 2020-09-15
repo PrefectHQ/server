@@ -191,7 +191,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
           path: 'services/apollo'
-          extra_build_args: '--build-arg PREFECT_VERSION=master'
+          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: master
           filters:
             branches:
@@ -215,6 +215,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
           path: 'services/apollo'
+          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
           filters:
             branches:

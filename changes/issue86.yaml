@@ -1,0 +1,2 @@
+fix:
+  - "Fix and consolidate behavior for active schedules - [#86](https://github.com/PrefectHQ/server/issues/86)"

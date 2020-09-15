@@ -2,10 +2,11 @@ import asyncio
 import uuid
 
 import pendulum
+import pytest
 
 import prefect
-from prefect.engine.state import Pending, Scheduled
 from prefect import api
+from prefect.engine.state import Pending, Scheduled
 from prefect_server.database import models
 
 
@@ -572,3 +573,86 @@ class TestSetTaskRunName:
 
         tr = await models.TaskRun.where(id=task_run_id).first({"name"})
         assert tr.name == "hello"
+
+
+class TestMappedChildren:
+
+    query = """
+        query($task_run_id: UUID!) {
+            mapped_children(task_run_id: $task_run_id) {
+                min_start_time
+                max_end_time
+                state_counts
+            }
+        }
+        """
+
+    @pytest.fixture(autouse=True)
+    async def mapped_children(self, task_id, running_flow_run_id):
+        run_ids = []
+        for i in range(10):
+            run_ids.append(
+                await api.runs.get_or_create_task_run(
+                    flow_run_id=running_flow_run_id, task_id=task_id, map_index=i
+                )
+            )
+
+        # 0, 1, 2 succeed
+        for i in [0, 1, 2]:
+            await api.states.set_task_run_state(
+                run_ids[i], prefect.engine.state.Success()
+            )
+
+        # 3, 4 fail
+        for i in [3, 4]:
+            await api.states.set_task_run_state(
+                run_ids[i], prefect.engine.state.Failed()
+            )
+
+        # 5 retrying
+        for i in [5]:
+            await api.states.set_task_run_state(
+                run_ids[i], prefect.engine.state.Retrying()
+            )
+
+        # 6, 7, 8 running
+        for i in [6, 7, 8]:
+            await api.states.set_task_run_state(
+                run_ids[i], prefect.engine.state.Running()
+            )
+
+        # 9 still pending
+
+        return run_ids
+
+    async def test_query_mapped_children(self, task_run_id, run_query):
+        result = await run_query(self.query, variables=dict(task_run_id=task_run_id))
+        assert result.data.mapped_children.min_start_time is not None
+        assert result.data.mapped_children.max_end_time is not None
+        assert result.data.mapped_children.state_counts == {
+            "Success": 3,
+            "Failed": 2,
+            "Retrying": 1,
+            "Running": 3,
+            "Pending": 1,
+        }
+
+    async def test_query_mapped_children_with_non_mapped_parent_task_run_id(
+        self, task_run_id, run_query, mapped_children
+    ):
+        result = await run_query(
+            self.query, variables=dict(task_run_id=mapped_children[1])
+        )
+        assert result.data.mapped_children.min_start_time is None
+        assert result.data.mapped_children.max_end_time is None
+        assert result.data.mapped_children.state_counts == {}
+
+    async def test_query_mapped_children_with_invalid_task_run_id(
+        self, task_run_id, run_query
+    ):
+        result = await run_query(
+            self.query, variables=dict(task_run_id=str(uuid.uuid4()))
+        )
+        assert result.data.mapped_children.min_start_time is None
+        assert result.data.mapped_children.max_end_time is None
+        assert result.data.mapped_children.state_counts == {}
