@@ -63,20 +63,10 @@ tables:
     schema: public
     name: flow_run
   object_relationships:
-  - name: current_state
-    using:
-      foreign_key_constraint_on: state_id
   - name: flow
     using:
       foreign_key_constraint_on: flow_id
   array_relationships:
-  - name: states
-    using:
-      foreign_key_constraint_on:
-        column: flow_run_id
-        table:
-          schema: public
-          name: flow_run_state
   - name: task_runs
     using:
       foreign_key_constraint_on:
@@ -87,10 +77,6 @@ tables:
 - table:
     schema: public
     name: flow_run_state
-  object_relationships:
-  - name: flow_run
-    using:
-      foreign_key_constraint_on: flow_run_id
 - table:
     schema: public
     name: log
@@ -124,23 +110,12 @@ tables:
     schema: public
     name: task_run
   object_relationships:
-  - name: current_state
-    using:
-      foreign_key_constraint_on: state_id
   - name: flow_run
     using:
       foreign_key_constraint_on: flow_run_id
   - name: task
     using:
       foreign_key_constraint_on: task_id
-  array_relationships:
-  - name: states
-    using:
-      foreign_key_constraint_on:
-        column: task_run_id
-        table:
-          schema: public
-          name: task_run_state
 - table:
     schema: public
     name: task_run_state
