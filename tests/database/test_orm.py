@@ -175,10 +175,7 @@ class TestORM:
     async def test_insert_selection_set(self):
         result = Box(
             await models.Project(name="test").insert(
-                selection_set={
-                    "affected_rows": True,
-                    "returning": {"created", "name"},
-                }
+                selection_set={"affected_rows": True, "returning": {"created", "name"},}
             )
         )
         assert result.affected_rows == 1
@@ -308,8 +305,7 @@ class TestModelQuery:
         assert set(p.id for p in flows) == set(flow_ids)
 
     async def test_get_selection_set(
-        self,
-        flow_ids,
+        self, flow_ids,
     ):
 
         flows = await orm.ModelQuery(model=models.Project).get(selection_set="name")
@@ -324,27 +320,17 @@ class TestModelQuery:
         assert isinstance(flow, models.Project)
 
     async def test_count(
-        self,
-        flow_ids,
+        self, flow_ids,
     ):
         assert await orm.ModelQuery(model=models.Project, where={}).count() == 3
 
     async def test_count_where(
-        self,
-        flow_ids,
+        self, flow_ids,
     ):
-        assert (
-            await models.Project.where(
-                {
-                    "name": {"_neq": "f2"},
-                }
-            ).count()
-            == 2
-        )
+        assert await models.Project.where({"name": {"_neq": "f2"},}).count() == 2
 
     async def test_update(
-        self,
-        flow_ids,
+        self, flow_ids,
     ):
         await models.Project.where({"id": {"_eq": flow_ids[0]}}).update(
             set=dict(name="test")
@@ -353,8 +339,7 @@ class TestModelQuery:
         assert names == {"test", "f2", "f3"}
 
     async def test_delete(
-        self,
-        flow_ids,
+        self, flow_ids,
     ):
         await models.Project.where({"id": {"_eq": flow_ids[0]}}).delete()
         names = set(p.name for p in await models.Project.where({}).get("name"))
@@ -395,3 +380,93 @@ class TestRunModels:
         assert info["message"] == state.message
         assert info["result"] == state.result
         assert info["serialized_state"] == state.serialize()
+
+
+class TestJSONBQuerying:
+    """
+    These aren't necessarily testing application code, but
+    rather are making sure how we're querying JSONB data structures
+    via Hasura works.
+
+    These are heavily used by the concurrency limits API
+    """
+
+    @pytest.mark.parametrize(
+        "labels", [["foo"], ["bar"], ["foo", "bar"], ["bar", "foo"]]
+    )
+    async def test_contains_partial_matches_in(
+        self, labeled_flow_id: str, labels: List[str]
+    ):
+        """
+        This test doesn't necessarily test our code, but it does test
+        that our understanding of how Hasura handles filtering a JSONB
+        for the existance of one or more values that should return a match
+        given the structure:
+        {
+            environment: {labels: [foo, bar, value,3]}
+        }
+        These find the match because they're either a subset or exact
+        match. Order doesn't matter.
+        """
+
+        res = await models.Flow.where(
+            {"environment": {"_contains": {"labels": labels}}}
+        ).count()
+        assert res == 1
+
+    @pytest.mark.parametrize("labels", [["foo", "bar", "baz"], ["baz"], ["foo", "baz"]])
+    async def test_contains_not_full_match(
+        self, labeled_flow_id: str, labels: List[str]
+    ):
+        """
+        This test doesn't necessarily test our code, but it does test
+        that our understanding of how Hasura handles filtering a JSONB
+        for the existance of one or more values that should not return 
+        a match given the structure:
+        {
+            environment: {labels: [value, value2, value,3]}
+        }
+        These don't find a match because the _contains filter needs
+        to be an exact match or subset.
+        """
+        res = await models.Flow.where(
+            {"environment": {"_contains": {"labels": labels}}}
+        ).count()
+        assert res == 0
+
+    @pytest.mark.parametrize(
+        "labels", [["foo"], ["bar"], ["foo", "bar"], ["bar", "foo"]]
+    )
+    async def test_array_labels(self, flow_group_id, labels: List[str]):
+
+        await models.FlowGroup.where(id=flow_group_id).update(
+            set=dict(labels=["foo", "bar"])
+        )
+
+        res = await models.Flow.where(
+            {"flow_group": {"labels": {"_contains": labels}}}
+        ).count()
+
+        assert res == 1
+
+    @pytest.mark.parametrize("labels", [["foo", "bar", "baz"], ["baz"], ["foo", "baz"]])
+    async def test_array_contains_not_full_match(
+        self, flow_group_id: str, labels: List[str]
+    ):
+        """
+        This test doesn't necessarily test our code, but it does test
+        that our understanding of how Hasura handles filtering a JSONB
+        for the existance of one or more values that should not return 
+        a match given the structure:
+        [value, value2]
+        
+        These don't find a match because the _contains filter needs
+        to be an exact match or subset.
+        """
+        await models.FlowGroup.where(id=flow_group_id).update(
+            set=dict(labels=["foo", "bar"])
+        )
+        res = await models.Flow.where(
+            {"flow_group": {"labels": {"_contains": labels}}}
+        ).count()
+        assert res == 0
