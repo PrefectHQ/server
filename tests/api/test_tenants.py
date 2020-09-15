@@ -131,8 +131,7 @@ class TestDeleteTenant:
         assert result is False
 
     @pytest.mark.parametrize(
-        "bad_value",
-        [None, ""],
+        "bad_value", [None, ""],
     )
     async def test_delete_tenant_fails_if_none(self, bad_value):
         with pytest.raises(ValueError, match="Invalid tenant ID"):

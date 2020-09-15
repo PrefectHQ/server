@@ -342,11 +342,7 @@ class TestZombieKillerRetries:
 
     @pytest.mark.parametrize("state", ["Failed", "Cancelling"])
     async def test_zombie_killer_does_not_retry_if_flow_run_is_not_running(
-        self,
-        flow_run_id,
-        task_id,
-        task_run_id,
-        state,
+        self, flow_run_id, task_id, task_run_id, state,
     ):
         await api.states.set_task_run_state(
             task_run_id, state=prefect.engine.state.Running()

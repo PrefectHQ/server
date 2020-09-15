@@ -23,9 +23,7 @@ async def db_flow_id(project_id):
 class TestFlowRunInsertTrigger:
     async def test_insert_flow_run_creates_task_runs(self, db_flow_id):
         # create a flow run
-        flow_run_id = await models.FlowRun(
-            flow_id=db_flow_id,
-        ).insert()
+        flow_run_id = await models.FlowRun(flow_id=db_flow_id,).insert()
         # retrieve the task runs associated with the flow run
         task_runs = await models.TaskRun.where(
             {"flow_run_id": {"_eq": flow_run_id}}

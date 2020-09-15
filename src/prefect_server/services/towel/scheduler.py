@@ -38,9 +38,7 @@ class Scheduler(LoopService):
                     "archived": {"_eq": False},
                 }
             ).get(
-                selection_set={
-                    "id",
-                },
+                selection_set={"id",},
                 order_by=[
                     {
                         "flow_runs_aggregate": {

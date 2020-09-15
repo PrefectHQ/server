@@ -146,8 +146,7 @@ class Lazarus(LoopService):
                 )
                 # Set flow run state to failed
                 await prefect.api.states.set_flow_run_state(
-                    flow_run_id=fr.id,
-                    state=Failed(message=message),
+                    flow_run_id=fr.id, state=Failed(message=message),
                 )
                 # log flow run state change
                 await prefect.api.logs.create_logs(

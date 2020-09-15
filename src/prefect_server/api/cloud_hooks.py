@@ -75,16 +75,12 @@ async def create_cloud_hook(
         if set(config or {}) != {"url"}:
             raise ValueError("Invalid config; expected `url`")
     elif type == "TWILIO":
-        if (
-            set(config or {})
-            != {
-                "account_sid",
-                "auth_token",
-                "messaging_service_sid",
-                "to",
-            }
-            or not config.get("to")
-        ):
+        if set(config or {}) != {
+            "account_sid",
+            "auth_token",
+            "messaging_service_sid",
+            "to",
+        } or not config.get("to"):
             raise ValueError(
                 "Invalid config; expected `account_sid`, `auth_token`, `messaging_service_sid`, and `to`"
             )

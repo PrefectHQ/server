@@ -18,8 +18,7 @@ class TestWriteRunLogs:
 
         logs = [dict(flow_run_id=flow_run_id, message="test") for _ in range(10)]
         result = await run_query(
-            query=self.mutation,
-            variables=dict(input=dict(logs=logs)),
+            query=self.mutation, variables=dict(input=dict(logs=logs)),
         )
 
         assert result.data.write_run_logs.success
@@ -38,8 +37,7 @@ class TestWriteRunLogs:
             for _ in range(14)
         ]
         result = await run_query(
-            query=self.mutation,
-            variables=dict(input=dict(logs=logs)),
+            query=self.mutation, variables=dict(input=dict(logs=logs)),
         )
         assert result.data.write_run_logs.success
 
@@ -66,8 +64,7 @@ class TestWriteRunLogs:
         )
         logs = [payload for _ in range(6)]
         result = await run_query(
-            query=self.mutation,
-            variables=dict(input=dict(logs=logs)),
+            query=self.mutation, variables=dict(input=dict(logs=logs)),
         )
 
         assert result.data.write_run_logs.success
@@ -118,8 +115,7 @@ class TestWriteRunLogs:
             for i in range(4)
         ]
         await run_query(
-            query=self.mutation,
-            variables=dict(input=dict(logs=payloads)),
+            query=self.mutation, variables=dict(input=dict(logs=payloads)),
         )
 
         await asyncio.sleep(0.5)
@@ -142,8 +138,7 @@ class TestWriteRunLogs:
         logs = [dict(flow_run_id=flow_run_id, message="test") for _ in range(9)]
         logs.append(dict(flow_run_id=None, message="test"))
         result = await run_query(
-            query=self.mutation,
-            variables=dict(input=dict(logs=logs)),
+            query=self.mutation, variables=dict(input=dict(logs=logs)),
         )
 
         assert result.errors

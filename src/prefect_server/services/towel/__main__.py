@@ -7,9 +7,7 @@ from prefect_server.services.towel.zombie_killer import ZombieKiller
 
 async def run_towel():
     await asyncio.gather(
-        Lazarus().run(),
-        Scheduler().run(),
-        ZombieKiller().run(),
+        Lazarus().run(), Scheduler().run(), ZombieKiller().run(),
     )
 
 

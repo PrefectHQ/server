@@ -658,4 +658,3 @@ class TestQueueFlowRun:
 
         result = await api.states.set_flow_run_state(flow_run_id, state)
         assert result.state != "Queued"
-

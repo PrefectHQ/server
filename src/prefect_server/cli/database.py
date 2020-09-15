@@ -156,8 +156,7 @@ def reset(unsafe, yes):
         if config.hasura.host not in hasura_hosts:
             click.secho(
                 "Failed safety check: bad 'hasura.host': '{}'\n  expected to be one of: {}".format(
-                    config.hasura.host,
-                    ",".join(repr(c) for c in hasura_hosts),
+                    config.hasura.host, ",".join(repr(c) for c in hasura_hosts),
                 ),
                 bg="red",
                 bold=True,
@@ -224,8 +223,7 @@ def reset(unsafe, yes):
         if not found_valid_candidate:
             click.secho(
                 "Failed safety check: bad 'hasura.db_url': '{}'\n  expected to contain one of: {}".format(
-                    config.hasura.db_url,
-                    ",".join(repr(c) for c in valid_candidates),
+                    config.hasura.db_url, ",".join(repr(c) for c in valid_candidates),
                 ),
                 bg="red",
                 bold=True,
