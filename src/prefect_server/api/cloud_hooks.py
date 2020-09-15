@@ -8,9 +8,8 @@ from box import Box
 from pydantic import BaseModel
 
 import prefect
-from prefect import api
+from prefect import api, models
 from prefect_server import config as server_config
-from prefect_server.database import models
 from prefect_server.utilities import logging, names, events
 from prefect.utilities.plugins import register_api
 
