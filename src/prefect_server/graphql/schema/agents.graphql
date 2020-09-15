@@ -26,9 +26,9 @@ extend type Mutation {
 
 input register_agent_input {
   "the tenant"
-  tenant_id: UUID!
+  tenant_id: UUID
   "instance labels"
-  labels: [String!]!
+  labels: [String!]
   "agent config id"
   agent_config_id: UUID
   "instance type"

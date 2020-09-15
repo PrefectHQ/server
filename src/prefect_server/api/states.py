@@ -9,8 +9,8 @@ from box import Box
 
 import prefect
 from prefect.engine.state import Cancelled, Cancelling, Queued, State
-from prefect import api
-from prefect_server.database import models
+from prefect import api, models
+
 from prefect_server.utilities import events
 from prefect_server.utilities.logging import get_logger
 from prefect.utilities.plugins import register_api

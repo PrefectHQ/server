@@ -234,4 +234,3 @@ tables:
     name: message
     schema: public
 version: 2
-

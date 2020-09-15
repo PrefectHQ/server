@@ -16,8 +16,5 @@
 #
 # Here's an example of a PR that adds an enhancement
 
-migration:
-  - "Increase performance of state update triggers - [#72](https://github.com/PrefectHQ/server/pull/72)"
-
-breaking:
-  - "Remove `run_count` and `duration` columns - [#72](https://github.com/PrefectHQ/server/pull/72)"
+enhancement:
+  - "Hasura metadata archives use the most recent alembic revision ID - [#78](https://github.com/PrefectHQ/server/pull/78)"

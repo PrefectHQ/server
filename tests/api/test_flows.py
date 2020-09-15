@@ -345,6 +345,27 @@ class TestCreateFlow:
         )
         assert flow_id
 
+    async def test_create_flow_registers_flow_even_when_required_params(
+        self, project_id
+    ):
+        """
+        We allow Flow registration to proceed even when there are required
+        params, but we don't set the schedule to active.
+        """
+        a, b = prefect.Parameter("a"), prefect.Parameter("b", default=1)
+        clock = prefect.schedules.clocks.CronClock(cron=f"* * * * *")
+        schedule = prefect.schedules.Schedule(clocks=[clock])
+
+        flow = prefect.Flow("test-params", tasks=[a, b], schedule=schedule)
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+        assert flow_id
+
+        db_flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
+        assert db_flow.is_schedule_active is False
+
     async def test_create_flow_assigns_description(
         self,
         project_id,
@@ -750,6 +771,96 @@ class TestSetScheduleActive:
     async def test_set_schedule_active_with_no_id(self):
         with pytest.raises(ValueError, match="Invalid flow id"):
             await api.flows.set_schedule_active(flow_id=None)
+
+    async def test_set_schedule_active_with_required_parameters(self, project_id):
+        flow = prefect.Flow(
+            name="test",
+            tasks=[prefect.Parameter("p", required=True)],
+            schedule=prefect.schedules.IntervalSchedule(
+                start_date=pendulum.now("EST"), interval=datetime.timedelta(minutes=1)
+            ),
+        )
+        flow_id = await api.flows.create_flow(
+            serialized_flow=flow.serialize(),
+            project_id=project_id,
+            set_schedule_active=False,
+        )
+        with pytest.raises(ValueError, match="required parameters"):
+            await api.flows.set_schedule_active(flow_id=flow_id)
+
+    async def test_set_schedule_active_handles_scheduled_param_defaults(
+        self, project_id
+    ):
+        a, b = prefect.Parameter("a"), prefect.Parameter("b", default=1)
+        clock = prefect.schedules.clocks.CronClock(
+            cron=f"* * * * *", parameter_defaults={"a": 1, "b": 2}
+        )
+        schedule = prefect.schedules.Schedule(clocks=[clock])
+
+        flow = prefect.Flow("test-params", tasks=[a, b], schedule=schedule)
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=flow.serialize(),
+            set_schedule_active=False,
+        )
+        assert flow_id
+        assert await api.flows.set_schedule_active(flow_id=flow_id)
+
+    async def test_set_schedule_active_handles_flow_group_defaults(self, project_id):
+        flow = prefect.Flow(
+            name="test",
+            tasks=[prefect.Parameter("p", required=True)],
+            schedule=prefect.schedules.IntervalSchedule(
+                start_date=pendulum.now("EST"), interval=datetime.timedelta(minutes=1)
+            ),
+        )
+        flow_id = await api.flows.create_flow(
+            serialized_flow=flow.serialize(),
+            project_id=project_id,
+            set_schedule_active=False,
+        )
+
+        # set a default for "p" at the flow group level
+        flow_group = await models.Flow.where(id=flow_id).first({"flow_group_id"})
+        await models.FlowGroup.where(id=flow_group.flow_group_id).update(
+            set=dict(default_parameters={"p": 1})
+        )
+
+        assert await api.flows.set_schedule_active(flow_id=flow_id) is True
+
+    async def test_set_schedule_active_handles_flow_group_defaults_and_schedule_defaults(
+        self, project_id
+    ):
+        clock = prefect.schedules.clocks.CronClock(
+            cron=f"* * * * *", parameter_defaults={"b": 2}
+        )
+        schedule = prefect.schedules.Schedule(clocks=[clock])
+
+        flow = prefect.Flow(
+            name="test",
+            tasks=[
+                prefect.Parameter("p", required=True),
+                prefect.Parameter("b", required=True),
+            ],
+            schedule=schedule,
+        )
+        flow_id = await api.flows.create_flow(
+            serialized_flow=flow.serialize(),
+            project_id=project_id,
+            set_schedule_active=False,
+        )
+
+        with pytest.raises(ValueError, match="required parameters"):
+            await api.flows.set_schedule_active(flow_id=flow_id)
+
+        # set a default for "p" at the flow group level
+        flow_group = await models.Flow.where(id=flow_id).first({"flow_group_id"})
+        await models.FlowGroup.where(id=flow_group.flow_group_id).update(
+            set=dict(default_parameters={"p": 3})
+        )
+
+        assert await api.flows.set_schedule_active(flow_id=flow_id) is True
 
     async def test_set_schedule_active_with_bad_id(self):
         assert not await api.flows.set_schedule_active(flow_id=str(uuid.uuid4()))
