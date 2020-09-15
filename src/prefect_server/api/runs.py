@@ -1,5 +1,5 @@
 import datetime
-from typing import Any, Iterable, List
+from typing import Any, Iterable, List, Set
 
 import pendulum
 
@@ -283,9 +283,7 @@ async def get_or_create_mapped_task_run_children(
 
 
 @register_api("runs.update_flow_run_heartbeat")
-async def update_flow_run_heartbeat(
-    flow_run_id: str,
-) -> None:
+async def update_flow_run_heartbeat(flow_run_id: str,) -> None:
     """
     Updates the heartbeat of a flow run.
 
@@ -304,9 +302,7 @@ async def update_flow_run_heartbeat(
 
 
 @register_api("runs.update_task_run_heartbeat")
-async def update_task_run_heartbeat(
-    task_run_id: str,
-) -> None:
+async def update_task_run_heartbeat(task_run_id: str,) -> None:
     """
     Updates the heartbeat of a task run. Also sets the corresponding flow run heartbeat.
 
@@ -409,6 +405,24 @@ async def get_runs_in_queue(
     counter = 0
     final_flow_runs = []
 
+    # Concurrency limiting is implemented here to not deadlock agents,
+    # but the final check is set in the state setting pipeline
+    all_run_labels: Set[str] = set()
+    for flow_run in flow_runs:
+
+        # critical line: if flow_group labels are None that means use the flow labels
+        if flow_run.flow.flow_group.labels is not None:
+            run_labels = flow_run.flow.flow_group.labels
+        else:
+            run_labels = flow_run.flow.environment.get("labels") or []
+
+        if run_labels:
+            all_run_labels.update(run_labels)
+
+    available_concurrency_slots = await api.concurrency_limits.get_available_flow_run_concurrency(
+        tenant_id=tenant_id, labels=list(all_run_labels)
+    )
+
     for flow_run in flow_runs:
         if counter == config.queued_runs_returned_limit:
             continue
@@ -419,13 +433,30 @@ async def get_runs_in_queue(
         else:
             run_labels = flow_run.flow.environment.get("labels") or []
 
+        # Agent label filtering
         # if the run labels are a superset of the provided labels, skip
         if set(run_labels) - set(labels):
             continue
 
+        # Agent label filtering
         # if the run has no labels but labels were provided, skip
         if not run_labels and labels:
             continue
+
+        # Concurrency label filtering
+        if run_labels:
+            if not all(
+                [available_concurrency_slots.get(label, 1) for label in run_labels]
+            ):
+                # Not all labels have available concurrency
+                continue
+            else:
+                # There is concurrency, so decrement available slots and move on
+                for run_label in run_labels:
+                    # Run labels that aren't directly associated with limits
+                    # are considered to have unlimited slots
+                    if run_label in available_concurrency_slots:
+                        available_concurrency_slots[run_label] -= 1
 
         final_flow_runs.append(flow_run.id)
         counter += 1

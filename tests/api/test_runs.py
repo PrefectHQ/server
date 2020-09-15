@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 
 import pendulum
@@ -405,9 +406,7 @@ class TestGetTaskRunInfo:
         )
         await api.states.set_task_run_state(tr_id, state=Success())
 
-        tr = await models.TaskRun.where(id=tr_id).first(
-            {"state", "serialized_state"},
-        )
+        tr = await models.TaskRun.where(id=tr_id).first({"state", "serialized_state"},)
         assert tr.state == "Success"
         assert tr.serialized_state["type"] == "Success"
 
@@ -726,8 +725,7 @@ class TestDeleteFlowRuns:
         assert result is False
 
     @pytest.mark.parametrize(
-        "bad_value",
-        [None, ""],
+        "bad_value", [None, ""],
     )
     async def test_delete_flow_run_fails_if_none(self, bad_value):
         with pytest.raises(ValueError, match="Invalid flow run ID"):
@@ -837,6 +835,97 @@ class TestGetRunsInQueue:
 
         assert labeled_flow_run_id not in mixed_flow_runs
         assert flow_run_id not in mixed_flow_runs
+
+    async def test_concurrency_limited_flows_not_returned(
+        self, tenant_id: str, labeled_flow_id: str, flow_concurrency_limit_id: str
+    ):
+        """
+        Tests to make sure that if there aren't flow concurrency
+        slots available for a given flow, this won't return
+        those ids to the Agent. This will prevent agents from
+        deadlocking themselves by only waiting on flows that
+        Cloud knows aren't available to run.
+        """
+        labeled_flow_run_id = await api.runs.create_flow_run(labeled_flow_id)
+        labeled_flow_run_id_2 = await api.runs.create_flow_run(labeled_flow_id)
+
+        await api.states.set_flow_run_state(
+            flow_run_id=labeled_flow_run_id,
+            state=Scheduled(start_time=pendulum.now("utc").subtract(days=1)),
+        )
+
+        await api.states.set_flow_run_state(
+            flow_run_id=labeled_flow_run_id_2, state=Running()
+        )
+
+        super_flow_runs = await api.runs.get_runs_in_queue(
+            tenant_id=tenant_id, labels=["foo", "bar", "alex"]
+        )
+
+        assert labeled_flow_run_id not in super_flow_runs
+
+    async def test_concurrency_limited_flows_returned_if_slots_available(
+        self, tenant_id: str, labeled_flow_run_id: str, flow_concurrency_limit_id: str
+    ):
+        await api.states.set_flow_run_state(
+            flow_run_id=labeled_flow_run_id,
+            state=Scheduled(start_time=pendulum.now("utc").subtract(days=1)),
+        )
+
+        super_flow_runs = await api.runs.get_runs_in_queue(
+            tenant_id=tenant_id, labels=["foo", "bar", "alex"]
+        )
+
+        assert labeled_flow_run_id in super_flow_runs
+
+    async def test_limited_and_unlimited_flows_respect_max_runs(
+        self,
+        tenant_id: str,
+        flow_id: str,
+        flow_group_id: str,
+        labeled_flow_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        """
+        Tests that any combination of concurrency limited flow runs
+        and unlimited flow runs don't exceed the value set in the
+        configuration.
+        """
+        # Making sure there's _always_ at least one of each to verify
+        # the logic doesn't _only_ count one vs the others
+        unlabeled_runs = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id)
+                for _ in range(config.queued_runs_returned_limit - 1)
+            ]
+        )
+        labeled_runs = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(labeled_flow_id)
+                for _ in range(config.queued_runs_returned_limit - 1)
+            ]
+        )
+
+        await asyncio.gather(
+            *[
+                api.concurrency_limits.update_flow_concurrency_limit(
+                    tenant_id=flow_concurrency_limit.tenant_id,
+                    name=flow_concurrency_limit.name,
+                    limit=config.queued_runs_returned_limit,
+                ),
+                # Not a concurrency limited label, just a regular ole label
+                api.flow_groups.set_flow_group_labels(
+                    flow_group_id=flow_group_id, labels=["baz"]
+                ),
+            ]
+        )
+
+        super_flow_runs = await api.runs.get_runs_in_queue(
+            tenant_id=tenant_id, labels=["foo", "bar", "baz"]
+        )
+        assert len(super_flow_runs) == config.queued_runs_returned_limit
+        assert any([run in super_flow_runs for run in unlabeled_runs])
+        assert any([run in super_flow_runs for run in labeled_runs])
 
     async def test_get_flow_run_in_queue_uses_labels_on_task_runs(
         self,
@@ -1072,3 +1161,27 @@ class TestGetRunsInQueueFlowGroupLabels:
         )
         flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
         assert labeled_flow_run_id not in flow_runs
+
+    @pytest.mark.parametrize("limit", [1, 5, 10, config.queued_runs_returned_limit * 2])
+    async def test_concurrency_limited_by_group_labels(
+        self,
+        tenant_id: str,
+        flow_id: str,
+        flow_group_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+        limit: int,
+    ):
+
+        await asyncio.gather(
+            *[api.runs.create_flow_run(flow_id=flow_id)],
+            api.flow_groups.set_flow_group_labels(
+                flow_group_id=flow_group_id, labels=[flow_concurrency_limit.name]
+            ),
+        )
+
+        runs = await api.runs.get_runs_in_queue(
+            tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+        )
+
+        assert len(runs) == flow_concurrency_limit.limit
+
