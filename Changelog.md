@@ -1,5 +1,29 @@
 # Changelog
 
+## September 11, 2020 <Badge text="beta" type="success" />
+
+Released on September 11, 2020.
+
+### Features
+
+- Add database structure and routes for persisting Agents - [#58](https://github.com/PrefectHQ/server/pull/58)
+
+### Enhancements
+
+- Add route for querying mapped children - [#73](https://github.com/PrefectHQ/server/pull/73)
+
+### Fixes
+
+- Fix __init__.py for deprecated API module - [#71](https://github.com/PrefectHQ/server/pull/71)
+
+### Breaking Changes
+
+- Remove `run_count` and `duration` columns - [#72](https://github.com/PrefectHQ/server/pull/72)
+
+### Database Migrations
+
+- Increase performance of state update triggers - [#72](https://github.com/PrefectHQ/server/pull/72)
+
 ## September 1, 2020 <Badge text="beta" type="success" />
 
 Released on September 1, 2020.
