@@ -32,14 +32,19 @@ async def resolve_set_flow_run_states(
         state = state_schema.load(state_input["state"])
 
         flow_run_id = state_input.get("flow_run_id")
-        await api.states.set_flow_run_state(
+        fr_state = await api.states.set_flow_run_state(
             flow_run_id=flow_run_id,
             version=state_input.get("version"),
             state=state,
             agent_id=agent_id,
         )
 
-        return {"id": flow_run_id, "status": "SUCCESS", "message": None}
+        if state_schema.load(fr_state.serialized_state).is_queued():
+            status = "QUEUED"
+        else:
+            status = "SUCCESS"
+
+        return {"id": flow_run_id, "status": status, "message": None}
 
     result = await asyncio.gather(
         *[check_size_and_set_state(state_input) for state_input in input["states"]]

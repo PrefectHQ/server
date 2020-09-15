@@ -246,6 +246,54 @@ class TestSetFlowRunStates:
         )
         assert "State payload is too large" in result.errors[0].message
 
+    async def test_set_flow_run_states_coerced_to_queued(
+        self,
+        run_query,
+        flow_id: str,
+        flow_run_id: str,
+        flow_group_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        await api.flow_groups.set_flow_group_labels(
+            flow_group_id=flow_group_id, labels=[flow_concurrency_limit.name]
+        )
+        # Should succeed, taking first concurrency slot
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    states=[dict(flow_run_id=flow_run_id, state=Running().serialize())]
+                )
+            ),
+        )
+
+        assert result.data.set_flow_run_states.states[0].id == flow_run_id
+        assert result.data.set_flow_run_states.states[0].status == "SUCCESS"
+        assert result.data.set_flow_run_states.states[0].message is None
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"state", "version"})
+        assert fr.version == 3
+        assert fr.state == "Running"
+
+        # Should succeed, but get coerced to a `Queued` state
+        second_run = await api.runs.create_flow_run(flow_id)
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    states=[dict(flow_run_id=second_run, state=Running().serialize())]
+                )
+            ),
+        )
+
+        assert result.data.set_flow_run_states.states[0].id == second_run
+        assert result.data.set_flow_run_states.states[0].status == "QUEUED"
+        assert result.data.set_flow_run_states.states[0].message is None
+
+        fr = await models.FlowRun.where(id=second_run).first({"state", "version"})
+        assert fr.version == 3
+        assert fr.state == "Queued"
+
 
 # ---------------------------------------------------------------
 # Task runs
@@ -542,8 +590,7 @@ class TestCancelFlowRun:
         )
 
         result = await run_query(
-            query=self.mutation,
-            variables={"input": {"flow_run_id": flow_run_id}},
+            query=self.mutation, variables={"input": {"flow_run_id": flow_run_id}},
         )
 
         assert result.data.cancel_flow_run.state == res_state

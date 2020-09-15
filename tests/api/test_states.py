@@ -1,7 +1,10 @@
+import asyncio
 import uuid
+from typing import List
 
 import pendulum
 import pytest
+from asynctest import CoroutineMock
 from box import Box
 
 from prefect.engine.result import SafeResult
@@ -14,6 +17,7 @@ from prefect.engine.state import (
     Mapped,
     Paused,
     Pending,
+    Queued,
     Retrying,
     Running,
     Scheduled,
@@ -237,7 +241,7 @@ class TestFlowRunStates:
         [
             s()
             for s in State.children()
-            if not s().is_running() and not s().is_submitted()
+            if not s().is_running() and not s().is_submitted() and not s().is_queued()
         ],
     )
     async def test_state_does_not_set_heartbeat_unless_running_or_submitted(
@@ -493,3 +497,165 @@ class TestCancelFlowRun:
         result = await api.states.cancel_flow_run(flow_run_id=flow_run_id)
         assert result.flow_run_id == flow_run_id
         assert result.state == "Cancelled"
+
+
+class TestQueueFlowRun:
+    async def set_flow_group_labels(self, flow_group_id: str, labels: List[str] = None):
+        if labels is None:
+            # Allows setting labels of "[]"
+            labels = ["foo", "bar"]
+        await models.FlowGroup.where(id=flow_group_id).update(set={"labels": labels})
+
+    async def test_ignores_unlimited_labels(self, flow_group_id: str, flow_run_id: str):
+        """
+        Tests to make sure that if a label exists on the flow, but does
+        not have a flow concurrency limit directly associated with it,
+        that it is treated as "unlimited", and will not restrict
+        flow runs transitioning to `Running`.
+        """
+        await self.set_flow_group_labels(flow_group_id)
+        state = await api.states.set_flow_run_state(flow_run_id, Running())
+
+        assert state.state == "Running"
+
+    async def test_ignores_unlabeled_flows(
+        self, flow_id: str, flow_run_id: str, monkeypatch
+    ):
+        """
+        Tests to make sure that unlabeled flows are not restricted;
+        a backwards compatability test.
+        """
+
+        mock_concurrency_check = CoroutineMock(return_value={})
+        monkeypatch.setattr(
+            "prefect_server.api.states.api.concurrency_limits.get_available_flow_run_concurrency",
+            mock_concurrency_check,
+        )
+
+        state = await api.states.set_flow_run_state(flow_run_id, Running())
+
+        assert state.state == "Running"
+        mock_concurrency_check.assert_not_called()
+
+    async def test_ignores_request_if_already_queued(
+        self, flow_group_id: str, flow_id: str, flow_concurrency_limit_id: str,
+    ):
+        """
+        This tests that if the existing state of the flow run is already `Queued`,
+        and we're supposed to enter another `Queued` state,
+        we don't enter into an endless loop where we keep pushing forward the
+        start time. If that were to happen, no other Agents could pick up
+        the flow run, thus "locking" the run into one execution process.
+        """
+
+        first, second, _ = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id),
+                api.runs.create_flow_run(flow_id),
+                self.set_flow_group_labels(flow_group_id),
+            ]
+        )
+
+        first_state = await api.states.set_flow_run_state(first, Running())
+        assert first_state.state == "Running"
+
+        before = pendulum.now("UTC")
+        await asyncio.sleep(0.001)
+        second_state = await api.states.set_flow_run_state(second, Running())
+        assert second_state.state == "Queued"
+        assert second_state.start_time > before
+        assert second_state.timestamp > before
+
+        after = pendulum.now("UTC")
+        second_state = await api.states.set_flow_run_state(second, Running())
+        assert second_state.state == "Queued"
+        assert second_state.start_time > before
+        assert second_state.timestamp > before
+        # The "updated" state doesn't actually create a new state;
+        # it just returns the existing queued state
+        assert second_state.timestamp < after
+        assert second_state.start_time < after.add(minutes=10)
+
+    async def test_can_set_directly_to_queued(self, flow_run_id: str):
+        """
+        Tests that we're able to set a run directly to `Queued`,
+        even though it's an edge case of how we'd use the API.
+        """
+
+        state = await api.states.set_flow_run_state(
+            flow_run_id, Queued(state=Submitted(), start_time=pendulum.now("UTC"))
+        )
+        assert state.state == "Queued"
+
+    async def test_sets_state_to_queued_on_failed_concurrency_check(
+        self, flow_id: str, flow_group_id: str, flow_concurrency_limit_id: str
+    ):
+        """
+        Tests to make sure that if the concurrency check fails, the
+        run gets set to a `Queued` state instead of a `Running` state.
+        """
+        first, second, _ = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id),
+                api.runs.create_flow_run(flow_id),
+                self.set_flow_group_labels(flow_group_id),
+            ]
+        )
+
+        first_state = await api.states.set_flow_run_state(first, Running())
+        assert first_state.state == "Running"
+
+        second_state = await api.states.set_flow_run_state(second, Running())
+        assert second_state.state == "Queued"
+
+    async def test_requires_slots_on_all_limits(
+        self,
+        flow_id: str,
+        flow_group_id: str,
+        flow_concurrency_limit_id: str,
+        flow_concurrency_limit_id_2: str,
+    ):
+        """
+        Tests that the requirement is _all_ concurrency limits
+        pass the check, not just a subset.
+        """
+
+        first, second, *_ = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id),
+                api.runs.create_flow_run(flow_id),
+                self.set_flow_group_labels(flow_group_id),
+                models.FlowConcurrencyLimit.where(id=flow_concurrency_limit_id).update(
+                    set={"limit": 2}
+                ),
+            ]
+        )
+
+        first_state = await api.states.set_flow_run_state(first, Running())
+        assert first_state.state == "Running"
+        # Limit 1 only has 1 slot, while the second has 2 slots
+        second_state = await api.states.set_flow_run_state(second, Running())
+        assert second_state.state == "Queued"
+
+    @pytest.mark.parametrize(
+        "state", [Submitted(), Cancelled(), Retrying(), Pending(), Success(), Failed()]
+    )
+    async def test_doesnt_interfere_with_non_running_state_changes(
+        self,
+        flow_run_id: str,
+        flow_run_id_2: str,
+        flow_group_id: str,
+        flow_concurrency_limit_id: str,
+        flow_concurrency_limit_id_2: str,
+        state: State,
+    ):
+        """
+        Tests that changing states to any other state than `Running`
+        doesn't trigger any kind of concurrency check or limiting.
+        """
+
+        await self.set_flow_group_labels(flow_group_id)
+
+        result = await api.states.set_flow_run_state(flow_run_id, state)
+        assert result.state != "Queued"
+
