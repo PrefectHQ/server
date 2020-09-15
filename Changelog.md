@@ -1,5 +1,17 @@
 # Changelog
 
+## September 15, 2020 <Badge text="beta" type="success" />
+
+Released on September 15, 2020.
+
+### Enhancements
+
+- Hasura metadata archives use the most recent alembic revision ID - [#78](https://github.com/PrefectHQ/server/pull/78)
+
+### Fixes
+
+- Fix and consolidate behavior for active schedules - [#86](https://github.com/PrefectHQ/server/issues/86)
+
 ## September 11, 2020 <Badge text="beta" type="success" />
 
 Released on September 11, 2020.
