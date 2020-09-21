@@ -93,6 +93,8 @@ class FlowSchema(Model):
     edges: List[EdgeSchema] = Field(default_factory=list)
     parameters: List[ParameterSchema] = Field(default_factory=list)
     environment: Dict[str, Any] = None
+    run_config: Dict[str, Any] = None
+    core_version: str = None
     storage: Dict[str, Any] = None
     schedule: ScheduleSchema = None
     reference_tasks: List[str] = Field(default_factory=list)
@@ -208,7 +210,8 @@ async def create_flow(
         name=flow.name,
         serialized_flow=serialized_flow,
         environment=flow.environment,
-        core_version=flow.environment.get("__version__"),
+        run_config=flow.run_config,
+        core_version=flow.environment.get("__version__") or flow.core_version,
         storage=flow.storage,
         parameters=flow.parameters,
         version_group_id=version_group_id,
