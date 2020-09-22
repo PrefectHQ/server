@@ -12,8 +12,9 @@ import pydantic
 import pytest
 from box import Box
 
-from prefect import models, orm
+from prefect import models
 from prefect.engine.state import Running, Scheduled
+from prefect_server.database import orm
 
 
 class TestModel:
