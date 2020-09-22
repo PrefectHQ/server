@@ -48,7 +48,7 @@ class TestGetAvailableFlowRunConcurrency:
         flow_group_id -> flow group for `flow_id`. Unlabeled by default
         labeled_flow_id -> environment labels ["foo", "bar"]
         labeled_flow_run_id -> a flow run for labeled_flow_id in a running state
-        
+
     To do testing, we're going to fiddle with either the number of
     flow runs for flow `labeled_flow_id`, or add labels to the
     `flow_group_id`'s flow group (associated with `flow_id`, which
@@ -107,11 +107,15 @@ class TestGetAvailableFlowRunConcurrency:
         assert result == {}
 
     async def test_limited_flow_runs_have_capacity(
-        self, tenant_id: str, flow_concurrency_limit: models.FlowConcurrencyLimit,
+        self,
+        tenant_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
     ):
 
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+            )
         )
         assert len(available_limits) == 1
         assert (
@@ -133,8 +137,10 @@ class TestGetAvailableFlowRunConcurrency:
         """
         # Make sure we can actually see the change
 
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+            )
         )
         assert available_limits[flow_concurrency_limit.name] == 10
         # Create a new flow run on a labeled flow and make sure it counts
@@ -142,8 +148,10 @@ class TestGetAvailableFlowRunConcurrency:
         labeled_flow_run_id = await api.runs.create_flow_run(labeled_flow_id)
         await api.states.set_flow_run_state(labeled_flow_run_id, Running())
 
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+            )
         )
         assert available_limits[flow_concurrency_limit.name] == 9
 
@@ -164,8 +172,10 @@ class TestGetAvailableFlowRunConcurrency:
 
         await self.set_flow_group_labels(flow_group_id)
 
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+            )
         )
         assert available_limits[flow_concurrency_limit.name] == 10
         # Create a new flow run on a labeled flow and make sure it counts
@@ -173,8 +183,10 @@ class TestGetAvailableFlowRunConcurrency:
 
         await api.states.set_flow_run_state(flow_run_id, Running())
 
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+            )
         )
         assert available_limits[flow_concurrency_limit.name] == 9
 
@@ -212,13 +224,15 @@ class TestGetAvailableFlowRunConcurrency:
         )
 
         # All limits should have 10 slots, since there are no running slots
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id,
-            labels=[
-                flow_concurrency_limit.name,
-                flow_concurrency_limit_2.name,
-                third_limit_name,
-            ],
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id,
+                labels=[
+                    flow_concurrency_limit.name,
+                    flow_concurrency_limit_2.name,
+                    third_limit_name,
+                ],
+            )
         )
 
         assert len(available_limits) == 3
@@ -229,13 +243,15 @@ class TestGetAvailableFlowRunConcurrency:
         # Both "foo" and "bar" should have 9 slots because `flow_run_id_2` is running
         # and taking up one slot of each
         await api.states.set_flow_run_state(labeled_flow_run_id, Running())
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id,
-            labels=[
-                flow_concurrency_limit.name,
-                flow_concurrency_limit_2.name,
-                third_limit_name,
-            ],
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id,
+                labels=[
+                    flow_concurrency_limit.name,
+                    flow_concurrency_limit_2.name,
+                    third_limit_name,
+                ],
+            )
         )
 
         assert len(available_limits) == 3
@@ -245,13 +261,15 @@ class TestGetAvailableFlowRunConcurrency:
 
         # Baz should now take up a slot since there's one running flow run
         await api.states.set_flow_run_state(flow_run_id, Running())
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id,
-            labels=[
-                flow_concurrency_limit.name,
-                flow_concurrency_limit_2.name,
-                third_limit_name,
-            ],
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id,
+                labels=[
+                    flow_concurrency_limit.name,
+                    flow_concurrency_limit_2.name,
+                    third_limit_name,
+                ],
+            )
         )
 
         assert len(available_limits) == 3
@@ -263,7 +281,10 @@ class TestGetAvailableFlowRunConcurrency:
         pass
 
     async def test_label_not_in_output_if_not_limited(
-        self, tenant_id: str, flow_id: str, flow_group_id: str,
+        self,
+        tenant_id: str,
+        flow_id: str,
+        flow_group_id: str,
     ):
 
         await asyncio.gather(
@@ -275,8 +296,10 @@ class TestGetAvailableFlowRunConcurrency:
 
         # No limits were created for these labels, so they shouldn't
         # exist in the output dictionary
-        available_limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id, labels=["foo", "bar"]
+        available_limits = (
+            await api.concurrency_limits.get_available_flow_run_concurrency(
+                tenant_id=tenant_id, labels=["foo", "bar"]
+            )
         )
 
         assert available_limits == {}

@@ -22,7 +22,7 @@ async def update_flow_concurrency_limit(tenant_id: str, name: str, limit: int) -
         - tenant_id (str): The tenant owner of the limit
         - name (str): The name of the limit
         - limit (int): The maximum number of concurrency flows allowed
-    
+
     Returns:
         - str: The ID of the created or updated flow concurrency limit
 
@@ -102,7 +102,7 @@ async def get_available_flow_run_concurrency(
 
     Returns:
         - Dict[str, int]: Number of available concurrency slots for each
-            label that's passed in. If a concurrency limit is not found, 
+            label that's passed in. If a concurrency limit is not found,
             the label won't be present in the output dictionary.
     """
 

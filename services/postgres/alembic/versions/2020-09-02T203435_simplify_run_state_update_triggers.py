@@ -106,10 +106,12 @@ def upgrade():
 def downgrade():
 
     op.add_column(
-        "flow_run", sa.Column("duration", sa.Interval),
+        "flow_run",
+        sa.Column("duration", sa.Interval),
     )
     op.add_column(
-        "task_run", sa.Column("duration", sa.Interval),
+        "task_run",
+        sa.Column("duration", sa.Interval),
     )
     op.add_column(
         "task_run",

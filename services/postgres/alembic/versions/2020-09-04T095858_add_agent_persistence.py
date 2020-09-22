@@ -110,7 +110,11 @@ def upgrade():
 
     op.add_column(
         "flow_run",
-        sa.Column("agent_id", UUID, sa.ForeignKey("agent.id", ondelete="SET NULL"),),
+        sa.Column(
+            "agent_id",
+            UUID,
+            sa.ForeignKey("agent.id", ondelete="SET NULL"),
+        ),
     )
 
 

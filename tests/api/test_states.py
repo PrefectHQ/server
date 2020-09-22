@@ -538,7 +538,10 @@ class TestQueueFlowRun:
         mock_concurrency_check.assert_not_called()
 
     async def test_ignores_request_if_already_queued(
-        self, flow_group_id: str, flow_id: str, flow_concurrency_limit_id: str,
+        self,
+        flow_group_id: str,
+        flow_id: str,
+        flow_concurrency_limit_id: str,
     ):
         """
         This tests that if the existing state of the flow run is already `Queued`,

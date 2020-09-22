@@ -20,7 +20,9 @@ depends_on = None
 
 def upgrade():
     op.create_index(
-        "ix_flow_run_agent_id", "flow_run", ["agent_id"],
+        "ix_flow_run_agent_id",
+        "flow_run",
+        ["agent_id"],
     )
 
 

@@ -175,7 +175,10 @@ class TestORM:
     async def test_insert_selection_set(self):
         result = Box(
             await models.Project(name="test").insert(
-                selection_set={"affected_rows": True, "returning": {"created", "name"},}
+                selection_set={
+                    "affected_rows": True,
+                    "returning": {"created", "name"},
+                }
             )
         )
         assert result.affected_rows == 1
@@ -305,7 +308,8 @@ class TestModelQuery:
         assert set(p.id for p in flows) == set(flow_ids)
 
     async def test_get_selection_set(
-        self, flow_ids,
+        self,
+        flow_ids,
     ):
 
         flows = await orm.ModelQuery(model=models.Project).get(selection_set="name")
@@ -320,17 +324,27 @@ class TestModelQuery:
         assert isinstance(flow, models.Project)
 
     async def test_count(
-        self, flow_ids,
+        self,
+        flow_ids,
     ):
         assert await orm.ModelQuery(model=models.Project, where={}).count() == 3
 
     async def test_count_where(
-        self, flow_ids,
+        self,
+        flow_ids,
     ):
-        assert await models.Project.where({"name": {"_neq": "f2"},}).count() == 2
+        assert (
+            await models.Project.where(
+                {
+                    "name": {"_neq": "f2"},
+                }
+            ).count()
+            == 2
+        )
 
     async def test_update(
-        self, flow_ids,
+        self,
+        flow_ids,
     ):
         await models.Project.where({"id": {"_eq": flow_ids[0]}}).update(
             set=dict(name="test")
@@ -339,7 +353,8 @@ class TestModelQuery:
         assert names == {"test", "f2", "f3"}
 
     async def test_delete(
-        self, flow_ids,
+        self,
+        flow_ids,
     ):
         await models.Project.where({"id": {"_eq": flow_ids[0]}}).delete()
         names = set(p.name for p in await models.Project.where({}).get("name"))
@@ -421,7 +436,7 @@ class TestJSONBQuerying:
         """
         This test doesn't necessarily test our code, but it does test
         that our understanding of how Hasura handles filtering a JSONB
-        for the existance of one or more values that should not return 
+        for the existance of one or more values that should not return
         a match given the structure:
         {
             environment: {labels: [value, value2, value,3]}
@@ -456,10 +471,10 @@ class TestJSONBQuerying:
         """
         This test doesn't necessarily test our code, but it does test
         that our understanding of how Hasura handles filtering a JSONB
-        for the existance of one or more values that should not return 
+        for the existance of one or more values that should not return
         a match given the structure:
         [value, value2]
-        
+
         These don't find a match because the _contains filter needs
         to be an exact match or subset.
         """

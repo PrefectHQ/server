@@ -119,7 +119,8 @@ class TestDeleteFlowConcurrencyLimit:
 
     async def test_delete_missing(self, run_query):
         result = await run_query(
-            query=self.mutation, variables=dict(input=dict(limit_id=str(uuid.uuid4()))),
+            query=self.mutation,
+            variables=dict(input=dict(limit_id=str(uuid.uuid4()))),
         )
 
         assert result.errors

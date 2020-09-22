@@ -31,7 +31,9 @@ class TestCreateUpdate:
     async def test_create_message_fails_with_invalid_type(self, tenant_id):
         with pytest.raises(ValueError, match="Invalid message type."):
             await api.messages.create_message(
-                type="blah", content=dict(text="blah"), tenant_id=tenant_id,
+                type="blah",
+                content=dict(text="blah"),
+                tenant_id=tenant_id,
             )
 
 
