@@ -1,8 +1,10 @@
-import uuid
-import pendulum
 import datetime
+import uuid
+
+import pendulum
 from pydantic import BaseModel, validator
-from prefect_server.database import models
+
+from prefect import models
 
 
 class Event(BaseModel):

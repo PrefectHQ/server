@@ -3,7 +3,6 @@ import os
 import prefect
 import prefect_server
 
-
 QUERY = """
     query {
         api {

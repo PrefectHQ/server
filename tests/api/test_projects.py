@@ -2,8 +2,7 @@ import uuid
 
 import pytest
 
-from prefect import api
-from prefect_server.database import models
+from prefect import api, models
 
 
 class TestCreateProject:

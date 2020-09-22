@@ -4,10 +4,9 @@ import click
 import pendulum
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import Submitted
 from prefect.utilities.graphql import EnumValue, with_args
-from prefect import api
-from prefect_server.database import models
 from prefect_server.utilities import logging
 
 state_schema = prefect.serialization.state.StateSchema()

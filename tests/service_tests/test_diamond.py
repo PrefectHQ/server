@@ -4,9 +4,8 @@ import datetime
 import pytest
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import Pending, Retrying, Running, Success
-from prefect import api
-from prefect_server.database import models
 from prefect_server.utilities.tests import set_temporary_config
 
 state_schema = prefect.serialization.state.StateSchema()

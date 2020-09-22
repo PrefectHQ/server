@@ -5,9 +5,8 @@ import pendulum
 import pytest
 
 import prefect
-from prefect import api
+from prefect import api, models
 from prefect.engine.state import Pending, Scheduled
-from prefect_server.database import models
 
 
 class TestCreateFlowRun:
