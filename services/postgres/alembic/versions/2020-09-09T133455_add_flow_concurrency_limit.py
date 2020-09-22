@@ -63,4 +63,8 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table("flow_concurrency_limit")
+    op.execute(
+        """
+    DROP TABLE flow_concurrency_limit CASCADE;
+    """
+    )
