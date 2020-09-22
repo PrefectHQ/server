@@ -1,9 +1,9 @@
 """
 add flow concurrency limit
 
-Revision ID: 8d9176f5e9f5
-Revises: 70528cee0d2b
-Create Date: 2020-09-09 13:34:55.226577
+Revision ID: 0ebcc469a91d
+Revises: 9cb7539b7363
+Create Date: 2020-09-22 03:16:48.797370
 
 """
 from alembic import op
@@ -12,8 +12,8 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 
 # revision identifiers, used by Alembic.
-revision = "8d9176f5e9f5"
-down_revision = "70528cee0d2b"
+revision = "0ebcc469a91d"
+down_revision = "9cb7539b7363"
 branch_labels = None
 depends_on = None
 
