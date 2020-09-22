@@ -3,8 +3,8 @@ from typing import List
 import pendulum
 
 from prefect import models
-from prefect_server.utilities import context
 from prefect.utilities.plugins import register_api
+from prefect_server.utilities import context
 
 
 @register_api("agents.register_agent")

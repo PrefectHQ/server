@@ -4,6 +4,7 @@ import pendulum
 import pytest
 from box import Box
 
+from prefect import api, models
 from prefect.engine.result import SafeResult
 from prefect.engine.result_handlers import JSONResultHandler
 from prefect.engine.state import (
@@ -24,8 +25,6 @@ from prefect.engine.state import (
     TriggerFailed,
     _MetaState,
 )
-from prefect import api
-from prefect_server.database import models
 
 
 class TestTaskRunStates:

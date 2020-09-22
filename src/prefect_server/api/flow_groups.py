@@ -1,8 +1,7 @@
 from typing import List
 
-from prefect.serialization.schedule import ClockSchema
-
 from prefect import api, models
+from prefect.serialization.schedule import ClockSchema
 from prefect.utilities.plugins import register_api
 
 
