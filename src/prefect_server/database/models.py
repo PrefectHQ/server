@@ -169,6 +169,7 @@ class TaskRun(HasuraModel):
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
     cache_key: str = None
+    name: str = None
 
     # state fields
     state: str = None
