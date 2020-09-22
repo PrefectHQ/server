@@ -2,7 +2,7 @@
 Add task run name
 
 Revision ID: e148cf9f1e5b
-Revises: c1f317aa658c
+Revises: 9cb7539b7363
 Create Date: 2020-09-03 09:55:23.155317
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 # revision identifiers, used by Alembic.
 revision = "e148cf9f1e5b"
-down_revision = "70528cee0d2b"
+down_revision = "9cb7539b7363"
 branch_labels = None
 depends_on = None
 
