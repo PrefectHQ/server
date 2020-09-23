@@ -36,10 +36,29 @@ async def register_agent(
             tenant_id = await models.Tenant.where({"id": {"_eq": None}}).first().id
         except:
             raise ValueError("No tenant found.")
+
+    # Check for existing agents with these kwargs
+    agent = await models.Agent.where(
+        {
+            "_and": [
+                {"tenant_id": {"_eq": tenant_id}},
+                {"name": {"_eq": name}},
+                {"type": {"_eq": type}},
+                {"core_version": {"_eq": core_version}},
+                {"labels": {"_eq": sorted(labels or [])}},
+            ]
+        }
+    ).first()
+
+    # Return existing agent ID
+    if agent:
+        return agent.id
+
+    # Insert new agent
     return await models.Agent(
         tenant_id=tenant_id,
         agent_config_id=agent_config_id,
-        labels=labels or [],
+        labels=sorted(labels or []),
         name=name,
         type=type,
         core_version=core_version,

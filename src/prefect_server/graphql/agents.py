@@ -33,7 +33,7 @@ async def resolve_create_agent_config(
     return {
         "id": await api.agents.create_agent_config(
             tenant_id=input["tenant_id"],
-            agent=input.get("name"),
+            name=input.get("name"),
             settings=input.get("settings"),
         )
     }
