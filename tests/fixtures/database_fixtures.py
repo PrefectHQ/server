@@ -25,6 +25,11 @@ async def tenant_id():
 
 
 @pytest.fixture
+async def agent_id(tenant_id):
+    return await api.agents.register_agent(tenant_id=tenant_id, labels=["foo", "bar"])
+
+
+@pytest.fixture
 async def project_id(tenant_id):
     project_id = await api.projects.create_project(
         tenant_id=tenant_id, name="Test Project"
