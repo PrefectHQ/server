@@ -74,6 +74,49 @@ class TestCreateAgent:
         ).count()
         assert agent_count == 2
 
+    async def test_register_multiple_agents_label_order(self, tenant_id):
+        agent_id = await api.agents.register_agent(
+            tenant_id=tenant_id,
+            labels=["foo", "bar", "chris"],
+        )
+        agent_count = await models.Agent.where(id=agent_id).count()
+        assert agent_count == 1
+
+        agent_id = await api.agents.register_agent(
+            tenant_id=tenant_id,
+            labels=["chris", "bar", "foo"],
+        )
+        agent_count = await models.Agent.where(id=agent_id).count()
+        assert agent_count == 1
+
+        agent_id = await api.agents.register_agent(
+            tenant_id=tenant_id,
+            labels=["bar", "chris", "foo"],
+        )
+        agent_count = await models.Agent.where(id=agent_id).count()
+        assert agent_count == 1
+
+        agent_id = await api.agents.register_agent(
+            tenant_id=tenant_id,
+            labels=["foo", "chris", "bar"],
+        )
+        agent_count = await models.Agent.where(id=agent_id).count()
+        assert agent_count == 1
+
+        agent_id = await api.agents.register_agent(
+            tenant_id=tenant_id,
+            labels=["bar", "foo", "chris"],
+        )
+        agent_count = await models.Agent.where(id=agent_id).count()
+        assert agent_count == 1
+
+        agent_id = await api.agents.register_agent(
+            tenant_id=tenant_id,
+            labels=["chris", "foo", "bar"],
+        )
+        agent_count = await models.Agent.where(id=agent_id).count()
+        assert agent_count == 1
+
 
 class TestUpdateAgentLastQueried:
     async def test_update_agent_last_queried(self, agent_id):
