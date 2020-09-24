@@ -39,7 +39,7 @@ input register_agent_input {
 
 input delete_agent_input {
   "The ID of the agent to delete"
-  agent_id: UUID!
+  agent_id: String!
 }
 
 input create_agent_config_input {
