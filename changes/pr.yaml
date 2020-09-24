@@ -1,5 +1,0 @@
-fix:
-  - "Fix `name` field in `delete_agent` GraphQL resolver - [#95](https://github.com/PrefectHQ/server/pull/95)"
-
-enhancement:
-  - "Registering agents will now retrieve IDs from matching entries in order to prevent duplication - [#95](https://github.com/PrefectHQ/server/pull/95)"
