@@ -1,3 +1,0 @@
-
-fix:
-  - "Replace all uses of `database.models` with `prefect.models` - [#94](https://github.com/PrefectHQ/server/pull/94)"
