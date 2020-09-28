@@ -29,6 +29,7 @@ def upgrade():
             sa.TIMESTAMP(timezone=True),
             nullable=False,
             server_default=sa.func.now(),
+            index=True,
         ),
         sa.Column(
             "updated",
@@ -43,8 +44,9 @@ def upgrade():
             nullable=False,
             index=True,
         ),
-        sa.Column("name", sa.String(length=100), nullable=False),
+        sa.Column("name", sa.String(length=100), nullable=False, index=True),
         sa.Column("limit", sa.Integer, nullable=False),
+        sa.UniqueConstraint("tenant_id", "name"),
     )
     op.execute(
         """
@@ -52,12 +54,6 @@ def upgrade():
         BEFORE UPDATE ON flow_concurrency_limit
         FOR EACH ROW
         EXECUTE PROCEDURE set_updated_timestamp();
-        """
-    )
-
-    op.execute(
-        """
-        ALTER TABLE ONLY flow_concurrency_limit ADD CONSTRAINT flow_concurrency_limit_uq_name_tenant_id UNIQUE (tenant_id, name);
         """
     )
 
