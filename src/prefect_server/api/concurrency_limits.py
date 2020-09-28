@@ -2,8 +2,8 @@ import asyncio
 from typing import Dict, List
 
 import prefect
+from prefect import models
 from prefect.engine.state import Running
-from prefect_server.database import models
 from prefect.utilities.plugins import register_api
 
 RUNNING_STATES = [
@@ -59,13 +59,12 @@ async def update_flow_concurrency_limit(tenant_id: str, name: str, limit: int) -
 
 
 @register_api("concurrency_limits.delete_flow_concurrency_limit")
-async def delete_flow_concurrency_limit(flow_concurrency_limit_id: str) -> bool:
+async def delete_flow_concurrency_limit(limit_id: str) -> bool:
     """
     Deletes a flow concurrency limit.
 
     Args:
-        - flow_concurrency_limit_id (str): The flow concurrency limit
-            to delete.
+        - limit_id (str): The flow concurrency limit to delete.
 
     Returns:
         - bool: If the delete was successful
@@ -74,11 +73,11 @@ async def delete_flow_concurrency_limit(flow_concurrency_limit_id: str) -> bool:
         - ValueError: If an ID isn't provided
     """
 
-    if not flow_concurrency_limit_id:
+    if not limit_id:
         raise ValueError("Invalid flow concurrency limit ID.")
 
     result = await models.FlowConcurrencyLimit.where(
-        id=flow_concurrency_limit_id
+        id=limit_id
     ).delete()
     return bool(result.affected_rows)
 

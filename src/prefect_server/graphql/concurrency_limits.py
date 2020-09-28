@@ -11,7 +11,7 @@ async def resolve_update_flow_concurrency_limit(
 
     return {
         "id": await api.concurrency_limits.update_flow_concurrency_limit(
-            tenant_id=input["tenant_id"], name=input["name"], limit=input["limit"]
+            tenant_id=input["tenant_id"], name=input["label"], limit=input["limit"]
         )
     }
 
