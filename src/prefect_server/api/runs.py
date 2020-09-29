@@ -419,7 +419,14 @@ async def get_runs_in_queue(
             ],
         }
     ).get(
-        {"id": True, "flow": {"environment": True, "flow_group": {"labels": True}}},
+        {
+            "id": True,
+            "flow": {
+                "environment": True,
+                "run_config": True,
+                "flow_group": {"labels": True},
+            },
+        },
         order_by=[{"state_start_time": EnumValue("asc")}],
         # get extra in case labeled runs don't show up at the top
         limit=config.queued_runs_returned_limit * 3,
@@ -436,7 +443,12 @@ async def get_runs_in_queue(
         if flow_run.flow.flow_group.labels is not None:
             run_labels = flow_run.flow.flow_group.labels
         else:
-            run_labels = flow_run.flow.environment.get("labels") or []
+            # Use labels from `run_config` if present, otherwise use `environment`
+            run_labels = (
+                flow_run.flow.run_config.get("labels")
+                if flow_run.flow.run_config
+                else flow_run.flow.environment.get("labels")
+            ) or []
 
         # if the run labels are a superset of the provided labels, skip
         if set(run_labels) - set(labels):

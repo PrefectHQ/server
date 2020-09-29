@@ -90,7 +90,7 @@ class TestCreateFlow:
 
     async def test_create_old_and_valid_flow(self, project_id, flow):
         serialized_flow = flow.serialize()
-        serialized_flow["environment"]["__version__"] = "0.0.42"
+        serialized_flow["__version__"] = "0.0.42"
         with pytest.raises(ValueError, match="requires new flows to be built with"):
             await api.flows.create_flow(
                 project_id=project_id, serialized_flow=serialized_flow

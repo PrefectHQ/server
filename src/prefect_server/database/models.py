@@ -61,6 +61,7 @@ class Flow(HasuraModel):
     description: str = None
     serialized_flow: Dict[str, Any] = None
     environment: Dict[str, Any] = None
+    run_config: Dict[str, Any] = None
     storage: Dict[str, Any] = None
     parameters: List[Dict[str, Any]] = None
     flow_group_id: UUIDString = None
