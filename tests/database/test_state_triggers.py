@@ -5,7 +5,7 @@ associated run's details via Postgres trigger
 import pendulum
 import pytest
 
-from prefect_server.database import models
+from prefect import models
 
 
 class TestFlowRunStateTrigger:

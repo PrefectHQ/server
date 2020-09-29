@@ -4,10 +4,9 @@ import pendulum
 import pytest
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import Running, Submitted, Success
-from prefect import api
 from prefect_server import config
-from prefect_server.database import models
 
 START_TIME = pendulum.now()
 
@@ -23,6 +22,11 @@ async def clear_database():
 @pytest.fixture
 async def tenant_id():
     return await api.tenants.create_tenant(name="Test Tenant")
+
+
+@pytest.fixture
+async def agent_id(tenant_id):
+    return await api.agents.register_agent(tenant_id=tenant_id, labels=["foo", "bar"])
 
 
 @pytest.fixture

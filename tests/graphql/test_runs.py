@@ -5,9 +5,8 @@ import pendulum
 import pytest
 
 import prefect
-from prefect import api
+from prefect import api, models
 from prefect.engine.state import Pending, Scheduled
-from prefect_server.database import models
 
 
 class TestCreateFlowRun:
@@ -529,6 +528,52 @@ class TestGetRunsInQueue:
             assert len(result.data.get_runs_in_queue.flow_run_ids) == i + 1
 
 
+class TestSetFlowRunName:
+    mutation = """
+        mutation($input: set_flow_run_name_input!) {
+            set_flow_run_name(input: $input) {
+                success
+            }
+        }
+    """
+
+    async def test_set_flow_run_name(self, run_query, flow_run_id):
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name != "hello"
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=flow_run_id, name="hello")),
+        )
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name == "hello"
+
+
+class TestSetTaskRunName:
+    mutation = """
+        mutation($input: set_task_run_name_input!) {
+            set_task_run_name(input: $input) {
+                success
+            }
+        }
+    """
+
+    async def test_set_task_run_name(self, run_query, task_run_id):
+
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name != "hello"
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(task_run_id=task_run_id, name="hello")),
+        )
+
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name == "hello"
+
+
 class TestMappedChildren:
 
     query = """
@@ -539,7 +584,7 @@ class TestMappedChildren:
                 state_counts
             }
         }
-    """
+        """
 
     @pytest.fixture(autouse=True)
     async def mapped_children(self, task_id, running_flow_run_id):

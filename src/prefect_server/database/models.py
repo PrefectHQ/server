@@ -5,8 +5,8 @@ import pendulum
 import pydantic
 
 import prefect
-from prefect_server.database.orm import HasuraModel, UUIDString
 from prefect.utilities import plugins
+from prefect_server.database.orm import HasuraModel, UUIDString
 
 models = plugins.MODELS
 
@@ -170,6 +170,7 @@ class TaskRun(HasuraModel):
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
     cache_key: str = None
+    name: str = None
 
     # state fields
     state: str = None

@@ -6,12 +6,6 @@
 
 
 
-## Changes
-<!-- What does this PR change? -->
-
-
-
-
 ## Importance
 <!-- Why is this PR important? -->
 

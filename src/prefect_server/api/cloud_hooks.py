@@ -9,9 +9,9 @@ from pydantic import BaseModel
 
 import prefect
 from prefect import api, models
-from prefect_server import config as server_config
-from prefect_server.utilities import logging, names, events
 from prefect.utilities.plugins import register_api
+from prefect_server import config as server_config
+from prefect_server.utilities import events, logging, names
 
 cloud_hook_httpx_client = httpx.AsyncClient()
 

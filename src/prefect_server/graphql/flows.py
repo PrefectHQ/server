@@ -2,9 +2,8 @@ from typing import Any
 
 from graphql import GraphQLResolveInfo
 
+from prefect import api, models
 from prefect.utilities.graphql import EnumValue, decompress
-from prefect import api
-from prefect_server.database import models
 from prefect_server.utilities.graphql import mutation
 
 

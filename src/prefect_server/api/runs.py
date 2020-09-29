@@ -4,12 +4,12 @@ from typing import Any, Iterable, List
 import pendulum
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import Pending, Queued, Scheduled
 from prefect.utilities.graphql import EnumValue
-from prefect import api, models
+from prefect.utilities.plugins import register_api
 from prefect_server import config
 from prefect_server.utilities import exceptions, names
-from prefect.utilities.plugins import register_api
 
 SCHEDULED_STATES = [
     s.__name__
@@ -75,6 +75,26 @@ async def create_flow_run(
         )
 
     return flow_run_id
+
+
+@register_api("runs.set_flow_run_name")
+async def set_flow_run_name(flow_run_id: str, name: str) -> bool:
+    if flow_run_id is None:
+        raise ValueError("Invalid flow run ID")
+    elif not name:
+        raise ValueError("Invalid name")
+    result = await models.FlowRun.where(id=flow_run_id).update({"name": name})
+    return bool(result.affected_rows)
+
+
+@register_api("runs.set_task_run_name")
+async def set_task_run_name(task_run_id: str, name: str) -> bool:
+    if task_run_id is None:
+        raise ValueError("Invalid task run ID")
+    elif not name:
+        raise ValueError("Invalid name")
+    result = await models.TaskRun.where(id=task_run_id).update({"name": name})
+    return bool(result.affected_rows)
 
 
 @register_api("runs._create_flow_run")
