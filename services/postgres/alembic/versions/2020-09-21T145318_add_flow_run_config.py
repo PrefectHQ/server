@@ -2,7 +2,7 @@
 Add flow run config
 
 Revision ID: 850b76d44332
-Revises: 9cb7539b7363
+Revises: e148cf9f1e5b
 Create Date: 2020-09-21 14:53:18.321017
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
 revision = "850b76d44332"
-down_revision = "9cb7539b7363"
+down_revision = "e148cf9f1e5b"
 branch_labels = None
 depends_on = None
 
