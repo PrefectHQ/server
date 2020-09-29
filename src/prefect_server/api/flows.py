@@ -138,7 +138,7 @@ async def create_flow(
     flow = FlowSchema(**serialized_flow)
 
     # core versions before 0.6.1 were used only for internal purposes-- this is our cutoff
-    core_version = flow.environment.get("__version__", None)
+    core_version = flow.__version__
     if core_version and module_version.parse(core_version) < module_version.parse(
         config.core_version_cutoff
     ):

@@ -423,11 +423,12 @@ async def get_runs_in_queue(
         if flow_run.flow.flow_group.labels is not None:
             run_labels = flow_run.flow.flow_group.labels
         else:
+            # Use labels from `run_config` if present, otherwise use `environment`
             run_labels = (
-                flow_run.flow.environment.get("labels")
-                or flow_run.flow.run_config.get("labels")
-                or []
-            )
+                flow_run.flow.run_config.get("labels")
+                if flow_run.flow.run_config
+                else flow_run.flow.environment.get("labels")
+            ) or []
 
         # if the run labels are a superset of the provided labels, skip
         if set(run_labels) - set(labels):
