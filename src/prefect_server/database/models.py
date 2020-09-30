@@ -126,6 +126,7 @@ class FlowRun(HasuraModel):
     tenant_id: UUIDString = None
     flow_id: UUIDString = None
     parameters: Dict[str, Any] = None
+    labels: List[str] = None
     context: Dict[str, Any] = None
     version: int = None
     heartbeat: datetime.datetime = None

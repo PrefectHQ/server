@@ -138,9 +138,11 @@ async def _create_flow_run(
             "id": True,
             "archived": True,
             "tenant_id": True,
+            "environment": True,
+            "run_config": True,
             "parameters": True,
             "flow_group_id": True,
-            "flow_group": {"default_parameters": True},
+            "flow_group": {"default_parameters": True, "labels": True},
         },
         order_by={"version": EnumValue("desc")},
     )  # type: Any
@@ -155,6 +157,15 @@ async def _create_flow_run(
     elif flow.archived:
         raise ValueError(f"Flow {flow.id} is archived.")
 
+    # set labels
+    run_labels = []
+    if flow.flow_group.labels is not None:
+        run_labels = flow.flow_group.labels
+    elif flow.run_config is not None:
+        run_labels = flow.run_config.get("labels") or []
+    else:
+        run_labels = flow.environment.get("labels") or []
+
     # check parameters
     run_parameters = flow.flow_group.default_parameters
     run_parameters.update((parameters or {}))
@@ -167,6 +178,7 @@ async def _create_flow_run(
     run = models.FlowRun(
         tenant_id=flow.tenant_id,
         flow_id=flow_id or flow.id,
+        labels=run_labels,
         parameters=run_parameters,
         context=context or {},
         scheduled_start_time=scheduled_start_time,
