@@ -143,7 +143,7 @@ async def create_flow(
         config.core_version_cutoff
     ):
         raise ValueError(
-            "Prefect Server requires new flows to be built with Prefect "
+            "Prefect backends require new flows to be built with Prefect "
             f"{config.core_version_cutoff}+, but this flow was built with "
             f"Prefect {core_version}."
         )
