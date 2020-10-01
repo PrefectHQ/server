@@ -31,6 +31,13 @@ class TestCreateRun:
         flow_run_id = await api.runs.create_flow_run(flow_id=simple_flow_id)
         assert await models.FlowRun.exists(flow_run_id)
 
+    async def test_create_flow_run_accepts_labels(self, simple_flow_id):
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id=simple_flow_id, labels=["one", "two"]
+        )
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == ["one", "two"]
+
     async def test_create_flow_run_respects_flow_group_labels(
         self,
         tenant_id,
@@ -809,6 +816,23 @@ class TestGetRunsInQueue:
         )
         assert labeled_flow_run_id in flow_runs
         assert flow_run_id not in flow_runs
+
+    async def test_get_flow_run_in_queue_uses_run_labels(
+        self,
+        tenant_id,
+        flow_id,
+        labeled_flow_run_id,
+    ):
+
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id=flow_id, labels=["dev", "staging"]
+        )
+
+        flow_runs = await api.runs.get_runs_in_queue(
+            tenant_id=tenant_id, labels=["dev", "staging"]
+        )
+        assert flow_run_id in flow_runs
+        assert labeled_flow_run_id not in flow_runs
 
     async def test_get_flow_run_in_queue_works_if_environment_labels_are_none(
         self, tenant_id, flow_run_id, flow_id

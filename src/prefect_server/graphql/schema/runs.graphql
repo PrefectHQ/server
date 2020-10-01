@@ -52,6 +52,8 @@ input create_flow_run_input {
   "A JSON payload specifying parameter values for any parameters in this flow"
   parameters: JSON
   "A JSON payload of key / value pairs to be placed in Prefect context for this run"
+  labels: [String!]
+  "A list of labels to apply to the newly created run"
   context: JSON
   "An optional start time to schedule this run for - if not provided, will be scheduled immediately"
   scheduled_start_time: DateTime

@@ -27,6 +27,7 @@ async def create_flow_run(
     flow_run_name: str = None,
     version_group_id: str = None,
     idempotency_key: str = None,
+    labels: List[str] = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -42,6 +43,7 @@ async def create_flow_run(
             recent unarchived version of the group
         - idempotency_key (str, optional): An optional idempotency key to prevent duplicate run creation.
             Idempotency keys are only respected for 24 hours after a flow is created.
+        - labels (List[str], optional): a list of labels to apply to this individual flow run
     """
 
     if idempotency_key is not None:
@@ -67,6 +69,7 @@ async def create_flow_run(
         scheduled_start_time=scheduled_start_time,
         flow_run_name=flow_run_name,
         version_group_id=version_group_id,
+        labels=labels,
     )
 
     if idempotency_key is not None:
@@ -105,6 +108,7 @@ async def _create_flow_run(
     scheduled_start_time: datetime.datetime = None,
     flow_run_name: str = None,
     version_group_id: str = None,
+    labels: List[str] = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -118,6 +122,7 @@ async def _create_flow_run(
         - flow_run_name (str, optional): An optional string representing this flow run
         - version_group_id (str, optional): An optional version group ID; if provided, will run the most
             recent unarchived version of the group
+        - labels (List[str], optional): a list of labels to apply to this individual flow run
     """
 
     if flow_id is None and version_group_id is None:
@@ -159,7 +164,9 @@ async def _create_flow_run(
 
     # set labels
     run_labels = []
-    if flow.flow_group.labels is not None:
+    if labels is not None:
+        run_labels = labels
+    elif flow.flow_group.labels is not None:
         run_labels = flow.flow_group.labels
     elif flow.run_config is not None:
         run_labels = flow.run_config.get("labels") or []

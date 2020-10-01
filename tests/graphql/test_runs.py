@@ -38,13 +38,34 @@ class TestCreateFlowRun:
                 "scheduled_start_time",
                 "auto_scheduled",
                 "context",
+                "labels",
             }
         )
         assert fr.flow_id == flow_id
+        assert fr.labels == []
         assert fr.scheduled_start_time == dt
         assert fr.parameters == dict(x=1)
         assert fr.auto_scheduled is False
         assert fr.context == {"a": 2}
+
+    async def test_create_flow_run_with_labels(self, run_query, flow_id):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    flow_id=flow_id,
+                    labels=["a", "b", "c"],
+                )
+            ),
+        )
+        fr = await models.FlowRun.where(id=result.data.create_flow_run.id).first(
+            {
+                "flow_id",
+                "labels",
+            }
+        )
+        assert fr.flow_id == flow_id
+        assert fr.labels == ["a", "b", "c"]
 
     async def test_create_flow_run_with_version_group_id(self, run_query, flow_id):
         dt = pendulum.now("utc").add(hours=1)
