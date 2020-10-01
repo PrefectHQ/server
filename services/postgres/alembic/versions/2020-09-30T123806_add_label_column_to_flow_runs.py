@@ -26,7 +26,7 @@ def upgrade():
     # run that has been updated in the last day, and applies our standard label logic to it.
     # This ensures that active flow runs don't incorrectly receive `[]` as their label set,
     # which would cause delayed work and user frustration.
-    # Note that flow runs not touched by this query will have `[]` has their labels regardless of
+    # Note that flow runs not touched by this query will have `[]` as their labels regardless of
     # their flow label properties.
     op.execute(
         """
