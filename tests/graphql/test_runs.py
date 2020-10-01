@@ -549,6 +549,42 @@ class TestGetRunsInQueue:
             assert len(result.data.get_runs_in_queue.flow_run_ids) == i + 1
 
 
+class TestSetFlowRunLabels:
+    mutation = """
+        mutation($input: set_flow_run_labels_input!) {
+            set_flow_run_labels(input: $input) {
+                success
+            }
+        }
+    """
+
+    async def test_set_flow_run_labels(self, run_query, flow_run_id):
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == []
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=flow_run_id, labels=["big", "boo"])),
+        )
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == ["big", "boo"]
+
+    async def test_set_flow_run_labels_to_empty(self, run_query, labeled_flow_run_id):
+
+        fr = await models.FlowRun.where(id=labeled_flow_run_id).first({"labels"})
+        assert fr.labels
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=labeled_flow_run_id, labels=[])),
+        )
+
+        fr = await models.FlowRun.where(id=labeled_flow_run_id).first({"labels"})
+        assert fr.labels == []
+
+
 class TestSetFlowRunName:
     mutation = """
         mutation($input: set_flow_run_name_input!) {

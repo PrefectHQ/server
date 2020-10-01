@@ -85,6 +85,17 @@ async def resolve_create_flow_run(
     return result
 
 
+@mutation.field("set_flow_run_labels")
+async def resolve_set_flow_run_labels(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    return {
+        "success": await api.runs.set_flow_run_labels(
+            flow_run_id=input["flow_run_id"], labels=input["labels"]
+        )
+    }
+
+
 @mutation.field("set_flow_run_name")
 async def resolve_set_flow_run_name(
     obj: Any, info: GraphQLResolveInfo, input: dict

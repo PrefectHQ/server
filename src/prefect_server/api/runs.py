@@ -80,6 +80,18 @@ async def create_flow_run(
     return flow_run_id
 
 
+@register_api("runs.set_flow_run_labels")
+async def set_flow_run_labels(flow_run_id: str, labels: List[str]) -> bool:
+    if flow_run_id is None:
+        raise ValueError("Invalid flow run ID")
+    elif labels is None:
+        raise ValueError("Invalid labels")
+    result = await models.FlowRun.where(id=flow_run_id).update(
+        {"labels": sorted(labels)}
+    )
+    return bool(result.affected_rows)
+
+
 @register_api("runs.set_flow_run_name")
 async def set_flow_run_name(flow_run_id: str, name: str) -> bool:
     if flow_run_id is None:

@@ -1106,6 +1106,32 @@ class TestGetRunsInQueue:
         assert flow_run_id not in flow_runs
 
 
+class TestSetFlowRunLabels:
+    async def test_set_flow_run_labels(self, flow_run_id):
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == []
+
+        await api.runs.set_flow_run_labels(flow_run_id=flow_run_id, labels=["a", "b"])
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == ["a", "b"]
+
+    async def test_set_flow_run_labels_must_have_value(self, flow_run_id):
+        with pytest.raises(ValueError, match="Invalid labels"):
+            await api.runs.set_flow_run_labels(flow_run_id=flow_run_id, labels=None)
+
+    async def test_set_flow_run_id_invalid(self):
+        assert not await api.runs.set_flow_run_labels(
+            flow_run_id=str(uuid.uuid4()), labels=["a"]
+        )
+
+    async def test_set_flow_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid flow run ID"):
+            assert not await api.runs.set_flow_run_labels(
+                flow_run_id=None, labels=["a"]
+            )
+
+
 class TestSetFlowRunName:
     async def test_set_flow_run_name(self, flow_run_id):
         fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
