@@ -8,7 +8,6 @@ import psycopg2
 import pydantic
 
 import prefect
-import prefect_server
 from prefect.utilities.graphql import with_args
 from prefect_server.database.hasura import GQLObjectTypes
 

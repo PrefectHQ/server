@@ -5,7 +5,6 @@ from typing import List
 
 import httpx
 from box import Box
-from pydantic import BaseModel
 
 import prefect
 from prefect import api, models

@@ -1,9 +1,8 @@
-from typing import Any, List
+from typing import Any
 
 from graphql import GraphQLResolveInfo
 
 from prefect_server import api
-from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation
 
 

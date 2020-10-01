@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import pendulum
 
