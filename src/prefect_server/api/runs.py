@@ -165,6 +165,7 @@ async def _create_flow_run(
         run_labels = flow.run_config.get("labels") or []
     else:
         run_labels = flow.environment.get("labels") or []
+    run_labels.sort()
 
     # check parameters
     run_parameters = flow.flow_group.default_parameters
@@ -438,6 +439,7 @@ async def get_runs_in_queue(
                 "run_config": True,
                 "flow_group": {"labels": True},
             },
+            "labels": True,
         },
         order_by=[{"state_start_time": EnumValue("asc")}],
         # get extra in case labeled runs don't show up at the top
@@ -451,8 +453,11 @@ async def get_runs_in_queue(
         if counter == config.queued_runs_returned_limit:
             continue
 
+        # new runs should have their own labels
+        if flow_run.labels is not None:
+            run_labels = flow_run.labels
         # critical line: if flow_group labels are None that means use the flow labels
-        if flow_run.flow.flow_group.labels is not None:
+        elif flow_run.flow.flow_group.labels is not None:
             run_labels = flow_run.flow.flow_group.labels
         else:
             # Use labels from `run_config` if present, otherwise use `environment`

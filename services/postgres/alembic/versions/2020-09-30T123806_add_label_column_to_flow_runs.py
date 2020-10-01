@@ -19,9 +19,7 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column(
-        "flow_run", sa.Column("labels", JSONB, nullable=False, server_default="[]")
-    )
+    op.add_column("flow_run", sa.Column("labels", JSONB, nullable=True))
 
 
 def downgrade():

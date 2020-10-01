@@ -31,6 +31,53 @@ class TestCreateRun:
         flow_run_id = await api.runs.create_flow_run(flow_id=simple_flow_id)
         assert await models.FlowRun.exists(flow_run_id)
 
+    async def test_create_flow_run_respects_flow_group_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        # update the flow group's labels
+        labels = ["meep", "morp"]
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"flow_group_id"}
+        )
+        await api.flow_groups.set_flow_group_labels(
+            flow_group_id=labeled_flow.flow_group_id, labels=labels
+        )
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == ["meep", "morp"]
+
+    async def test_create_flow_run_respects_flow_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"environment"}
+        )
+        # create a flow run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == sorted(labeled_flow.environment["labels"])
+
+    async def test_create_flow_run_respects_empty_flow_group_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"flow_group_id"}
+        )
+        await api.flow_groups.set_flow_group_labels(
+            flow_group_id=labeled_flow.flow_group_id, labels=[]
+        )
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == []
+
     async def test_create_flow_run_with_version_group_id(self, project_id):
         flow_ids = []
         for _ in range(15):
@@ -1033,44 +1080,6 @@ class TestGetRunsInQueue:
         await api.states.set_task_run_state(task_run_id, prefect.engine.state.Paused())
         flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id)
         assert flow_run_id not in flow_runs
-
-
-class TestGetRunsInQueueFlowGroupLabels:
-    async def test_get_flow_runs_in_queue_respects_flow_group_labels(
-        self, tenant_id, labeled_flow_id, labeled_flow_run_id
-    ):
-        # update the flow group's labels
-        labels = ["meep", "morp"]
-        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
-            {"flow_group_id"}
-        )
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=labels
-        )
-        # get runs in queue
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=labels)
-        # confirm we could retrieve with the new labels
-        assert labeled_flow_run_id in flow_runs
-
-    async def test_get_flow_run_in_queue_respects_empty_flow_group_labels(
-        self, tenant_id, labeled_flow_id, labeled_flow_run_id
-    ):
-        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
-            {"flow_group_id"}
-        )
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=[]
-        )
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
-        # confirm we could retrieve the run without labels
-        assert labeled_flow_run_id in flow_runs
-
-        # set flow group labels to none and confirm the run isn't retrieved
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=None
-        )
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
-        assert labeled_flow_run_id not in flow_runs
 
 
 class TestSetFlowRunName:
