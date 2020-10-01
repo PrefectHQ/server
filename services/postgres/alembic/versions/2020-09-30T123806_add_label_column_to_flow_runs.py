@@ -22,6 +22,12 @@ def upgrade():
     op.add_column(
         "flow_run", sa.Column("labels", JSONB, nullable=False, server_default="[]")
     )
+    # this query looks at all currently scheduled flow runs, or more generally any flow
+    # run that has been updated in the last day, and applies our standard label logic to it.
+    # This ensures that active flow runs don't incorrectly receive `[]` as their label set,
+    # which would cause delayed work and user frustration.
+    # Note that flow runs not touched by this query will have `[]` has their labels regardless of
+    # their flow label properties.
     op.execute(
         """
     WITH runs_to_update AS (
@@ -34,7 +40,7 @@ def upgrade():
 	from flow_run
 	join flow on flow_run.flow_id = flow.id
 	join flow_group on flow.flow_group_id = flow_group.id
-	where flow_run.state = 'Scheduled'
+	where flow_run.state = 'Scheduled' OR flow_run.updated > NOW() - interval '1 day'
 	)
     update flow_run
     set labels = runs_to_update.new_labels

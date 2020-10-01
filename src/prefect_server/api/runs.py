@@ -175,7 +175,6 @@ async def _create_flow_run(
         raise ValueError(f"Flow {flow.id} is archived.")
 
     # set labels
-    run_labels = []
     if labels is not None:
         run_labels = labels
     elif flow.flow_group.labels is not None:
