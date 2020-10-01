@@ -20,7 +20,7 @@ async def resolve_mapped_children(
     Retrieve details about a task run's mapped children
     """
     query = r"""
-        SELECT 
+        SELECT
             min(task_run.start_time) AS min_start_time,
             max(task_run.end_time) AS max_end_time,
             task_run.state,
@@ -29,7 +29,7 @@ async def resolve_mapped_children(
         JOIN task_run AS reference
             ON task_run.flow_run_id = reference.flow_run_id
             AND task_run.task_id = reference.task_id
-        WHERE 
+        WHERE
             reference.id = $1
             AND reference.map_index < 0
             AND task_run.map_index >= 0
@@ -77,11 +77,23 @@ async def resolve_create_flow_run(
             flow_run_name=input.get("flow_run_name"),
             version_group_id=input.get("version_group_id"),
             idempotency_key=input.get("idempotency_key"),
+            labels=input.get("labels"),
         )
     }
 
     # return the result
     return result
+
+
+@mutation.field("set_flow_run_labels")
+async def resolve_set_flow_run_labels(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    return {
+        "success": await api.runs.set_flow_run_labels(
+            flow_run_id=input["flow_run_id"], labels=input["labels"]
+        )
+    }
 
 
 @mutation.field("set_flow_run_name")

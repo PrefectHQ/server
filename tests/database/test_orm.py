@@ -143,6 +143,7 @@ class TestORM:
         """ insert nested objects as an array"""
         flow_run_id = await models.FlowRun(
             flow_id=flow_id,
+            labels=[],
             states=[
                 models.FlowRunState(state="test", serialized_state={}),
                 models.FlowRunState(state="test", serialized_state={}),
@@ -160,6 +161,7 @@ class TestORM:
         """ insert nested objects as an array"""
         flow_run_id = await models.FlowRun(
             flow_id=flow_id,
+            labels=[],
             states=[
                 dict(state="test", serialized_state={}),
                 dict(state="test", serialized_state={}),

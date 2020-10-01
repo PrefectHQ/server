@@ -14,6 +14,9 @@ extend type Mutation {
   "Rename a task run"
   set_task_run_name(input: set_task_run_name_input!): success_payload
 
+  "Update the labels for a flow run"
+  set_flow_run_labels(input: set_flow_run_labels_input!): success_payload
+
   """
   Create a new task run, if it doesn't exist already. This is useful when dealing with dynamic
   task runs, such as those created by mapping, when it is not known if the task run has been
@@ -52,6 +55,8 @@ input create_flow_run_input {
   "A JSON payload specifying parameter values for any parameters in this flow"
   parameters: JSON
   "A JSON payload of key / value pairs to be placed in Prefect context for this run"
+  labels: [String!]
+  "A list of labels to apply to the newly created run"
   context: JSON
   "An optional start time to schedule this run for - if not provided, will be scheduled immediately"
   scheduled_start_time: DateTime
@@ -61,6 +66,13 @@ input create_flow_run_input {
   flow_run_name: String
   "The version group to schedule a run for - if provided, the unique unarchived version in this version group will be run; this input is useful as a stable API for running a regularly updated flow"
   version_group_id: String
+}
+
+input set_flow_run_labels_input {
+  "The ID of the flow run"
+  flow_run_id: UUID!
+  "The new labels"
+  labels: [String!]!
 }
 
 input set_flow_run_name_input {

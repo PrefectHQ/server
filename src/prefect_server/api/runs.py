@@ -27,6 +27,7 @@ async def create_flow_run(
     flow_run_name: str = None,
     version_group_id: str = None,
     idempotency_key: str = None,
+    labels: List[str] = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -42,6 +43,7 @@ async def create_flow_run(
             recent unarchived version of the group
         - idempotency_key (str, optional): An optional idempotency key to prevent duplicate run creation.
             Idempotency keys are only respected for 24 hours after a flow is created.
+        - labels (List[str], optional): a list of labels to apply to this individual flow run
     """
 
     if idempotency_key is not None:
@@ -67,6 +69,7 @@ async def create_flow_run(
         scheduled_start_time=scheduled_start_time,
         flow_run_name=flow_run_name,
         version_group_id=version_group_id,
+        labels=labels,
     )
 
     if idempotency_key is not None:
@@ -75,6 +78,18 @@ async def create_flow_run(
         )
 
     return flow_run_id
+
+
+@register_api("runs.set_flow_run_labels")
+async def set_flow_run_labels(flow_run_id: str, labels: List[str]) -> bool:
+    if flow_run_id is None:
+        raise ValueError("Invalid flow run ID")
+    elif labels is None:
+        raise ValueError("Invalid labels")
+    result = await models.FlowRun.where(id=flow_run_id).update(
+        {"labels": sorted(labels)}
+    )
+    return bool(result.affected_rows)
 
 
 @register_api("runs.set_flow_run_name")
@@ -105,6 +120,7 @@ async def _create_flow_run(
     scheduled_start_time: datetime.datetime = None,
     flow_run_name: str = None,
     version_group_id: str = None,
+    labels: List[str] = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -118,6 +134,7 @@ async def _create_flow_run(
         - flow_run_name (str, optional): An optional string representing this flow run
         - version_group_id (str, optional): An optional version group ID; if provided, will run the most
             recent unarchived version of the group
+        - labels (List[str], optional): a list of labels to apply to this individual flow run
     """
 
     if flow_id is None and version_group_id is None:
@@ -138,9 +155,11 @@ async def _create_flow_run(
             "id": True,
             "archived": True,
             "tenant_id": True,
+            "environment": True,
+            "run_config": True,
             "parameters": True,
             "flow_group_id": True,
-            "flow_group": {"default_parameters": True},
+            "flow_group": {"default_parameters": True, "labels": True},
         },
         order_by={"version": EnumValue("desc")},
     )  # type: Any
@@ -155,6 +174,17 @@ async def _create_flow_run(
     elif flow.archived:
         raise ValueError(f"Flow {flow.id} is archived.")
 
+    # set labels
+    if labels is not None:
+        run_labels = labels
+    elif flow.flow_group.labels is not None:
+        run_labels = flow.flow_group.labels
+    elif flow.run_config is not None:
+        run_labels = flow.run_config.get("labels") or []
+    else:
+        run_labels = flow.environment.get("labels") or []
+    run_labels.sort()
+
     # check parameters
     run_parameters = flow.flow_group.default_parameters
     run_parameters.update((parameters or {}))
@@ -167,6 +197,7 @@ async def _create_flow_run(
     run = models.FlowRun(
         tenant_id=flow.tenant_id,
         flow_id=flow_id or flow.id,
+        labels=run_labels,
         parameters=run_parameters,
         context=context or {},
         scheduled_start_time=scheduled_start_time,
@@ -426,6 +457,7 @@ async def get_runs_in_queue(
                 "run_config": True,
                 "flow_group": {"labels": True},
             },
+            "labels": True,
         },
         order_by=[{"state_start_time": EnumValue("asc")}],
         # get extra in case labeled runs don't show up at the top
@@ -439,16 +471,7 @@ async def get_runs_in_queue(
         if counter == config.queued_runs_returned_limit:
             continue
 
-        # critical line: if flow_group labels are None that means use the flow labels
-        if flow_run.flow.flow_group.labels is not None:
-            run_labels = flow_run.flow.flow_group.labels
-        else:
-            # Use labels from `run_config` if present, otherwise use `environment`
-            run_labels = (
-                flow_run.flow.run_config.get("labels")
-                if flow_run.flow.run_config
-                else flow_run.flow.environment.get("labels")
-            ) or []
+        run_labels = flow_run.labels
 
         # if the run labels are a superset of the provided labels, skip
         if set(run_labels) - set(labels):

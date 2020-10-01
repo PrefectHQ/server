@@ -5,7 +5,6 @@ import asyncio
 import uuid
 
 import pendulum
-from box import Box
 
 import prefect
 from prefect import api, models

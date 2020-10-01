@@ -38,13 +38,34 @@ class TestCreateFlowRun:
                 "scheduled_start_time",
                 "auto_scheduled",
                 "context",
+                "labels",
             }
         )
         assert fr.flow_id == flow_id
+        assert fr.labels == []
         assert fr.scheduled_start_time == dt
         assert fr.parameters == dict(x=1)
         assert fr.auto_scheduled is False
         assert fr.context == {"a": 2}
+
+    async def test_create_flow_run_with_labels(self, run_query, flow_id):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    flow_id=flow_id,
+                    labels=["a", "b", "c"],
+                )
+            ),
+        )
+        fr = await models.FlowRun.where(id=result.data.create_flow_run.id).first(
+            {
+                "flow_id",
+                "labels",
+            }
+        )
+        assert fr.flow_id == flow_id
+        assert fr.labels == ["a", "b", "c"]
 
     async def test_create_flow_run_with_version_group_id(self, run_query, flow_id):
         dt = pendulum.now("utc").add(hours=1)
@@ -526,6 +547,42 @@ class TestGetRunsInQueue:
                 ),
             )
             assert len(result.data.get_runs_in_queue.flow_run_ids) == i + 1
+
+
+class TestSetFlowRunLabels:
+    mutation = """
+        mutation($input: set_flow_run_labels_input!) {
+            set_flow_run_labels(input: $input) {
+                success
+            }
+        }
+    """
+
+    async def test_set_flow_run_labels(self, run_query, flow_run_id):
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == []
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=flow_run_id, labels=["big", "boo"])),
+        )
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == ["big", "boo"]
+
+    async def test_set_flow_run_labels_to_empty(self, run_query, labeled_flow_run_id):
+
+        fr = await models.FlowRun.where(id=labeled_flow_run_id).first({"labels"})
+        assert fr.labels
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=labeled_flow_run_id, labels=[])),
+        )
+
+        fr = await models.FlowRun.where(id=labeled_flow_run_id).first({"labels"})
+        assert fr.labels == []
 
 
 class TestSetFlowRunName:
