@@ -2,9 +2,9 @@ import pendulum
 import pytest
 
 import prefect
+from prefect import models
 from prefect.engine.state import Retrying, Scheduled
 from prefect_server import api
-from prefect_server.database import models
 from prefect_server.services.towel.zombie_killer import ZombieKiller
 
 

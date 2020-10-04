@@ -1,9 +1,8 @@
 import uuid
 
 import prefect
+from prefect import api, models
 from prefect.utilities.graphql import compress
-from prefect import api
-from prefect_server.database import models
 
 
 class TestCreateFlow:
@@ -90,7 +89,7 @@ class TestCreateFlow:
 
     async def test_create_flow_respects_core_version(self, run_query, project_id):
         serialized_flow = prefect.Flow(name="test").serialize(build=False)
-        serialized_flow["environment"]["__version__"] = "0.7.0+g5892"
+        serialized_flow["__version__"] = "0.7.0+g5892"
         result = await run_query(
             query=self.create_flow_mutation,
             variables=dict(

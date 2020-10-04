@@ -4,11 +4,11 @@ from typing import Any, Dict, Iterable, List, Union
 from box import Box
 
 from prefect.utilities.graphql import EnumValue, with_args
+from prefect.utilities.plugins import register_plugin
 from prefect_server import config
 from prefect_server.utilities import exceptions
 from prefect_server.utilities.graphql import GraphQLClient
 from prefect_server.utilities.logging import get_logger
-from prefect.utilities.plugins import register_plugin
 
 GQLObjectTypes = Union[None, str, Dict, Iterable]
 logger = get_logger("Hasura")

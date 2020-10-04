@@ -5,6 +5,7 @@ import pendulum
 import pytest
 
 import prefect
+from prefect import api, models
 from prefect.engine.state import (
     Failed,
     Finished,
@@ -15,9 +16,7 @@ from prefect.engine.state import (
     Success,
 )
 from prefect.utilities.graphql import EnumValue, with_args
-from prefect import api
 from prefect_server import config
-from prefect_server.database import models
 from prefect_server.utilities.exceptions import NotFound
 
 
@@ -32,6 +31,60 @@ class TestCreateRun:
     async def test_create_flow_run(self, simple_flow_id):
         flow_run_id = await api.runs.create_flow_run(flow_id=simple_flow_id)
         assert await models.FlowRun.exists(flow_run_id)
+
+    async def test_create_flow_run_accepts_labels(self, simple_flow_id):
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id=simple_flow_id, labels=["one", "two"]
+        )
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == ["one", "two"]
+
+    async def test_create_flow_run_respects_flow_group_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        # update the flow group's labels
+        labels = ["meep", "morp"]
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"flow_group_id"}
+        )
+        await api.flow_groups.set_flow_group_labels(
+            flow_group_id=labeled_flow.flow_group_id, labels=labels
+        )
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == ["meep", "morp"]
+
+    async def test_create_flow_run_respects_flow_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"environment"}
+        )
+        # create a flow run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == sorted(labeled_flow.environment["labels"])
+
+    async def test_create_flow_run_respects_empty_flow_group_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"flow_group_id"}
+        )
+        await api.flow_groups.set_flow_group_labels(
+            flow_group_id=labeled_flow.flow_group_id, labels=[]
+        )
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == []
 
     async def test_create_flow_run_with_version_group_id(self, project_id):
         flow_ids = []
@@ -765,6 +818,23 @@ class TestGetRunsInQueue:
         assert labeled_flow_run_id in flow_runs
         assert flow_run_id not in flow_runs
 
+    async def test_get_flow_run_in_queue_uses_run_labels(
+        self,
+        tenant_id,
+        flow_id,
+        labeled_flow_run_id,
+    ):
+
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id=flow_id, labels=["dev", "staging"]
+        )
+
+        flow_runs = await api.runs.get_runs_in_queue(
+            tenant_id=tenant_id, labels=["dev", "staging"]
+        )
+        assert flow_run_id in flow_runs
+        assert labeled_flow_run_id not in flow_runs
+
     async def test_get_flow_run_in_queue_works_if_environment_labels_are_none(
         self, tenant_id, flow_run_id, flow_id
     ):
@@ -1128,62 +1198,77 @@ class TestGetRunsInQueue:
         assert flow_run_id not in flow_runs
 
 
-class TestGetRunsInQueueFlowGroupLabels:
-    async def test_get_flow_runs_in_queue_respects_flow_group_labels(
-        self, tenant_id, labeled_flow_id, labeled_flow_run_id
-    ):
-        # update the flow group's labels
-        labels = ["meep", "morp"]
-        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
-            {"flow_group_id"}
-        )
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=labels
-        )
-        # get runs in queue
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=labels)
-        # confirm we could retrieve with the new labels
-        assert labeled_flow_run_id in flow_runs
+class TestSetFlowRunLabels:
+    async def test_set_flow_run_labels(self, flow_run_id):
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == []
 
-    async def test_get_flow_run_in_queue_respects_empty_flow_group_labels(
-        self, tenant_id, labeled_flow_id, labeled_flow_run_id
-    ):
-        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
-            {"flow_group_id"}
-        )
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=[]
-        )
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
-        # confirm we could retrieve the run without labels
-        assert labeled_flow_run_id in flow_runs
+        await api.runs.set_flow_run_labels(flow_run_id=flow_run_id, labels=["a", "b"])
 
-        # set flow group labels to none and confirm the run isn't retrieved
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=None
-        )
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
-        assert labeled_flow_run_id not in flow_runs
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == ["a", "b"]
 
-    @pytest.mark.parametrize("limit", [1, 5, 10, config.queued_runs_returned_limit * 2])
-    async def test_concurrency_limited_by_group_labels(
-        self,
-        tenant_id: str,
-        flow_id: str,
-        flow_group_id: str,
-        flow_concurrency_limit: models.FlowConcurrencyLimit,
-        limit: int,
-    ):
+    async def test_set_flow_run_labels_must_have_value(self, flow_run_id):
+        with pytest.raises(ValueError, match="Invalid labels"):
+            await api.runs.set_flow_run_labels(flow_run_id=flow_run_id, labels=None)
 
-        await asyncio.gather(
-            *[api.runs.create_flow_run(flow_id=flow_id)],
-            api.flow_groups.set_flow_group_labels(
-                flow_group_id=flow_group_id, labels=[flow_concurrency_limit.name]
-            ),
+    async def test_set_flow_run_id_invalid(self):
+        assert not await api.runs.set_flow_run_labels(
+            flow_run_id=str(uuid.uuid4()), labels=["a"]
         )
 
-        runs = await api.runs.get_runs_in_queue(
-            tenant_id=tenant_id, labels=[flow_concurrency_limit.name]
+    async def test_set_flow_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid flow run ID"):
+            assert not await api.runs.set_flow_run_labels(
+                flow_run_id=None, labels=["a"]
+            )
+
+
+class TestSetFlowRunName:
+    async def test_set_flow_run_name(self, flow_run_id):
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name != "hello"
+
+        await api.runs.set_flow_run_name(flow_run_id=flow_run_id, name="hello")
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name == "hello"
+
+    @pytest.mark.parametrize("name", [None, ""])
+    async def test_set_flow_run_name_must_have_value(self, flow_run_id, name):
+        with pytest.raises(ValueError, match="Invalid name"):
+            await api.runs.set_flow_run_name(flow_run_id=flow_run_id, name=name)
+
+    async def test_set_flow_run_id_invalid(self):
+        assert not await api.runs.set_flow_run_name(
+            flow_run_id=str(uuid.uuid4()), name="hello"
         )
 
-        assert len(runs) == flow_concurrency_limit.limit
+    async def test_set_flow_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid flow run ID"):
+            assert not await api.runs.set_flow_run_name(flow_run_id=None, name="hello")
+
+
+class TestSetTaskRunName:
+    async def test_set_task_run_name(self, task_run_id):
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name != "hello"
+
+        await api.runs.set_task_run_name(task_run_id=task_run_id, name="hello")
+
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name == "hello"
+
+    @pytest.mark.parametrize("name", [None, ""])
+    async def test_set_task_run_name_must_have_value(self, task_run_id, name):
+        with pytest.raises(ValueError, match="Invalid name"):
+            await api.runs.set_task_run_name(task_run_id=task_run_id, name=name)
+
+    async def test_set_task_run_id_invalid(self):
+        assert not await api.runs.set_task_run_name(
+            task_run_id=str(uuid.uuid4()), name="hello"
+        )
+
+    async def test_set_task_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid task run ID"):
+            assert not await api.runs.set_task_run_name(task_run_id=None, name="hello")

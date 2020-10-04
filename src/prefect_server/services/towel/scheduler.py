@@ -1,8 +1,7 @@
 import asyncio
 
+from prefect import api, models
 from prefect.utilities.graphql import EnumValue
-from prefect import api
-from prefect_server.database import models
 from prefect_server.services.loop_service import LoopService
 
 

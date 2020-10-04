@@ -6,12 +6,12 @@ import pendulum
 from packaging import version as module_version
 from pydantic import BaseModel, Field, validator
 
+from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
 from prefect.utilities.graphql import with_args
-from prefect import api, models
+from prefect.utilities.plugins import register_api
 from prefect_server import config
 from prefect_server.utilities import logging
-from prefect.utilities.plugins import register_api
 
 logger = logging.get_logger("api.flows")
 schedule_schema = ScheduleSchema()
@@ -93,6 +93,8 @@ class FlowSchema(Model):
     edges: List[EdgeSchema] = Field(default_factory=list)
     parameters: List[ParameterSchema] = Field(default_factory=list)
     environment: Dict[str, Any] = None
+    run_config: Dict[str, Any] = None
+    __version__: str = None
     storage: Dict[str, Any] = None
     schedule: ScheduleSchema = None
     reference_tasks: List[str] = Field(default_factory=list)
@@ -136,12 +138,12 @@ async def create_flow(
     flow = FlowSchema(**serialized_flow)
 
     # core versions before 0.6.1 were used only for internal purposes-- this is our cutoff
-    core_version = flow.environment.get("__version__", None)
+    core_version = flow.__version__
     if core_version and module_version.parse(core_version) < module_version.parse(
         config.core_version_cutoff
     ):
         raise ValueError(
-            "Prefect Server requires new flows to be built with Prefect "
+            "Prefect backends require new flows to be built with Prefect "
             f"{config.core_version_cutoff}+, but this flow was built with "
             f"Prefect {core_version}."
         )
@@ -208,7 +210,8 @@ async def create_flow(
         name=flow.name,
         serialized_flow=serialized_flow,
         environment=flow.environment,
-        core_version=flow.environment.get("__version__"),
+        run_config=flow.run_config,
+        core_version=flow.__version__,
         storage=flow.storage,
         parameters=flow.parameters,
         version_group_id=version_group_id,

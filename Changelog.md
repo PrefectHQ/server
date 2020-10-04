@@ -1,5 +1,24 @@
 # Changelog
 
+## September 24, 2020 <Badge text="beta" type="success" />
+
+Released on September 24, 2020.
+
+### Enhancements
+
+- Registering agents will now retrieve IDs from matching entries in order to prevent duplication - [#95](https://github.com/PrefectHQ/server/pull/95)
+- Add routes for setting run names - [#77](https://github.com/PrefectHQ/server/pull/77)
+
+### Fixes
+
+- Fix `name` field in `delete_agent` GraphQL resolver - [#95](https://github.com/PrefectHQ/server/pull/95)
+- Replace all uses of `database.models` with `prefect.models` - [#94](https://github.com/PrefectHQ/server/pull/94)
+
+### Database Migrations
+
+- Add task run name - [#77](https://github.com/PrefectHQ/server/pull/77)
+- Add index on `flow_run.agent_id` - [#93](https://github.com/PrefectHQ/server/pull/93)
+
 ## September 15, 2020 <Badge text="beta" type="success" />
 
 Released on September 15, 2020.

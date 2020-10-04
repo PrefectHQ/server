@@ -1,8 +1,7 @@
 import pytest
 
+from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
-from prefect import api
-from prefect_server.database import models
 
 
 class TestSetFlowGroupLabels:

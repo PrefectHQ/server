@@ -12,8 +12,9 @@ import pydantic
 import pytest
 from box import Box
 
+from prefect import models
 from prefect.engine.state import Running, Scheduled
-from prefect_server.database import models, orm
+from prefect_server.database import orm
 
 
 class TestModel:
@@ -142,6 +143,7 @@ class TestORM:
         """ insert nested objects as an array"""
         flow_run_id = await models.FlowRun(
             flow_id=flow_id,
+            labels=[],
             states=[
                 models.FlowRunState(state="test", serialized_state={}),
                 models.FlowRunState(state="test", serialized_state={}),
@@ -159,6 +161,7 @@ class TestORM:
         """ insert nested objects as an array"""
         flow_run_id = await models.FlowRun(
             flow_id=flow_id,
+            labels=[],
             states=[
                 dict(state="test", serialized_state={}),
                 dict(state="test", serialized_state={}),

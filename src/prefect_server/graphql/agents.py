@@ -1,9 +1,8 @@
-from typing import Any, List
+from typing import Any
 
 from graphql import GraphQLResolveInfo
 
 from prefect_server import api
-from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation
 
 
@@ -33,7 +32,7 @@ async def resolve_create_agent_config(
     return {
         "id": await api.agents.create_agent_config(
             tenant_id=input["tenant_id"],
-            agent=input.get("name"),
+            name=input.get("name"),
             settings=input.get("settings"),
         )
     }
