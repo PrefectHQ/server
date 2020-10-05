@@ -910,7 +910,10 @@ class TestGetRunsInQueue:
         assert flow_run_id not in mixed_flow_runs
 
     async def test_concurrency_limited_flows_not_returned(
-        self, tenant_id: str, labeled_flow_id: str, flow_concurrency_limit_id: str
+        self,
+        tenant_id: str,
+        labeled_flow_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
     ):
         """
         Tests to make sure that if there aren't flow concurrency
@@ -919,8 +922,12 @@ class TestGetRunsInQueue:
         deadlocking themselves by only waiting on flows that
         Cloud knows aren't available to run.
         """
-        labeled_flow_run_id = await api.runs.create_flow_run(labeled_flow_id)
-        labeled_flow_run_id_2 = await api.runs.create_flow_run(labeled_flow_id)
+        labeled_flow_run_id = await api.runs.create_flow_run(
+            labeled_flow_id, labels=[flow_concurrency_limit.name]
+        )
+        labeled_flow_run_id_2 = await api.runs.create_flow_run(
+            labeled_flow_id, labels=[flow_concurrency_limit.name]
+        )
 
         await api.states.set_flow_run_state(
             flow_run_id=labeled_flow_run_id,
@@ -968,29 +975,24 @@ class TestGetRunsInQueue:
         # the logic doesn't _only_ count one vs the others
         unlabeled_runs = await asyncio.gather(
             *[
-                api.runs.create_flow_run(flow_id)
+                # Not a concurrency limited label, just a regular run label
+                api.runs.create_flow_run(flow_id, labels=["baz"])
                 for _ in range(config.queued_runs_returned_limit - 1)
             ]
         )
         labeled_runs = await asyncio.gather(
             *[
-                api.runs.create_flow_run(labeled_flow_id)
+                api.runs.create_flow_run(
+                    labeled_flow_id, labels=[flow_concurrency_limit.name]
+                )
                 for _ in range(config.queued_runs_returned_limit - 1)
             ]
         )
 
-        await asyncio.gather(
-            *[
-                api.concurrency_limits.update_flow_concurrency_limit(
-                    tenant_id=flow_concurrency_limit.tenant_id,
-                    name=flow_concurrency_limit.name,
-                    limit=config.queued_runs_returned_limit,
-                ),
-                # Not a concurrency limited label, just a regular ole label
-                api.flow_groups.set_flow_group_labels(
-                    flow_group_id=flow_group_id, labels=["baz"]
-                ),
-            ]
+        await api.flow_concurrency_limits.update_flow_concurrency_limit(
+            tenant_id=flow_concurrency_limit.tenant_id,
+            name=flow_concurrency_limit.name,
+            limit=config.queued_runs_returned_limit,
         )
 
         super_flow_runs = await api.runs.get_runs_in_queue(

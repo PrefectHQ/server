@@ -74,13 +74,12 @@ async def set_flow_run_state(
             "state_result": True,
             "name": True,
             "version": True,
+            "labels": True,
             "flow": {
                 "id": True,
                 "name": True,
                 "flow_group_id": True,
                 "version_group_id": True,
-                "environment": True,
-                "flow_group": {"labels": True},
             },
             "tenant": {"id", "slug"},
         }
@@ -116,53 +115,46 @@ async def set_flow_run_state(
     # Queueing runs if using concurency limits
     # --------------------------------------------------------
 
-    if state.is_running():
-        if flow_run.flow.flow_group.labels is not None:
-            run_labels = flow_run.flow.flow_group.labels
-        else:
-            run_labels = flow_run.flow.environment.get("labels") or []
-
-        if run_labels:
-
-            # If the run is labeled in some kind of way
-            limits = await api.concurrency_limits.get_available_flow_run_concurrency(
-                tenant_id=flow_run.tenant_id, labels=run_labels
+    if state.is_running() or state.is_submitted():
+        # Flow Concurrency Limits
+        # If the run is already occupying a slot (Submitted -> Running)
+        # or is attempting to occupy a slot (X -> Submitted)
+        # OR if the flow_run isn't labeled / has "unlimited" labels
+        can_transition = (
+            await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
+                tenant_id=flow_run.tenant_id,
+                limit_names=flow_run.labels,
+                flow_run_id=flow_run_id,
             )
+        )
 
-            # If every label doesn't have a slot available, will be moved to queued
-            # If a label isn't specifically limited, it's considered to have
-            # unlimited slots.
-            if not all([limits.get(label, 1) > 0 for label in run_labels]):
-                if state_schema.load(flow_run.serialized_state).is_queued():
-                    # If the run is currently in a Queued state and is
-                    # being coerced into a Queued state,
-                    # we don't insert a new state to avoid endlessly
-                    # adding 10 minutes to when the flow runners would try to
-                    # see if the run is available to execute
+        if not can_transition:
+            if state_schema.load(flow_run.serialized_state).is_queued():
+                # If the run is currently in a Queued state and is
+                # being coerced into a Queued state,
+                # we don't insert a new state to avoid endlessly
+                # adding 10 minutes to when the flow runners would try to
+                # see if the run is available to execute
 
-                    await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
+                await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
 
-                    flow_run_state = models.FlowRunState(
-                        flow_run_id=flow_run_id,
-                        tenant_id=flow_run.tenant_id,
-                        version=flow_run.version,
-                        state=flow_run.state,
-                        serialized_state=flow_run.serialized_state,
-                        start_time=flow_run.state_start_time,
-                        message=flow_run.state_message,
-                        result=flow_run.state_result,
-                        timestamp=flow_run.state_timestamp,
-                    )
+                flow_run_state = models.FlowRunState(
+                    flow_run_id=flow_run_id,
+                    tenant_id=flow_run.tenant_id,
+                    version=flow_run.version,
+                    state=flow_run.state,
+                    serialized_state=flow_run.serialized_state,
+                    start_time=flow_run.state_start_time,
+                    message=flow_run.state_message,
+                    result=flow_run.state_result,
+                    timestamp=flow_run.state_timestamp,
+                )
 
-                    return flow_run_state
-
-                # Informative message for debugging
-                unavailable_limits = [
-                    label for label, slots in limits.items() if slots <= 0
-                ]
+                return flow_run_state
+            else:
                 state = Queued(
                     state=state,
-                    message=f"Queued by flow run concurrency limits on labels: {unavailable_limits}",
+                    message="Queued by flow run concurrency limit",
                     start_time=pendulum.now("UTC").add(minutes=10),
                 )
 

@@ -249,12 +249,10 @@ class TestSetFlowRunStates:
         self,
         run_query,
         flow_id: str,
-        flow_run_id: str,
-        flow_group_id: str,
         flow_concurrency_limit: models.FlowConcurrencyLimit,
     ):
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=flow_group_id, labels=[flow_concurrency_limit.name]
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id, labels=[flow_concurrency_limit.name]
         )
         # Should succeed, taking first concurrency slot
         result = await run_query(
@@ -275,7 +273,9 @@ class TestSetFlowRunStates:
         assert fr.state == "Running"
 
         # Should succeed, but get coerced to a `Queued` state
-        second_run = await api.runs.create_flow_run(flow_id)
+        second_run = await api.runs.create_flow_run(
+            flow_id, labels=[flow_concurrency_limit.name]
+        )
         result = await run_query(
             query=self.mutation,
             variables=dict(
@@ -286,8 +286,8 @@ class TestSetFlowRunStates:
         )
 
         assert result.data.set_flow_run_states.states[0].id == second_run
-        assert result.data.set_flow_run_states.states[0].status == "QUEUED"
         assert result.data.set_flow_run_states.states[0].message is None
+        assert result.data.set_flow_run_states.states[0].status == "QUEUED"
 
         fr = await models.FlowRun.where(id=second_run).first({"state", "version"})
         assert fr.version == 3

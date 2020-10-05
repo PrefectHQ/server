@@ -14,11 +14,11 @@ class TestUpdateFlowConcurrencyLimit:
     """
 
     async def test_creates_if_not_exists(self, run_query, tenant_id: str):
-        name = "test"
+        label = "test"
         limit = 5
         result = await run_query(
             query=self.mutation,
-            variables=dict(input=dict(tenant_id=tenant_id, name=name, limit=limit)),
+            variables=dict(input=dict(tenant_id=tenant_id, label=label, limit=limit)),
         )
 
         limit_id = result.data.update_flow_concurrency_limit.id
@@ -28,7 +28,7 @@ class TestUpdateFlowConcurrencyLimit:
         ).first({"id", "name", "limit", "tenant_id"})
 
         assert flow_concurrency_limit.id == limit_id
-        assert flow_concurrency_limit.name == name
+        assert flow_concurrency_limit.name == label
         assert flow_concurrency_limit.limit == limit
         assert flow_concurrency_limit.tenant_id == tenant_id
 
@@ -41,7 +41,7 @@ class TestUpdateFlowConcurrencyLimit:
             variables=dict(
                 input=dict(
                     tenant_id=flow_concurrency_limit.tenant_id,
-                    name=flow_concurrency_limit.name,
+                    label=flow_concurrency_limit.name,
                     limit=old_limit + 1,
                 )
             ),
@@ -67,7 +67,7 @@ class TestUpdateFlowConcurrencyLimit:
             variables=dict(
                 input=dict(
                     tenant_id=flow_concurrency_limit.tenant_id,
-                    name=flow_concurrency_limit.name,
+                    label=flow_concurrency_limit.name,
                     limit=flow_concurrency_limit.limit,
                 )
             ),
@@ -90,7 +90,7 @@ class TestUpdateFlowConcurrencyLimit:
             variables=dict(
                 input=dict(
                     tenant_id=tenant_id,
-                    name="this will error because of the negative limit",
+                    label="this will error because of the negative limit",
                     limit=-5,
                 )
             ),

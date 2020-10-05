@@ -517,30 +517,11 @@ class TestQueueFlowRun:
 
         assert state.state == "Running"
 
-    async def test_ignores_unlabeled_flows(
-        self, flow_id: str, flow_run_id: str, monkeypatch
-    ):
-        """
-        Tests to make sure that unlabeled flows are not restricted;
-        a backwards compatability test.
-        """
-
-        mock_concurrency_check = CoroutineMock(return_value={})
-        monkeypatch.setattr(
-            "prefect_server.api.states.api.concurrency_limits.get_available_flow_run_concurrency",
-            mock_concurrency_check,
-        )
-
-        state = await api.states.set_flow_run_state(flow_run_id, Running())
-
-        assert state.state == "Running"
-        mock_concurrency_check.assert_not_called()
-
     async def test_ignores_request_if_already_queued(
         self,
         flow_group_id: str,
         flow_id: str,
-        flow_concurrency_limit_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
     ):
         """
         This tests that if the existing state of the flow run is already `Queued`,
@@ -552,8 +533,8 @@ class TestQueueFlowRun:
 
         first, second, _ = await asyncio.gather(
             *[
-                api.runs.create_flow_run(flow_id),
-                api.runs.create_flow_run(flow_id),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
                 self.set_flow_group_labels(flow_group_id),
             ]
         )
@@ -590,7 +571,10 @@ class TestQueueFlowRun:
         assert state.state == "Queued"
 
     async def test_sets_state_to_queued_on_failed_concurrency_check(
-        self, flow_id: str, flow_group_id: str, flow_concurrency_limit_id: str
+        self,
+        flow_id: str,
+        flow_group_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
     ):
         """
         Tests to make sure that if the concurrency check fails, the
@@ -598,8 +582,8 @@ class TestQueueFlowRun:
         """
         first, second, _ = await asyncio.gather(
             *[
-                api.runs.create_flow_run(flow_id),
-                api.runs.create_flow_run(flow_id),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
                 self.set_flow_group_labels(flow_group_id),
             ]
         )
@@ -613,9 +597,8 @@ class TestQueueFlowRun:
     async def test_requires_slots_on_all_limits(
         self,
         flow_id: str,
-        flow_group_id: str,
-        flow_concurrency_limit_id: str,
-        flow_concurrency_limit_id_2: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+        flow_concurrency_limit_2: models.FlowConcurrencyLimit,
     ):
         """
         Tests that the requirement is _all_ concurrency limits
@@ -624,10 +607,15 @@ class TestQueueFlowRun:
 
         first, second, *_ = await asyncio.gather(
             *[
-                api.runs.create_flow_run(flow_id),
-                api.runs.create_flow_run(flow_id),
-                self.set_flow_group_labels(flow_group_id),
-                models.FlowConcurrencyLimit.where(id=flow_concurrency_limit_id).update(
+                api.runs.create_flow_run(
+                    flow_id,
+                    labels=[flow_concurrency_limit.name, flow_concurrency_limit_2.name],
+                ),
+                api.runs.create_flow_run(
+                    flow_id,
+                    labels=[flow_concurrency_limit.name, flow_concurrency_limit_2.name],
+                ),
+                models.FlowConcurrencyLimit.where(id=flow_concurrency_limit.id).update(
                     set={"limit": 2}
                 ),
             ]

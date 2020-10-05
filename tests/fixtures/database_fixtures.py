@@ -238,8 +238,10 @@ async def excess_submitted_task_runs(project_id):
 
 @pytest.fixture
 async def flow_concurrency_limit_id(tenant_id) -> str:
-    concurrency_limit_id = await api.concurrency_limits.update_flow_concurrency_limit(
-        name="foo", limit=1, tenant_id=tenant_id
+    concurrency_limit_id = (
+        await api.flow_concurrency_limits.update_flow_concurrency_limit(
+            name="foo", limit=1, tenant_id=tenant_id
+        )
     )
 
     return concurrency_limit_id
@@ -247,8 +249,10 @@ async def flow_concurrency_limit_id(tenant_id) -> str:
 
 @pytest.fixture
 async def flow_concurrency_limit_id_2(tenant_id) -> str:
-    concurrency_limit_id = await api.concurrency_limits.update_flow_concurrency_limit(
-        name="bar", limit=1, tenant_id=tenant_id
+    concurrency_limit_id = (
+        await api.flow_concurrency_limits.update_flow_concurrency_limit(
+            name="bar", limit=1, tenant_id=tenant_id
+        )
     )
 
     return concurrency_limit_id

@@ -467,26 +467,6 @@ async def get_runs_in_queue(
     counter = 0
     final_flow_runs = []
 
-    # Concurrency limiting is implemented here to not deadlock agents,
-    # but the final check is set in the state setting pipeline
-    all_run_labels: Set[str] = set()
-    for flow_run in flow_runs:
-
-        # critical line: if flow_group labels are None that means use the flow labels
-        if flow_run.flow.flow_group.labels is not None:
-            run_labels = flow_run.flow.flow_group.labels
-        else:
-            run_labels = flow_run.flow.environment.get("labels") or []
-
-        if run_labels:
-            all_run_labels.update(run_labels)
-
-    available_concurrency_slots = (
-        await api.concurrency_limits.get_available_flow_run_concurrency(
-            tenant_id=tenant_id, labels=list(all_run_labels)
-        )
-    )
-
     for flow_run in flow_runs:
         if counter == config.queued_runs_returned_limit:
             continue
@@ -504,19 +484,17 @@ async def get_runs_in_queue(
             continue
 
         # Concurrency label filtering
+        # Concurrency limiting final check is in state setting pipeline
         if run_labels:
-            if not all(
-                [available_concurrency_slots.get(label, 1) for label in run_labels]
+            if not await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
+                tenant_id=tenant_id,
+                limit_names=flow_run.labels,
+                flow_run_id=flow_run.id,
             ):
-                # Not all labels have available concurrency
+
+                # Unable to allocate concurrency, skipping to avoid
+                # deadlocking agents.
                 continue
-            else:
-                # There is concurrency, so decrement available slots and move on
-                for run_label in run_labels:
-                    # Run labels that aren't directly associated with limits
-                    # are considered to have unlimited slots
-                    if run_label in available_concurrency_slots:
-                        available_concurrency_slots[run_label] -= 1
 
         final_flow_runs.append(flow_run.id)
         counter += 1
