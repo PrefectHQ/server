@@ -1,11 +1,17 @@
+import asyncio
 import os
+import uuid
 
+import pendulum
 import pytest
 
 from prefect import api, models
 from prefect.engine.result import Result, SafeResult
 from prefect.engine.result_handlers import JSONResultHandler
 from prefect.engine.state import Retrying, Running, Submitted, Success
+from prefect.serialization.state import StateSchema
+
+state_schema = StateSchema()
 
 
 @pytest.fixture
@@ -245,37 +251,121 @@ class TestSetFlowRunStates:
         )
         assert "State payload is too large" in result.errors[0].message
 
-    async def test_set_flow_run_states_coerced_to_queued(
+    async def test_errors_when_trying_submit_flow_runs_without_slots(
         self,
         run_query,
         flow_id: str,
         flow_concurrency_limit: models.FlowConcurrencyLimit,
     ):
-        flow_run_id = await api.runs.create_flow_run(
-            flow_id, labels=[flow_concurrency_limit.name]
+        first_run_id, second_run_id = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+            ]
         )
-        # Should succeed, taking first concurrency slot
+        # First should succeed
         result = await run_query(
             query=self.mutation,
             variables=dict(
                 input=dict(
-                    states=[dict(flow_run_id=flow_run_id, state=Running().serialize())]
+                    states=[
+                        dict(flow_run_id=first_run_id, state=Submitted().serialize())
+                    ]
                 )
             ),
         )
 
-        assert result.data.set_flow_run_states.states[0].id == flow_run_id
+        assert result.data.set_flow_run_states.states[0].id == first_run_id
         assert result.data.set_flow_run_states.states[0].status == "SUCCESS"
         assert result.data.set_flow_run_states.states[0].message is None
 
-        fr = await models.FlowRun.where(id=flow_run_id).first({"state", "version"})
-        assert fr.version == 3
-        assert fr.state == "Running"
+        run = await models.FlowRun.where(id=first_run_id).first({"state"})
+        assert run.state == "Submitted"
 
-        # Should succeed, but get coerced to a `Queued` state
-        second_run = await api.runs.create_flow_run(
-            flow_id, labels=[flow_concurrency_limit.name]
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    states=[
+                        dict(flow_run_id=second_run_id, state=Submitted().serialize())
+                    ]
+                )
+            ),
         )
+
+        assert result.errors is not None
+        assert "concurrency" in result.errors[0].message.lower()
+
+    async def test_set_flow_run_states_coerced_to_queued(
+        self,
+        run_query,
+        tenant_id: str,
+        flow_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        first_run, second_run = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+            ]
+        )
+        # Occupy first concurrency slot
+        await api.states.set_flow_run_state(first_run, Submitted())
+
+        # This is effectively recreating `set_flow_run_state` without
+        # all the logic protecting against exactly what we're doing
+        # here.
+
+        ## Duplicated code
+
+        second_flow_run = await models.FlowRun.where(id=second_run).first(
+            {
+                "id": True,
+                "serialized_state": True,
+                "version": True,
+            }
+        )
+        existing_state = state_schema.load(second_flow_run.serialized_state)
+        state = Submitted(
+            state=existing_state,
+            message="Submitted outside of standard API to avoid safety checks.",
+        )
+
+        second_run_submitted_state = models.FlowRunState(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            flow_run_id=second_run,
+            version=second_flow_run.version + 1,
+            state=type(state).__name__,
+            timestamp=pendulum.now("UTC"),
+            message=state.message,
+            result=state.result,
+            start_time=getattr(state, "start_time", None),
+            serialized_state=state.serialize(),
+        )
+
+        await second_run_submitted_state.insert()
+
+        ## End duplicated code
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    states=[dict(flow_run_id=first_run, state=Running().serialize())]
+                )
+            ),
+        )
+
+        assert result.data.set_flow_run_states.states[0].id == first_run
+        assert result.data.set_flow_run_states.states[0].status == "QUEUED"
+        assert result.data.set_flow_run_states.states[0].message is None
+
+        fr = await models.FlowRun.where(id=first_run).first({"state", "version"})
+        assert fr.version == 4
+        assert fr.state == "Queued"
+
+        # Should succeed since the previous was set to a Queued State
         result = await run_query(
             query=self.mutation,
             variables=dict(
@@ -287,11 +377,11 @@ class TestSetFlowRunStates:
 
         assert result.data.set_flow_run_states.states[0].id == second_run
         assert result.data.set_flow_run_states.states[0].message is None
-        assert result.data.set_flow_run_states.states[0].status == "QUEUED"
+        assert result.data.set_flow_run_states.states[0].status == "SUCCESS"
 
         fr = await models.FlowRun.where(id=second_run).first({"state", "version"})
-        assert fr.version == 3
-        assert fr.state == "Queued"
+        assert fr.version == 4
+        assert fr.state == "Running"
 
 
 # ---------------------------------------------------------------

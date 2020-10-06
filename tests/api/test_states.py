@@ -29,6 +29,9 @@ from prefect.engine.state import (
     TriggerFailed,
     _MetaState,
 )
+from prefect.serialization.state import StateSchema
+
+state_schema = StateSchema()
 
 
 class TestTaskRunStates:
@@ -499,6 +502,174 @@ class TestCancelFlowRun:
 
 
 class TestQueueFlowRun:
+    async def test_errors_on_submitted_transition_with_no_slots(
+        self,
+        flow_id: str,
+        labeled_flow_run_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        """
+        Cloud compatability test; If a flow run is attempting to transition to
+        `Submitted` and the flow runs are concurrency limited, and without
+        any slots remaining, the transition should fail (not get set
+        to Queued).
+        """
+
+        flow_run_id, _ = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.states.set_flow_run_state(labeled_flow_run_id, Submitted()),
+            ]
+        )
+
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"state"})
+        state_before = flow_run.state
+
+        with pytest.raises(ValueError):
+            await api.states.set_flow_run_state(flow_run_id, Submitted())
+
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"state"})
+        assert flow_run.state == state_before
+        assert flow_run.state not in ["Submitted", "Queued"]
+
+    async def test_can_transition_to_submitted_when_slots_available(
+        self,
+        labeled_flow_run_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+
+        new_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Submitted()
+        )
+        assert new_state.state == "Submitted"
+
+    async def test_sets_state_to_queued_on_overused_concurrency_slots(
+        self,
+        flow_id: str,
+        tenant_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        """
+        Tests under the scenario where two flow runs end up in a `Submitted` state
+        when there was only one concurrency slot that the first of the two
+        to attempt to enter a `Running` state will end up getting rerouted
+        into a `Queued` state.
+        """
+
+        first_run, second_run = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+            ]
+        )
+
+        # First setting should work
+        await api.states.set_flow_run_state(first_run, Submitted())
+
+        # This is effectively recreating `set_flow_run_state` without
+        # all the logic protecting against exactly what we're doing
+        # here.
+
+        ## Duplicated code
+
+        second_flow_run = await models.FlowRun.where(id=second_run).first(
+            {
+                "id": True,
+                "serialized_state": True,
+                "version": True,
+            }
+        )
+        existing_state = state_schema.load(second_flow_run.serialized_state)
+        state = Submitted(
+            state=existing_state,
+            message="Submitted outside of standard API to avoid safety checks.",
+        )
+
+        second_run_submitted_state = models.FlowRunState(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            flow_run_id=second_run,
+            version=second_flow_run.version + 1,
+            state=type(state).__name__,
+            timestamp=pendulum.now("UTC"),
+            message=state.message,
+            result=state.result,
+            start_time=getattr(state, "start_time", None),
+            serialized_state=state.serialize(),
+        )
+
+        await second_run_submitted_state.insert()
+
+        ## End duplicated code
+
+        # It shouldn't matter which run we attempt to set to `Running`
+        # first.
+
+        second_run_state = await api.states.set_flow_run_state(second_run, Running())
+        assert second_run_state.state == "Queued"
+
+        first_run_state = await api.states.set_flow_run_state(first_run, Running())
+        assert first_run_state.state == "Running"
+
+    async def test_can_transition_from_submitted_to_running_without_concurrency_limits(
+        self, labeled_flow_run_id: str
+    ):
+
+        submitted_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Submitted()
+        )
+        assert submitted_state.state == "Submitted"
+
+        running_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Running()
+        )
+        assert running_state.state == "Running"
+
+    async def test_can_transition_from_submitted_to_running_strict_slots(
+        self,
+        labeled_flow_run_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        """
+        Tests that a flow run can transition from Submitted -> Running when
+        there's only 1 slot available and the flow run is already occupying
+        that slot.
+        """
+
+        submitted_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Submitted()
+        )
+        assert submitted_state.state == "Submitted"
+
+        running_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Running()
+        )
+        assert running_state.state == "Running"
+
+    async def test_can_transition_from_submitted_to_running_loose_slots(
+        self,
+        labeled_flow_run_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        """
+        Tests that a flow run can transition from Submitted -> Running when
+        there are more than 1 available slots and the flow run is occupying
+        one of the slots.
+        """
+        await models.FlowConcurrencyLimit.where(id=flow_concurrency_limit.id).update(
+            set={"limit": 5}
+        )
+
+        submitted_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Submitted()
+        )
+        assert submitted_state.state == "Submitted"
+
+        running_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Running()
+        )
+        assert running_state.state == "Running"
+
     async def set_flow_group_labels(self, flow_group_id: str, labels: List[str] = None):
         if labels is None:
             # Allows setting labels of "[]"

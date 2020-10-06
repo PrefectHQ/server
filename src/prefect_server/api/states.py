@@ -129,7 +129,10 @@ async def set_flow_run_state(
         )
 
         if not can_transition:
-            if state_schema.load(flow_run.serialized_state).is_queued():
+            if state.is_submitted():
+                raise ValueError("Unable to get flow run concurrency slot. Aborting.")
+            elif state_schema.load(flow_run.serialized_state).is_queued():
+
                 # If the run is currently in a Queued state and is
                 # being coerced into a Queued state,
                 # we don't insert a new state to avoid endlessly

@@ -116,7 +116,7 @@ async def try_take_flow_concurrency_slots(
 
     if flow_run_id is not None:
         # The flow_run_id already is occupying a slot
-        is_run_occupying_slot = await models.FlowRun.where(
+        num_records = await models.FlowRun.where(
             {
                 "id": {"_eq": flow_run_id},
                 "tenant_id": {"_eq": tenant_id},
@@ -124,10 +124,13 @@ async def try_take_flow_concurrency_slots(
             }
         ).count()
 
-        if is_run_occupying_slot == 1:
-            return True
+        is_occupying_run_slot = num_records == 1
+    else:
+        is_occupying_run_slot = False
 
-    async def check_individual_limit(tenant_id: str, limit_name: str) -> bool:
+    async def check_individual_limit(
+        tenant_id: str, limit_name: str, is_occupying_run_slot: bool
+    ) -> bool:
 
         # Checking to see if the limit exists first to avoid
         # querying the much larger flow runs table
@@ -147,11 +150,18 @@ async def try_take_flow_concurrency_slots(
             }
         ).count()
 
+        if is_occupying_run_slot:
+            occupied_slots -= 1
+
         return concurrency_limit.limit > occupied_slots
 
     slot_occupancies = await asyncio.gather(
         *[
-            check_individual_limit(tenant_id=tenant_id, limit_name=limit_name)
+            check_individual_limit(
+                tenant_id=tenant_id,
+                limit_name=limit_name,
+                is_occupying_run_slot=is_occupying_run_slot,
+            )
             for limit_name in limit_names
         ]
     )

@@ -2,11 +2,14 @@ import asyncio
 import uuid
 from typing import List, Optional
 
+import pendulum
 import pytest
 
 import prefect
 from prefect.engine.state import Running, Submitted
 from prefect import api, models
+
+state_schema = prefect.serialization.state.StateSchema()
 
 
 @pytest.fixture(autouse=True)
@@ -222,6 +225,120 @@ class TestTryTakeFlowConcurrencySlots:
         )
 
         assert all(can_occupy_slot) is True
+
+    async def test_can_transition_from_submitted_to_running(
+        self,
+        tenant_id: str,
+        labeled_flow_run_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+
+        can_transition_to_submitted = (
+            await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
+                tenant_id=tenant_id,
+                limit_names=[flow_concurrency_limit.name],
+                flow_run_id=labeled_flow_run_id,
+            )
+        )
+
+        assert can_transition_to_submitted is True
+
+        await api.states.set_flow_run_state(labeled_flow_run_id, Submitted())
+
+        can_transition_to_running = (
+            await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
+                tenant_id=tenant_id,
+                limit_names=[flow_concurrency_limit.name],
+                flow_run_id=labeled_flow_run_id,
+            )
+        )
+
+        assert can_transition_to_running is True
+
+    async def test_race_condition_over_allocated_concurrency(
+        self,
+        tenant_id: str,
+        flow_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        """
+        This test should cover the race condition where we 2 flow runs
+        accidentally end up in the `Submitted` state, even though there should
+        only be one in that state and the other should have failed. In this case,
+        when transitioning from `Submitted` -> `Running`, the first of the
+        two should realize it's over the concurrency limit and get set to `Queued`,
+        and the second should transition to `Running` (since the first is no longer
+        utilizing the slots)
+        """
+
+        first_run, second_run = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+            ]
+        )
+
+        # First setting should work
+        await api.states.set_flow_run_state(first_run, Submitted())
+
+        # This is effectively recreating `set_flow_run_state` without
+        # all the logic protecting against exactly what we're doing
+        # here.
+
+        ## Duplicated code
+
+        second_flow_run = await models.FlowRun.where(id=second_run).first(
+            {
+                "id": True,
+                "serialized_state": True,
+                "version": True,
+            }
+        )
+        existing_state = state_schema.load(second_flow_run.serialized_state)
+        state = Submitted(
+            state=existing_state,
+            message="Submitted outside of standard API to avoid safety checks.",
+        )
+
+        second_run_submitted_state = models.FlowRunState(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            flow_run_id=second_run,
+            version=second_flow_run.version + 1,
+            state=type(state).__name__,
+            timestamp=pendulum.now("UTC"),
+            message=state.message,
+            result=state.result,
+            start_time=getattr(state, "start_time", None),
+            serialized_state=state.serialize(),
+        )
+
+        await second_run_submitted_state.insert()
+
+        ## End duplicated code
+
+        # This should fail, regardless of which we check
+
+        transition_conditions = await asyncio.gather(
+            *[
+                api.flow_concurrency_limits.try_take_flow_concurrency_slots(
+                    tenant_id=tenant_id,
+                    limit_names=[flow_concurrency_limit.name],
+                    flow_run_id=first_run,
+                ),
+                api.flow_concurrency_limits.try_take_flow_concurrency_slots(
+                    tenant_id=tenant_id,
+                    limit_names=[flow_concurrency_limit.name],
+                    flow_run_id=second_run,
+                ),
+                api.flow_concurrency_limits.try_take_flow_concurrency_slots(
+                    tenant_id=tenant_id,
+                    limit_names=[flow_concurrency_limit.name],
+                ),
+            ]
+        )
+
+        assert any(transition_conditions) is False
 
 
 class TestUpdateFlowConcurrencyLimit:
