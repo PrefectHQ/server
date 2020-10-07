@@ -1,5 +1,0 @@
-feature:
-  - "Add ability to configure labels on individual flow runs - [#103](https://github.com/PrefectHQ/server/pull/103)"
-
-migration:
-  - "Add labels column to flow run table with sensible defaults - [#103](https://github.com/PrefectHQ/server/pull/103)"

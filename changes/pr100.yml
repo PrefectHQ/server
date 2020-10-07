@@ -1,5 +1,0 @@
-migration:
-  - "Add `run_config` field to flows - [#100](https://github.com/PrefectHQ/server/pull/100)"
-
-enhancement:
-  - "Get core version from `flow.__version__` not `flow.environment.__version__` - [#100](https://github.com/PrefectHQ/server/pull/100)"
