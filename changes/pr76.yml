@@ -1,5 +1,0 @@
-enhancement:
-  - "Reduce size of `prefecthq/apollo` Docker image - [#3215](https://github.com/PrefectHQ/server/pull/76)"
-
-contributor:
-  - "[Juan Calderon-Perez](https://github.com/gabrielcalderon)"

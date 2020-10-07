@@ -1,5 +1,0 @@
-fix:
-  - "Fix agent API calling `prefect.api.models` instead of `prefect.models` - [#89](https://github.com/PrefectHQ/server/pull/89)"
-
-enhancement:
-  - "Replace calls to `prefect_server.database.models` with `prefect.models` - [#89](https://github.com/PrefectHQ/server/pull/89)"
