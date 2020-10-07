@@ -1,2 +1,0 @@
-feature:
-    - "Allow for scheduling a flow to run multiple times at the same time with distinct parameter values - [#96](https://github.com/PrefectHQ/server/issues/96)"

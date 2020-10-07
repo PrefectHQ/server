@@ -1,5 +1,21 @@
 # Changelog
 
+## October 7, 2020 <Badge text="beta" type="success" />
+
+Released on October 7, 2020.
+
+### Features
+
+- Allow for scheduling a flow to run multiple times at the same time with distinct parameter values - [#96](https://github.com/PrefectHQ/server/issues/96)
+
+### Enhancements
+
+- Get core version from `flow.__version__` not `flow.environment.__version__` - [#100](https://github.com/PrefectHQ/server/pull/100)
+
+### Database Migrations
+
+- Add `run_config` field to flows - [#100](https://github.com/PrefectHQ/server/pull/100)
+
 ## September 24, 2020 <Badge text="beta" type="success" />
 
 Released on September 24, 2020.
