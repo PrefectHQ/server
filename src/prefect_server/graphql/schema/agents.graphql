@@ -53,7 +53,7 @@ input create_agent_config_input {
 
 input delete_agent_config_input {
   "The ID of the agent config to delete"
-  agent_id: UUID!
+  agent_config_id: UUID!
 }
 
 input update_agent_config_input {
