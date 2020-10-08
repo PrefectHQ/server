@@ -28,7 +28,7 @@ async def set_flow_run_state(
     Args:
         - flow_run_id (str): the flow run id to update
         - state (State): the new state
-        - version (int): a version to enforce version-locking
+        - version (int): a version (only for Cloud API compatibility)
         - agent_id (str): the ID of an agent instance setting the state
 
     Returns:
@@ -38,32 +38,7 @@ async def set_flow_run_state(
     if flow_run_id is None:
         raise ValueError(f"Invalid flow run ID.")
 
-    where = {
-        "id": {"_eq": flow_run_id},
-        "_or": [
-            # EITHER version locking is enabled and versions match
-            {
-                "version": {"_eq": version},
-                "flow": {
-                    "flow_group": {
-                        "settings": {"_contains": {"version_locking_enabled": True}}
-                    }
-                },
-            },
-            # OR version locking is not enabled
-            {
-                "flow": {
-                    "flow_group": {
-                        "_not": {
-                            "settings": {"_contains": {"version_locking_enabled": True}}
-                        }
-                    }
-                }
-            },
-        ],
-    }
-
-    flow_run = await models.FlowRun.where(where).first(
+    flow_run = await models.FlowRun.where(id=flow_run_id).first(
         {
             "id": True,
             "state": True,
@@ -158,8 +133,8 @@ async def set_task_run_state(
     Args:
         - task_run_id (str): the task run id to update
         - state (State): the new state
-        - version (int): a version to enforce version-locking
-        - flow_run_version (int): a flow run version to enforce version-lockgin
+        - version (int): a version (only for Cloud API compatibility)
+        - flow_run_version (int): a flow run version (only for Cloud API compatibility)
 
     Returns:
         - models.TaskRunState
@@ -168,39 +143,7 @@ async def set_task_run_state(
     if task_run_id is None:
         raise ValueError(f"Invalid task run ID.")
 
-    where = {
-        "id": {"_eq": task_run_id},
-        "_or": [
-            {
-                # EITHER version locking is enabled and the versions match
-                "version": {"_eq": version},
-                "flow_run": {
-                    "version": {"_eq": flow_run_version},
-                    "flow": {
-                        "flow_group": {
-                            "settings": {"_contains": {"version_locking_enabled": True}}
-                        }
-                    },
-                },
-            },
-            # OR version locking is not enabled
-            {
-                "flow_run": {
-                    "flow": {
-                        "flow_group": {
-                            "_not": {
-                                "settings": {
-                                    "_contains": {"version_locking_enabled": True}
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-        ],
-    }
-
-    task_run = await models.TaskRun.where(where).first(
+    task_run = await models.TaskRun.where(id=task_run_id).first(
         {
             "id": True,
             "tenant_id": True,
