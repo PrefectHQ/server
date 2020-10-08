@@ -134,28 +134,6 @@ async def resolve_disable_flow_lazarus_process(
     }
 
 
-@mutation.field("enable_flow_version_lock")
-async def resolve_enable_flow_version_lock(
-    obj: Any, info: GraphQLResolveInfo, input: dict
-) -> dict:
-    return {
-        "success": await api.flows.enable_version_locking_for_flow(
-            flow_id=input["flow_id"]
-        )
-    }
-
-
-@mutation.field("disable_flow_version_lock")
-async def resolve_disable_flow_version_lock(
-    obj: Any, info: GraphQLResolveInfo, input: dict
-) -> dict:
-    return {
-        "success": await api.flows.disable_version_locking_for_flow(
-            flow_id=input["flow_id"]
-        )
-    }
-
-
 @mutation.field("set_schedule_active")
 async def resolve_set_schedule_active(
     obj: Any, info: GraphQLResolveInfo, input: dict
