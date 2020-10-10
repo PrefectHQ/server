@@ -410,9 +410,10 @@ class TestCreateFlowVersions:
         # get the flow group from the DB
         flow_group = await models.FlowGroup.where(
             {"name": {"_eq": flow.version_group_id}}
-        ).first({"name"})
+        ).first({"name", "settings"})
 
         assert flow_group.name == flow.version_group_id
+        assert flow_group.settings["version_locking_enabled"] is False
 
     async def test_create_flow_creates_flow_group_if_version_group_provided(
         self, project_id, flow

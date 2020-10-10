@@ -39,16 +39,6 @@ extend type Mutation {
     input: enable_flow_lazarus_process_input!
   ): success_payload
 
-  "Enable version locking for a flow and its tasks. Version locking ensures that tasks run just once."
-  enable_flow_version_lock(
-    input: enable_flow_version_lock_input!
-  ): success_payload
-
-  "Disable version locking for a flow and its tasks. Version locking ensures that tasks run just once."
-  disable_flow_version_lock(
-    input: disable_flow_version_lock_input!
-  ): success_payload
-
   "Set labels for a flow group."
   set_flow_group_labels(input: set_flow_group_labels_input!): success_payload
 	  
@@ -135,16 +125,6 @@ input enable_flow_lazarus_process_input {
 }
 
 input disable_flow_lazarus_process_input {
-  "The ID of the flow to update"
-  flow_id: UUID!
-}
-
-input enable_flow_version_lock_input {
-  "The ID of the flow to update"
-  flow_id: UUID!
-}
-
-input disable_flow_version_lock_input {
   "The ID of the flow to update"
   flow_id: UUID!
 }
