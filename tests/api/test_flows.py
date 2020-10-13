@@ -1070,11 +1070,12 @@ class TestScheduledRunAttributes:
         assert all([fr.labels == ["a", "b"] for fr in flow_runs[::2]])
         assert all([fr.labels == ["c", "d"] for fr in flow_runs[1::2]])
 
-    async def test_schedule_does_not_overwrite_flow_labels(self, project_id):
+    @pytest.mark.parametrize("labels", [[], ["a", "b"]])
+    async def test_schedule_does_not_overwrite_flow_labels(self, project_id, labels):
         clock1 = prefect.schedules.clocks.IntervalClock(
             start_date=pendulum.now("UTC").add(minutes=1),
             interval=datetime.timedelta(minutes=2),
-            labels=["a", "b"],
+            labels=labels,
         )
         clock2 = prefect.schedules.clocks.IntervalClock(
             start_date=pendulum.now("UTC"),
@@ -1098,7 +1099,7 @@ class TestScheduledRunAttributes:
             order_by={"scheduled_start_time": EnumValue("asc")},
         )
 
-        assert all([fr.labels == ["a", "b"] for fr in flow_runs[::2]])
+        assert all([fr.labels == labels for fr in flow_runs[::2]])
         assert all([fr.labels == ["bar", "foo"] for fr in flow_runs[1::2]])
 
 
