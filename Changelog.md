@@ -1,5 +1,17 @@
 # Changelog
 
+## October 13, 2020 <Badge text="beta" type="success" />
+
+Released on October 13, 2020.
+
+### Features
+
+- Allow for scheduling changing labels on a per-flow run basis - [#109](https://github.com/PrefectHQ/server/pull/109)
+
+### Fixes
+
+- Fixes issue with Agent Config schema - [#107](https://github.com/PrefectHQ/server/pull/107)
+
 ## September 24, 2020 <Badge text="beta" type="success" />
 
 Released on September 24, 2020.
