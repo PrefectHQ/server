@@ -1007,7 +1007,7 @@ class TestSetScheduleInactive:
         assert {r.scheduled_start_time for r in new_runs} == start_times
 
 
-class TestScheduledParameters:
+class TestScheduledRunAttributes:
     async def test_schedule_creates_parametrized_flow_runs(self, project_id):
         clock1 = prefect.schedules.clocks.IntervalClock(
             start_date=pendulum.now("UTC").add(minutes=1),
@@ -1038,6 +1038,68 @@ class TestScheduledParameters:
 
         assert all([fr.parameters == dict(x="a") for fr in flow_runs[::2]])
         assert all([fr.parameters == dict(x="b") for fr in flow_runs[1::2]])
+
+    async def test_schedule_adds_labels_to_flow_runs(self, project_id):
+        clock1 = prefect.schedules.clocks.IntervalClock(
+            start_date=pendulum.now("UTC").add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+            labels=["a", "b"],
+        )
+        clock2 = prefect.schedules.clocks.IntervalClock(
+            start_date=pendulum.now("UTC"),
+            interval=datetime.timedelta(minutes=2),
+            labels=["c", "d"],
+        )
+
+        flow = prefect.Flow(
+            name="Test Scheduled Flow",
+            schedule=prefect.schedules.Schedule(clocks=[clock1, clock2]),
+        )
+        flow.add_task(prefect.Parameter("x", default=1))
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
+        assert len(await api.flows.schedule_flow_runs(flow_id)) == 10
+
+        flow_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
+            selection_set={"labels": True, "scheduled_start_time": True},
+            order_by={"scheduled_start_time": EnumValue("asc")},
+        )
+
+        assert all([fr.labels == ["a", "b"] for fr in flow_runs[::2]])
+        assert all([fr.labels == ["c", "d"] for fr in flow_runs[1::2]])
+
+    async def test_schedule_does_not_overwrite_flow_labels(self, project_id):
+        clock1 = prefect.schedules.clocks.IntervalClock(
+            start_date=pendulum.now("UTC").add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+            labels=["a", "b"],
+        )
+        clock2 = prefect.schedules.clocks.IntervalClock(
+            start_date=pendulum.now("UTC"),
+            interval=datetime.timedelta(minutes=2),
+        )
+
+        flow = prefect.Flow(
+            name="Test Scheduled Flow",
+            schedule=prefect.schedules.Schedule(clocks=[clock1, clock2]),
+            environment=prefect.environments.LocalEnvironment(labels=["foo", "bar"]),
+        )
+        flow.add_task(prefect.Parameter("x", default=1))
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
+        assert len(await api.flows.schedule_flow_runs(flow_id)) == 10
+
+        flow_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
+            selection_set={"labels": True, "scheduled_start_time": True},
+            order_by={"scheduled_start_time": EnumValue("asc")},
+        )
+
+        assert all([fr.labels == ["a", "b"] for fr in flow_runs[::2]])
+        assert all([fr.labels == ["bar", "foo"] for fr in flow_runs[1::2]])
 
 
 class TestScheduleRuns:

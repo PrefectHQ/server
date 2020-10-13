@@ -29,6 +29,7 @@ class Model(BaseModel):
 
 class ClockSchema(Model):
     parameter_defaults: Dict = Field(default_factory=dict)
+    labels: List[str] = Field(default_factory=list)
 
 
 class ScheduleSchema(Model):
@@ -548,6 +549,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
             flow_id=flow_id,
             scheduled_start_time=event.start_time,
             parameters=event.parameter_defaults,
+            labels=event.labels or None,
             idempotency_key=f"auto-scheduled:{event.start_time.in_tz('UTC')}",
         )
 
