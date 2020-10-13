@@ -1,2 +1,0 @@
-feature:
-  - "Allow for scheduling changing labels on a per-flow run basis - [#109](https://github.com/PrefectHQ/server/pull/109)"

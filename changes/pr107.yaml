@@ -1,2 +1,0 @@
-fix:
-  - "Fixes issue with Agent Config schema - [#107](https://github.com/PrefectHQ/server/pull/107)"
