@@ -1,0 +1,2 @@
+fix:
+  - "Allow for scheduling different parameters and different run labels at the exact same time - [#111](https://github.com/PrefectHQ/server/pull/111)"
