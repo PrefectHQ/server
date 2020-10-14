@@ -545,7 +545,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
 
         # if the event has parameter defaults or labels, we do allow for
         # same-time scheduling
-        if event.parameter_defaults or event.labels:
+        if event.parameter_defaults or event.labels is not None:
             md5 = hashlib.md5()
             param_string = str(sorted(json.dumps(event.parameter_defaults)))
             label_string = str(sorted(json.dumps(event.labels)))

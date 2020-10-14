@@ -1142,6 +1142,10 @@ class TestScheduledRunAttributes:
             [dict(parameter_defaults=dict(x="a")), dict(labels=["b"])],
             [dict(labels=["c", "d"]), dict(labels=["c"])],
             [dict(labels=None), dict(labels=["ef"])],
+            [
+                dict(labels=None),
+                dict(labels=[]),
+            ],  # the scheduler should distinguish between none vs. empty
         ],
     )
     async def test_allows_for_same_time_if_event_attrs_are_different(
