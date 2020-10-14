@@ -1133,7 +1133,16 @@ class TestScheduledRunAttributes:
 
     @pytest.mark.parametrize(
         "attrs",
-        [[dict(parameter_defaults=dict(x="a")), dict(parameter_defaults=dict(x="b"))]],
+        [
+            [
+                dict(parameter_defaults=dict(x="a")),
+                dict(parameter_defaults=dict(x="b")),
+            ],
+            [dict(parameter_defaults=dict(x="a")), dict(parameter_defaults=None)],
+            [dict(parameter_defaults=dict(x="a")), dict(labels=["b"])],
+            [dict(labels=["c", "d"]), dict(labels=["c"])],
+            [dict(labels=None), dict(labels=["ef"])],
+        ],
     )
     async def test_allows_for_same_time_if_event_attrs_are_different(
         self, project_id, attrs
