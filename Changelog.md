@@ -1,5 +1,13 @@
 # Changelog
 
+## October 14, 2020 <Badge text="beta" type="success" />
+
+Released on October 14, 2020.
+
+### Fixes
+
+- Allow for scheduling different parameters and different run labels at the exact same time - [#111](https://github.com/PrefectHQ/server/pull/111)
+
 ## October 13, 2020 <Badge text="beta" type="success" />
 
 Released on October 13, 2020.
