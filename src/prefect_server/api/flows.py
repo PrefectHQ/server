@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+import json
 import uuid
 from typing import Any, Dict, List
 
@@ -541,16 +543,28 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
     # schedule every event with an idempotent flow run
     for event in flow_schedule.next(n=max_runs, return_events=True):
 
+        # if the event has parameter defaults or labels, we do allow for
+        # same-time scheduling
+        if event.parameter_defaults or event.labels is not None:
+            md5 = hashlib.md5()
+            param_string = str(sorted(json.dumps(event.parameter_defaults)))
+            label_string = str(sorted(json.dumps(event.labels)))
+            md5.update((param_string + label_string).encode("utf-8"))
+            idempotency_key = (
+                f"auto-scheduled:{event.start_time.in_tz('UTC')}:{md5.hexdigest()}"
+            )
         # if this run was already scheduled, continue
-        if last_scheduled_run and event.start_time <= last_scheduled_run:
+        elif last_scheduled_run and event.start_time <= last_scheduled_run:
             continue
+        else:
+            idempotency_key = f"auto-scheduled:{event.start_time.in_tz('UTC')}"
 
         run_id = await api.runs.create_flow_run(
             flow_id=flow_id,
             scheduled_start_time=event.start_time,
             parameters=event.parameter_defaults,
             labels=event.labels,
-            idempotency_key=f"auto-scheduled:{event.start_time.in_tz('UTC')}",
+            idempotency_key=idempotency_key,
         )
 
         logger.debug(

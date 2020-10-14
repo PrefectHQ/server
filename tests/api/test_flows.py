@@ -1102,6 +1102,85 @@ class TestScheduledRunAttributes:
         assert all([fr.labels == labels for fr in flow_runs[::2]])
         assert all([fr.labels == ["bar", "foo"] for fr in flow_runs[1::2]])
 
+    async def test_doesnt_schedule_same_time_twice(self, project_id):
+        now = pendulum.now("UTC")
+        clock1 = prefect.schedules.clocks.IntervalClock(
+            start_date=now.add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+        )
+        clock2 = prefect.schedules.clocks.IntervalClock(
+            start_date=now.add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+        )
+
+        flow = prefect.Flow(
+            name="Test Scheduled Flow",
+            schedule=prefect.schedules.Schedule(clocks=[clock1, clock2]),
+        )
+        flow.add_task(prefect.Parameter("x", default=1))
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
+        assert len(set((await api.flows.schedule_flow_runs(flow_id)))) == 10
+
+        flow_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
+            selection_set={"parameters": True, "scheduled_start_time": True},
+            order_by={"scheduled_start_time": EnumValue("asc")},
+        )
+
+        assert len(set([fr.scheduled_start_time for fr in flow_runs])) == 10
+
+    @pytest.mark.parametrize(
+        "attrs",
+        [
+            [
+                dict(parameter_defaults=dict(x="a")),
+                dict(parameter_defaults=dict(x="b")),
+            ],
+            [dict(parameter_defaults=dict(x="a")), dict(parameter_defaults=None)],
+            [dict(parameter_defaults=dict(x="a")), dict(labels=["b"])],
+            [dict(labels=["c", "d"]), dict(labels=["c"])],
+            [dict(labels=None), dict(labels=["ef"])],
+            [
+                dict(labels=None),
+                dict(labels=[]),
+            ],  # the scheduler should distinguish between none vs. empty
+        ],
+    )
+    async def test_allows_for_same_time_if_event_attrs_are_different(
+        self, project_id, attrs
+    ):
+        now = pendulum.now("UTC")
+        clock1 = prefect.schedules.clocks.IntervalClock(
+            start_date=now.add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+            **attrs[0],
+        )
+        clock2 = prefect.schedules.clocks.IntervalClock(
+            start_date=now.add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+            **attrs[1],
+        )
+
+        flow = prefect.Flow(
+            name="Test Scheduled Flow",
+            schedule=prefect.schedules.Schedule(clocks=[clock1, clock2]),
+        )
+        flow.add_task(prefect.Parameter("x", default=1))
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
+        assert len(set((await api.flows.schedule_flow_runs(flow_id)))) == 10
+
+        flow_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
+            selection_set={"parameters": True, "scheduled_start_time": True},
+            order_by={"scheduled_start_time": EnumValue("asc")},
+        )
+
+        assert len(set([fr.scheduled_start_time for fr in flow_runs])) == 5
+
 
 class TestScheduleRuns:
     async def test_schedule_runs(self, flow_id):
