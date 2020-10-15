@@ -819,3 +819,31 @@ class TestQueueFlowRun:
 
         result = await api.states.set_flow_run_state(flow_run_id, state)
         assert result.state != "Queued"
+
+    async def test_queued_state_wraps_old_state(
+        self, flow_id: str, flow_concurrency_limit: models.FlowConcurrencyLimit
+    ):
+        first, second = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
+            ]
+        )
+
+        second_flow_run = await models.FlowRun.where(id=second).first(
+            {"serialized_state"}
+        )
+
+        prior_state = state_schema.load(second_flow_run.serialized_state)
+
+        # Should succeed
+        first_state = await api.states.set_flow_run_state(first, Running())
+        # Without a small sleep, the test fails occassionally b/c the event
+        # loop schedules the second coroutine quicker than the first executes
+        await asyncio.sleep(0.001)
+
+        second_state = await api.states.set_flow_run_state(second, Running())
+        assert second_state.state == "Queued"
+        after_state = state_schema.load(second_state.serialized_state)
+
+        assert after_state.state == prior_state
