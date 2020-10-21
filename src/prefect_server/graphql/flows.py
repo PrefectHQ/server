@@ -104,7 +104,12 @@ async def resolve_update_flow_project(
 async def resolve_disable_heartbeat_for_flow(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
-    success = await api.flows.disable_heartbeat_for_flow(flow_id=input["flow_id"])
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
+    success = await api.flow_groups.disable_heartbeat(flow_group_id=flow.flow_group_id)
     return {"success": success}
 
 
@@ -112,7 +117,12 @@ async def resolve_disable_heartbeat_for_flow(
 async def resolve_enable_heartbeat_for_flow(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
-    success = await api.flows.enable_heartbeat_for_flow(flow_id=input["flow_id"])
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
+    success = await api.flow_groups.enable_heartbeat(flow_group_id=flow.flow_group_id)
     return {"success": success}
 
 
@@ -120,8 +130,15 @@ async def resolve_enable_heartbeat_for_flow(
 async def resolve_enable_flow_lazarus_process(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
     return {
-        "success": await api.flows.enable_lazarus_for_flow(flow_id=input["flow_id"])
+        "success": await api.flow_groups.enable_lazarus(
+            flow_group_id=flow.flow_group_id
+        )
     }
 
 
@@ -129,8 +146,15 @@ async def resolve_enable_flow_lazarus_process(
 async def resolve_disable_flow_lazarus_process(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
     return {
-        "success": await api.flows.disable_lazarus_for_flow(flow_id=input["flow_id"])
+        "success": await api.flow_groups.disable_lazarus(
+            flow_group_id=flow.flow_group_id
+        )
     }
 
 
