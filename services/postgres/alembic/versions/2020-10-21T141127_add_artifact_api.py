@@ -12,8 +12,8 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 
 # revision identifiers, used by Alembic.
-revision = '3c87ad7e0b71'
-down_revision = '24f10aeee83e'
+revision = "3c87ad7e0b71"
+down_revision = "24f10aeee83e"
 branch_labels = None
 depends_on = None
 
@@ -44,7 +44,7 @@ def upgrade():
             nullable=False,
             index=True,
         ),
-        sa.Column("kind", sa.String),
+        sa.Column("kind", sa.String, nullable=False),
         sa.Column("data", JSONB, nullable=False, server_default="{}"),
     )
 

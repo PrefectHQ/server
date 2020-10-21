@@ -1,0 +1,19 @@
+extend type Mutation {
+  "Create task run artifact"
+  create_task_run_artifact(input: create_task_run_artifact_input!): task_run_artifact_id_payload
+}
+
+# Inputs
+
+input create_task_run_artifact_input {
+  task_run_id: UUID!
+  kind: String!
+  data: JSON!
+  tenant_id: UUID
+}
+
+# Payloads
+
+type task_run_artifact_id_payload {
+  id: UUID
+}
