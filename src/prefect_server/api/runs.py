@@ -395,7 +395,7 @@ async def delete_flow_run(flow_run_id: str) -> bool:
 
 
 @register_api("runs.update_flow_run_agent")
-async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> None:
+async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> bool:
     """
     Updates the agent instance of a flow run
 
@@ -406,6 +406,11 @@ async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> None:
     Returns:
         bool: if the update was successful
     """
+
+    agent = await models.Agent.where(id=agent_id).first()
+    if not agent:
+        return False
+
     result = await models.FlowRun.where(id=flow_run_id).update(
         set={"agent_id": agent_id}
     )
