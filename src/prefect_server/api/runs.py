@@ -400,7 +400,7 @@ async def delete_flow_runs(flow_run_ids: List[str]) -> int:
     Deletes a set of flow runs
 
     Args:
-        - flow_run_id (str): the flow run to delete
+        - flow_run_ids (List[str]): the list of flow runs to delete
 
     Returns:
         - int: The number of affected rows
