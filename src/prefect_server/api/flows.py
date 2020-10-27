@@ -211,7 +211,7 @@ async def create_flow(
     else:
         flow_group_id = flow_group.id
 
-        # check idempotency key and  early if we find a matching key and flow,
+        # check idempotency key and exit early if we find a matching key and flow,
         # otherwise update the key for the group
         last_idempotency_key = flow_group.settings.get("idempotency_key", None)
         if (
