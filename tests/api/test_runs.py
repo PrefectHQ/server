@@ -799,10 +799,12 @@ class TestDeleteFlowRuns:
         assert list(flow_runs) == []
 
     async def test_delete_flow_runs_allows_bad_id(self, flow_run_id):
-        result = await api.runs.delete_flow_runs(
-            flow_run_ids=[flow_run_id, str(uuid.uuid4())]
-        )
+        flow_run_ids = [flow_run_id, str(uuid.uuid4())]
+        result = await api.runs.delete_flow_runs(flow_run_ids=flow_run_ids)
+        flow_runs = await models.FlowRun.where({"id": {"_in": flow_run_ids}}).get()
+
         assert result == 1
+        assert not flow_runs  # Ensure the real run was deleted still
 
     async def test_delete_flow_runs_allows_all_bad_ids(self):
         result = await api.runs.delete_flow_runs(flow_run_ids=[str(uuid.uuid4())])
