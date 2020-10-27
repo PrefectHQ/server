@@ -119,6 +119,24 @@ class TestCreateFlow:
         )
         assert flow.description == description
 
+    async def test_create_flow_with_idempotency_key(self, run_query, project_id):
+        serialized_flow = prefect.Flow(name="test").serialize(build=False)
+        idempotency_key = "test"
+        result = await run_query(
+            query=self.create_flow_mutation,
+            variables=dict(
+                input=dict(
+                    serialized_flow=serialized_flow,
+                    project_id=project_id,
+                    idempotency_key=idempotency_key,
+                )
+            ),
+        )
+        flow = await models.Flow.where(id=result.data.create_flow.id).first(
+            {"flow_group": {"settings"}}
+        )
+        assert flow.flow_group.settings["idempotency_key"] == idempotency_key
+
     async def test_create_flow_autodetects_version_group(
         self, run_query, project_id, project_id_2
     ):
