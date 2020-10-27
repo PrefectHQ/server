@@ -44,6 +44,9 @@ extend type Mutation {
   "Delete a flow run."
   delete_flow_run(input: delete_flow_run_input!): success_payload
 
+  "Delete a group of flow runs."
+  delete_flow_runs(input: delete_flow_runs_input!): deleted_count_payload
+
   get_runs_in_queue(input: get_runs_in_queue_input!): runs_in_queue_payload
 
 }
@@ -119,6 +122,10 @@ input delete_flow_run_input {
   flow_run_id: UUID!
 }
 
+input delete_flow_runs_input {
+  flow_run_ids: [UUID!]
+}
+
 type flow_run_id_payload {
   id: UUID
 }
@@ -139,4 +146,8 @@ type mapped_children_payload {
   min_start_time: DateTime
   max_end_time: DateTime
   state_counts: JSON
+}
+
+type deleted_count_payload {
+  affected_rows: Int
 }

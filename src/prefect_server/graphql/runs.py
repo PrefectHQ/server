@@ -150,6 +150,17 @@ async def resolve_delete_flow_run(
     return {"success": await api.runs.delete_flow_run(flow_run_id=input["flow_run_id"])}
 
 
+@mutation.field("delete_flow_runs")
+async def resolve_delete_flow_runs(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    return {
+        "affected_rows": await api.runs.delete_flow_runs(
+            flow_run_ids=input["flow_run_ids"]
+        )
+    }
+
+
 @mutation.field("update_flow_run_heartbeat")
 async def resolve_update_flow_run_heartbeat(
     obj: Any, info: GraphQLResolveInfo, input: dict

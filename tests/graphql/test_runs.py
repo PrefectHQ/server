@@ -377,6 +377,39 @@ class TestDeleteFlowRun:
         assert not result.data.delete_flow_run.success
 
 
+class TestDeleteFlowRuns:
+    mutation = """
+        mutation($input: delete_flow_runs_input!) {
+            delete_flow_runs(input: $input) {
+                affected_rows
+            }
+        }
+    """
+
+    async def test_delete_flow_runs(self, run_query, flow_id):
+        flow_run_ids = [
+            await api.runs.create_flow_run(flow_id=flow_id, parameters=dict(x=i))
+            for i in range(2)
+        ]
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_ids=flow_run_ids)),
+        )
+
+        assert result.data.delete_flow_runs.affected_rows == 2
+        for flow_run_id in flow_run_ids:
+            assert not await models.FlowRun.exists(flow_run_id)
+
+    async def test_delete_flow_runs_one_missing(self, run_query, flow_run_id):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_ids=[flow_run_id, str(uuid.uuid4())])),
+        )
+
+        assert result.data.delete_flow_runs.affected_rows == 1
+
+
 class TestIdempotentCreateRun:
     mutation = """
         mutation($input: create_flow_run_input!) {

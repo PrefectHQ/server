@@ -394,6 +394,21 @@ async def delete_flow_run(flow_run_id: str) -> bool:
     return bool(result.affected_rows)  # type: ignore
 
 
+@register_api("runs.delete_flow_runs")
+async def delete_flow_runs(flow_run_ids: List[str]) -> int:
+    """
+    Deletes a set of flow runs
+
+    Args:
+        - flow_run_id (str): the flow run to delete
+
+    Returns:
+        - int: The number of affected rows
+    """
+    result = await models.FlowRun.where({"id": {"_in": flow_run_ids}}).delete()
+    return result.affected_rows  # type: ignore
+
+
 @register_api("runs.update_flow_run_agent")
 async def update_flow_run_agent(flow_run_id: str, agent_id: str) -> bool:
     """

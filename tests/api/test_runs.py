@@ -786,6 +786,28 @@ class TestDeleteFlowRuns:
         with pytest.raises(ValueError, match="Invalid flow run ID"):
             await api.runs.delete_flow_run(flow_run_id=bad_value)
 
+    async def test_delete_flow_runs(self, flow_id):
+        flow_run_ids = [
+            await api.runs.create_flow_run(flow_id=flow_id, parameters=dict(x=i))
+            for i in range(2)
+        ]
+
+        result = await api.runs.delete_flow_runs(flow_run_ids=flow_run_ids)
+        flow_runs = await models.FlowRun.where({"id": {"_in": flow_run_ids}}).get()
+
+        assert result == 2
+        assert list(flow_runs) == []
+
+    async def test_delete_flow_runs_allows_bad_id(self, flow_run_id):
+        result = await api.runs.delete_flow_runs(
+            flow_run_ids=[flow_run_id, str(uuid.uuid4())]
+        )
+        assert result == 1
+
+    async def test_delete_flow_runs_allows_all_bad_ids(self):
+        result = await api.runs.delete_flow_runs(flow_run_ids=[str(uuid.uuid4())])
+        assert result == 0
+
 
 class TestGetRunsInQueue:
     async def test_get_flow_run_in_queue(self, flow_run_id, tenant_id):
