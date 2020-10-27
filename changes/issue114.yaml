@@ -1,2 +1,0 @@
-fix:
-  - "Check for existence of agent before updating flow run agent - [#114](https://github.com/PrefectHQ/server/issues/114)"
