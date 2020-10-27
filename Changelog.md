@@ -1,5 +1,13 @@
 # Changelog
 
+## October 22, 2020 <Badge text="beta" type="success" />
+
+Released on October 22, 2020.
+
+### Enhancements
+
+- Update flow settings graphql logic to use supported API routes - [#113](https://github.com/PrefectHQ/server/pull/113)
+
 ## October 14, 2020 <Badge text="beta" type="success" />
 
 Released on October 14, 2020.
