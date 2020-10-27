@@ -261,31 +261,66 @@ class TestCreateFlow:
             == len(flow.tasks) * 2
         )
 
-    async def test_flows_not_duplicated_with_same_idempotency_key(
-        self, project_id, flow
-    ):
+    async def test_flows_not_added_with_same_idempotency_key(self, project_id, flow):
         flow_id_1 = await api.flows.create_flow(
             project_id=project_id,
             serialized_flow=flow.serialize(),
             idempotency_key="foo",
         )
-        flow_model = await models.Flow.where({"id": {"_eq": flow_id_1}}).first(
-            {"version_group_id"}
+        flow_model_1 = await models.Flow.where({"id": {"_eq": flow_id_1}}).first(
+            {"version", "version_group_id"}
         )
         flow_id_2 = await api.flows.create_flow(
             project_id=project_id,
             serialized_flow=flow.serialize(),
-            version_group_id=flow_model.version_group_id,
+            version_group_id=flow_model_1.version_group_id,
             idempotency_key="foo",
+        )
+        flow_model_2 = await models.Flow.where({"id": {"_eq": flow_id_2}}).first(
+            {"version", "version_group_id"}
         )
 
         assert flow_id_1 == flow_id_2
+        assert flow_model_1.version == flow_model_2.version
 
         # Verify that the flow is not duplicated
         assert await models.Flow.where({"id": {"_eq": flow_id_1}}).count() == 1
         # Verify that the tasks are not duplicated
         assert await models.Task.where({"flow_id": {"_eq": flow_id_1}}).count() == len(
             flow.tasks
+        )
+
+    async def test_flows_added_with_different_idempotency_key(self, project_id, flow):
+        flow_id_1 = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=flow.serialize(),
+            idempotency_key="foo",
+        )
+        flow_model_1 = await models.Flow.where({"id": {"_eq": flow_id_1}}).first(
+            {"version", "version_group_id"}
+        )
+        flow_id_2 = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=flow.serialize(),
+            version_group_id=flow_model_1.version_group_id,
+            idempotency_key="bar",
+        )
+        flow_model_2 = await models.Flow.where({"id": {"_eq": flow_id_2}}).first(
+            {"version"}
+        )
+
+        assert flow_id_1 != flow_id_2
+        assert flow_model_1.version == flow_model_2.version - 1
+
+        assert (
+            await models.Flow.where({"id": {"_in": [flow_id_1, flow_id_2]}}).count()
+            == 2
+        )
+        assert (
+            await models.Task.where(
+                {"flow_id": {"_in": [flow_id_1, flow_id_2]}}
+            ).count()
+            == len(flow.tasks) * 2
         )
 
     async def test_create_flow_with_schedule(self, project_id):
