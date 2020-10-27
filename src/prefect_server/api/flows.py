@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, validator
 
 from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
-from prefect.utilities.graphql import with_args
+from prefect.utilities.graphql import with_args, EnumValue
 from prefect.utilities.plugins import register_api
 from prefect_server import config
 from prefect_server.utilities import logging
@@ -225,9 +225,8 @@ async def create_flow(
                 {
                     "version_group_id": {"_eq": version_group_id},
                     "archived": {"_eq": False},
-                    "order_by": {"version": "desc"},
                 }
-            ).first()
+            ).first(order_by={"version": EnumValue("desc")})
             if flow:
                 return flow.id
             # otherwise, despite the key matching we don't have a valid flow to return
