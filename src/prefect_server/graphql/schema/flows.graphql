@@ -77,6 +77,8 @@ input create_flow_input {
   set_schedule_active: Boolean
   "An optional description of this Flow"
   description: String
+  "An optional idempotency key for this flow to prevent multiple subsequent creations"
+  idempotency_key: String
 }
 
 input create_flow_from_compressed_string_input {
@@ -90,6 +92,8 @@ input create_flow_from_compressed_string_input {
   set_schedule_active: Boolean
   "An optional description of this Flow"
   description: String
+  "An optional idempotency key for this flow to prevent multiple subsequent creations"
+  idempotency_key: String
 }
 
 input delete_flow_input {
