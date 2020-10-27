@@ -290,11 +290,14 @@ class TestCreateFlow:
             flow.tasks
         )
 
-    async def test_flows_added_with_different_idempotency_key(self, project_id, flow):
+    @pytest.mark.parametrize("idempotency_keys", [("foo", "bar"), (None, None)])
+    async def test_flows_added_with_different_idempotency_key(
+        self, project_id, flow, idempotency_keys
+    ):
         flow_id_1 = await api.flows.create_flow(
             project_id=project_id,
             serialized_flow=flow.serialize(),
-            idempotency_key="foo",
+            idempotency_key=idempotency_keys[0],
         )
         flow_model_1 = await models.Flow.where({"id": {"_eq": flow_id_1}}).first(
             {"version", "version_group_id"}
@@ -303,7 +306,7 @@ class TestCreateFlow:
             project_id=project_id,
             serialized_flow=flow.serialize(),
             version_group_id=flow_model_1.version_group_id,
-            idempotency_key="bar",
+            idempotency_key=idempotency_keys[1],
         )
         flow_model_2 = await models.Flow.where({"id": {"_eq": flow_id_2}}).first(
             {"version"}
