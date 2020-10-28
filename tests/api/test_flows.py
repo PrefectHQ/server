@@ -290,41 +290,60 @@ class TestCreateFlow:
             flow.tasks
         )
 
-    @pytest.mark.parametrize("idempotency_keys", [("foo", "bar"), (None, None)])
-    async def test_flows_added_with_different_idempotency_key(
+    @pytest.mark.parametrize(
+        "idempotency_keys",
+        [
+            pytest.param(("foo", "bar"), id="simple different keys"),
+            pytest.param((None, None), id="sequential empty keys"),
+            pytest.param(("foo", None, "foo"), id="same key with empty between"),
+            pytest.param(("foo", "bar", "foo"), id="same key with different between"),
+        ],
+    )
+    async def test_flows_added_with_different_idempotency_keys(
         self, project_id, flow, idempotency_keys
     ):
-        flow_id_1 = await api.flows.create_flow(
-            project_id=project_id,
-            serialized_flow=flow.serialize(),
-            idempotency_key=idempotency_keys[0],
-        )
-        flow_model_1 = await models.Flow.where({"id": {"_eq": flow_id_1}}).first(
-            {"version", "version_group_id"}
-        )
-        flow_id_2 = await api.flows.create_flow(
-            project_id=project_id,
-            serialized_flow=flow.serialize(),
-            version_group_id=flow_model_1.version_group_id,
-            idempotency_key=idempotency_keys[1],
-        )
-        flow_model_2 = await models.Flow.where({"id": {"_eq": flow_id_2}}).first(
-            {"version"}
-        )
+        """
+        Allows testing any number of keys but expects/asserts that all test cases
+        successfully create a flow per key
+        """
+        flow_ids = []
+        flow_models = []
 
-        assert flow_id_1 != flow_id_2
-        assert flow_model_1.version == flow_model_2.version - 1
+        for idempotency_key in idempotency_keys:
+            flow_id = await api.flows.create_flow(
+                project_id=project_id,
+                serialized_flow=flow.serialize(),
+                idempotency_key=idempotency_key,
+                # Create the flows within the same group as the first
+                version_group_id=(
+                    flow_models[0].version_group_id if flow_models else None
+                ),
+            )
+            flow_ids.append(flow_id)
+            flow_models.append(
+                await models.Flow.where({"id": {"_eq": flow_id}}).first(
+                    {"version", "version_group_id"}
+                )
+            )
 
-        assert (
-            await models.Flow.where({"id": {"_in": [flow_id_1, flow_id_2]}}).count()
-            == 2
+        # We should have the same number of IDs as keys
+        assert len(flow_ids) == len(idempotency_keys)
+
+        # All ids should be unique
+        assert len(flow_ids) == len(set(flow_ids))
+
+        # Versions should be increasing
+        for i in range(len(flow_models) - 1):
+            assert flow_models[i].version == flow_models[i + 1].version - 1
+
+        # There should be N flows in the Flows table
+        assert await models.Flow.where({"id": {"_in": flow_ids}}).count() == len(
+            flow_ids
         )
-        assert (
-            await models.Task.where(
-                {"flow_id": {"_in": [flow_id_1, flow_id_2]}}
-            ).count()
-            == len(flow.tasks) * 2
-        )
+        # There should be N * n_tasks_per_flow tasks in the Tasks table
+        assert await models.Task.where({"flow_id": {"_in": flow_ids}}).count() == len(
+            flow.tasks
+        ) * len(flow_ids)
 
     @pytest.mark.parametrize("no_flow_case", ["archived", "deleted"])
     async def test_flows_added_with_same_idempotency_key_but_no_valid_flows(
