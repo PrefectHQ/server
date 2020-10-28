@@ -19,6 +19,7 @@ async def resolve_create_task_run_artifact(
     )
     return {"id": task_run_artifact_id}
 
+
 @mutation.field("update_task_run_artifact")
 async def resolve_update_task_run_artifact(
     obj: Any, info: GraphQLResolveInfo, input: dict
@@ -28,6 +29,7 @@ async def resolve_update_task_run_artifact(
         data=input.get("data"),
     )
     return {"success": success}
+
 
 @mutation.field("delete_task_run_artifact")
 async def resolve_delete_task_run_artifact(
