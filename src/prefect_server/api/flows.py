@@ -192,11 +192,8 @@ async def create_flow(
         }
     ).first({"id", "schedule", "settings"})
 
-    # create the flow group or check for the idempotency key in the existing group
-    # Note: The key is stashed in the `settings` dict of the flow group which makes
-    # idempotency only apply to the most recent flow creation. If we want to avoid
-    # re-registering old flow versions we'll need to add a column to the Flow table
-    # TODO: Should we leave empty idempotency_keys as `None` or generate a uuid4?
+    # create the flow group or check for the idempotency key in the existing flow group
+    # settings
     if flow_group is None:
         flow_group_id = await models.FlowGroup(
             tenant_id=tenant_id,
