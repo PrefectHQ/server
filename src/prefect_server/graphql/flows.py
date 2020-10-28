@@ -26,6 +26,7 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
     version_group_id = input.get("version_group_id", None)
     set_schedule_active = input.get("set_schedule_active", True)
     description = input.get("description", None)
+    idempotency_key = input.get("idempotency_key", None)
 
     if project_id is None:
         raise ValueError("Invalid project ID")
@@ -59,6 +60,7 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
         version_group_id=version_group_id,
         set_schedule_active=set_schedule_active,
         description=description,
+        idempotency_key=idempotency_key,
     )
 
     # archive all other versions
