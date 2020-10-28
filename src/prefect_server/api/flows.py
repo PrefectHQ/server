@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, validator
 
 from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
-from prefect.utilities.graphql import with_args
+from prefect.utilities.graphql import with_args, EnumValue
 from prefect.utilities.plugins import register_api
 from prefect_server import config
 from prefect_server.utilities import logging
@@ -120,6 +120,7 @@ async def create_flow(
     version_group_id: str = None,
     set_schedule_active: bool = True,
     description: str = None,
+    idempotency_key: str = None,
 ) -> str:
     """
     Add a flow to the database.
@@ -130,6 +131,9 @@ async def create_flow(
         - version_group_id (str): A version group to add the Flow to
         - set_schedule_active (bool): Whether to set the flow's schedule to active
         - description (str): a description of the flow being created
+        - idempotency_key (optional, str): a key that, if matching the most recent call
+            to `create_flow` for this flow group, will prevent the creation of another
+            flow version
 
     Returns:
         str: The id of the new flow
@@ -177,7 +181,8 @@ async def create_flow(
         "version_group_id": {"_eq": version_group_id},
         "tenant_id": {"_eq": tenant_id},
     }
-    # set up a flow group if it's not already in the system
+
+    # lookup the associated flow group (may not exist yet)
     flow_group = await models.FlowGroup.where(
         {
             "_and": [
@@ -185,7 +190,10 @@ async def create_flow(
                 {"name": {"_eq": version_group_id}},
             ]
         }
-    ).first({"id", "schedule"})
+    ).first({"id", "schedule", "settings"})
+
+    # create the flow group or check for the idempotency key in the existing flow group
+    # settings
     if flow_group is None:
         flow_group_id = await models.FlowGroup(
             tenant_id=tenant_id,
@@ -194,10 +202,38 @@ async def create_flow(
                 "heartbeat_enabled": True,
                 "lazarus_enabled": True,
                 "version_locking_enabled": False,
+                "idempotency_key": idempotency_key,
             },
         ).insert()
     else:
         flow_group_id = flow_group.id
+
+        # check idempotency key and exit early if we find a matching key and flow,
+        # otherwise update the key for the group
+        last_idempotency_key = flow_group.settings.get("idempotency_key", None)
+        if (
+            last_idempotency_key
+            and idempotency_key
+            and last_idempotency_key == idempotency_key
+        ):
+            # get the most recent unarchived version, there should only be one
+            # unarchived flow at a time but it is safer not to presume
+            flow_model = await models.Flow.where(
+                {
+                    "version_group_id": {"_eq": version_group_id},
+                    "archived": {"_eq": False},
+                }
+            ).first(order_by={"version": EnumValue("desc")})
+            if flow_model:
+                return flow_model.id
+            # otherwise, despite the key matching we don't have a valid flow to return
+            # and will continue as though the key did not match
+
+        settings = flow_group.settings
+        settings["idempotency_key"] = idempotency_key
+        await models.FlowGroup.where({"id": {"_eq": flow_group.id}}).update(
+            set={"settings": settings}
+        )
 
     version = (await models.Flow.where(version_where).max({"version"}))["version"] or 0
 

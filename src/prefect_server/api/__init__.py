@@ -9,5 +9,4 @@ import prefect_server.api.runs
 import prefect_server.api.messages
 import prefect_server.api.agents
 import prefect_server.api.artifacts
-
 import prefect_server.api.deprecated

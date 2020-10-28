@@ -119,6 +119,24 @@ class TestCreateFlow:
         )
         assert flow.description == description
 
+    async def test_create_flow_with_idempotency_key(self, run_query, project_id):
+        serialized_flow = prefect.Flow(name="test").serialize(build=False)
+        idempotency_key = "test"
+        result = await run_query(
+            query=self.create_flow_mutation,
+            variables=dict(
+                input=dict(
+                    serialized_flow=serialized_flow,
+                    project_id=project_id,
+                    idempotency_key=idempotency_key,
+                )
+            ),
+        )
+        flow = await models.Flow.where(id=result.data.create_flow.id).first(
+            {"flow_group": {"settings"}}
+        )
+        assert flow.flow_group.settings["idempotency_key"] == idempotency_key
+
     async def test_create_flow_autodetects_version_group(
         self, run_query, project_id, project_id_2
     ):
@@ -421,6 +439,74 @@ class TestUpdateFlowProject:
         # confirm the project ID wasn't updated
         flow = await models.Flow.where(id=flow_id).first({"project_id"})
         assert flow.project_id == project_id
+
+
+class TestUpdateFlowHeartbeat:
+    enable_heartbeat_mutation = """
+        mutation($input: enable_flow_heartbeat_input!) {
+            enable_flow_heartbeat(input: $input) {
+                success
+            }
+        }
+    """
+
+    disable_heartbeat_mutation = """
+        mutation($input: disable_flow_heartbeat_input!) {
+            disable_flow_heartbeat(input: $input) {
+                success
+            }
+        }
+    """
+
+    async def test_enable_flow_heartbeat(self, run_query, flow_id, flow_group_id):
+        await models.FlowGroup.where(id=flow_group_id).update({"settings": {}})
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
+        assert flow_group.settings.get("heartbeat_enabled", False) is False
+
+        result = await run_query(
+            query=self.enable_heartbeat_mutation,
+            variables=dict(input={"flow_id": flow_id}),
+        )
+        assert result.data.enable_flow_heartbeat.success is True
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
+        assert flow_group.settings == {
+            "heartbeat_enabled": True,
+            "disable_heartbeat": False,
+        }
+
+    async def test_disable_flow_heartbeat(self, run_query, flow_id, flow_group_id):
+        await models.FlowGroup.where(id=flow_group_id).update(
+            {"settings": {"heartbeat_enabled": True}}
+        )
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
+        assert flow_group.settings.get("heartbeat_enabled", True) is True
+
+        result = await run_query(
+            query=self.disable_heartbeat_mutation,
+            variables=dict(input={"flow_id": flow_id}),
+        )
+        assert result.data.disable_flow_heartbeat.success is True
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
+        assert flow_group.settings == {
+            "heartbeat_enabled": False,
+            "disable_heartbeat": True,
+        }
+
+    async def test_disable_flow_heartbeat__where_flow_id_none(self, run_query):
+        result = await run_query(
+            query=self.disable_heartbeat_mutation,
+            variables=dict(input={"flow_id": None}),
+        )
+        # confirm there was an error, and that it was related to flow_id=None
+        assert "got invalid value None at 'input.flow_id'" in result.errors[0].message
+
+    async def test_enable_flow_heartbeat_where_flow_id_none(self, run_query):
+        result = await run_query(
+            query=self.enable_heartbeat_mutation,
+            variables=dict(input={"flow_id": None}),
+        )
+        # confirm there was an error, and that it was related to flow_id=None
+        assert "got invalid value None at 'input.flow_id'" in result.errors[0].message
 
 
 class TestUpdateFlowLazarus:

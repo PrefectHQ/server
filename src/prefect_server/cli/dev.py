@@ -108,11 +108,20 @@ def infrastructure(tag, skip_pull, skip_upgrade):
                     click.secho("Database upgraded.", fg="green")
                     break
                 # trap error during the SELECT 1
-                except sqlalchemy.exc.OperationalError:
-                    click.secho(
-                        "Database not ready yet. Waiting 1 second to retry upgrade."
-                    )
-                    time.sleep(1)
+                except sqlalchemy.exc.OperationalError as exc:
+                    if "Connection refused" in str(exc):
+                        click.echo(
+                            "Database not ready yet. Waiting 1 second to retry upgrade."
+                        )
+                        time.sleep(1)
+                    else:
+                        click.secho(
+                            "Database upgrade encountered fatal error:\n",
+                            fg="red",
+                            bold=True,
+                        )
+                        click.secho(str(exc) + "\n", fg="red")
+                        raise
 
         click.echo(ascii_welcome())
 
