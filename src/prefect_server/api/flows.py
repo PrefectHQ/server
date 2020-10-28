@@ -218,14 +218,14 @@ async def create_flow(
         ):
             # get the most recent unarchived version, there should only be one
             # unarchived flow at a time but it is safer not to presume
-            flow = await models.Flow.where(
+            flow_model = await models.Flow.where(
                 {
                     "version_group_id": {"_eq": version_group_id},
                     "archived": {"_eq": False},
                 }
             ).first(order_by={"version": EnumValue("desc")})
-            if flow:
-                return flow.id
+            if flow_model:
+                return flow_model.id
             # otherwise, despite the key matching we don't have a valid flow to return
             # and will continue as though the key did not match
 

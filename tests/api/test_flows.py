@@ -326,6 +326,49 @@ class TestCreateFlow:
             == len(flow.tasks) * 2
         )
 
+    @pytest.mark.parametrize("no_flow_case", ["archived", "deleted"])
+    async def test_flows_added_with_same_idempotency_key_but_no_valid_flows(
+        self,
+        project_id,
+        flow,
+        no_flow_case,
+    ):
+        idempotency_key = "foo"
+        flow_id_1 = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=flow.serialize(),
+            idempotency_key=idempotency_key,
+        )
+        flow_model_1 = await models.Flow.where({"id": {"_eq": flow_id_1}}).first(
+            {"version", "version_group_id"}
+        )
+
+        if no_flow_case == "deleted":
+            await models.Flow.where({"id": {"_eq": flow_id_1}}).delete()
+        elif no_flow_case == "archived":
+            await models.Flow.where({"id": {"_eq": flow_id_1}}).update(
+                set={"archived": True}
+            )
+
+        flow_id_2 = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=flow.serialize(),
+            version_group_id=flow_model_1.version_group_id,
+            idempotency_key=idempotency_key,
+        )
+        flow_model_2 = await models.Flow.where({"id": {"_eq": flow_id_2}}).first(
+            {"version"}
+        )
+
+        assert flow_id_1 != flow_id_2
+        if no_flow_case == "archived":
+            # in the deleted case, the version will start over
+            assert flow_model_1.version == flow_model_2.version - 1
+
+        assert await models.Flow.where(
+            {"id": {"_in": [flow_id_1, flow_id_2]}}
+        ).count() == (2 if no_flow_case == "archived" else 1)
+
     async def test_create_flow_with_schedule(self, project_id):
         flow = prefect.Flow(
             name="test", schedule=prefect.schedules.CronSchedule("0 0 * * *")
