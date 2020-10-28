@@ -1,0 +1,2 @@
+fix:
+  - "Expose database upgrade errors during infrastructure start  - [#117](https://github.com/PrefectHQ/server/pull/117)"
