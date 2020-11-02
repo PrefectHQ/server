@@ -1,4 +1,5 @@
 {{- if .Values.ui.ingress.enabled -}}
+{{- $fullname := include "ui.fullname" . -}}
 {{- $svcPort := .Values.global.ui.port -}}
 {{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1beta1
@@ -25,7 +26,7 @@ spec:
       secretName: {{ .secretName }}
   {{- end }}
 {{- end }}
-  {{- if .Values.ui.ingress.hosts  -}}
+  {{- if .Values.ui.ingress.hosts }}
   rules:
     {{- range .Values.ui.ingress.hosts }}
     - host: {{ .host | quote }}
@@ -34,7 +35,7 @@ spec:
         {{- range .paths }}
           - path: {{ . }}
             backend:
-              serviceName: {{ include "ui.fullname" . }}
+              serviceName: {{ $fullname }}
               servicePort: {{ $svcPort }}
         {{- end }}
     {{- end }}

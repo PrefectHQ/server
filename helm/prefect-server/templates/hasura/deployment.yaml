@@ -62,7 +62,7 @@ spec:
             httpGet:
               path: /healthz
               port: http
-          {{- with .Values.hasura.resources -}}
+          {{- with .Values.hasura.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}

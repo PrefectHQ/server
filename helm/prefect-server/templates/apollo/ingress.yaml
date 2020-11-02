@@ -1,4 +1,5 @@
 {{- if .Values.apollo.ingress.enabled -}}
+{{- $fullname = include "apollo.fullname" . -}}
 {{- $svcPort := .Values.global.apollo.port -}}
 {{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1beta1
@@ -25,7 +26,7 @@ spec:
       secretName: {{ .secretName }}
   {{- end }}
 {{- end }}
-  {{- if .Values.apollo.ingress.hosts  -}}
+  {{- if .Values.apollo.ingress.hosts }}
   rules:
     {{- range .Values.apollo.ingress.hosts }}
     - host: {{ .host | quote }}
@@ -34,7 +35,7 @@ spec:
         {{- range .paths }}
           - path: {{ . }}
             backend:
-              serviceName: {{ include "apollo.fullname" . }}
+              serviceName: {{ $fullname }}
               servicePort: {{ $svcPort }}
         {{- end }}
     {{- end }}
