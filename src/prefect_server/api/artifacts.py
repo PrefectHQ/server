@@ -31,7 +31,7 @@ async def create_task_run_artifact(
         raise ValueError(f"Task run {task_run_id} not found")
 
     if tenant_id and tenant_id != task_run.tenant_id:
-        raise ValueError("Provided tenant ID does not match task run")
+        raise ValueError("Invalid tenant ID.")
 
     if not tenant_id:
         tenant_id = task_run.tenant_id
