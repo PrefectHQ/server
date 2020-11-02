@@ -1,5 +1,17 @@
 # Changelog
 
+## October 29, 2020 <Badge text="beta" type="success" />
+
+Released on October 29, 2020.
+
+### Features
+
+- Add idempotency keys to `flows.create_flow` - [#116](https://github.com/PrefectHQ/server/pull/116)
+
+### Fixes
+
+- Expose database upgrade errors during infrastructure start  - [#117](https://github.com/PrefectHQ/server/pull/117)
+
 ## October 27, 2020 <Badge text="beta" type="success" />
 
 Released on October 27, 2020.
