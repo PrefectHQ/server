@@ -22,10 +22,16 @@ async def create_task_run_artifact(
     Returns:
         - str: the task run artifact ID
     """
+    if not task_run_id:
+        raise ValueError("A `task_run_id` must be provided to create artifact")
+
     task_run = await models.TaskRun.where(id=task_run_id).first({"tenant_id"})
 
     if not task_run:
-        raise ValueError(f"Creating artifact failed for task run ID {task_run_id}")
+        raise ValueError(f"Task run {task_run_id} not found")
+
+    if tenant_id and tenant_id != task_run.tenant_id:
+        raise ValueError("Provided tenant ID does not match task run")
 
     if not tenant_id:
         tenant_id = task_run.tenant_id
@@ -52,7 +58,7 @@ async def update_task_run_artifact(
         - bool: if the update was successful
     """
     if not task_run_artifact_id:
-        raise ValueError("Must supply a valid task run artifac ID to update")
+        raise ValueError("Must supply a valid task run artifact ID to update")
 
     result = await models.TaskRunArtifact.where(id=task_run_artifact_id).update(
         set={"data": data}
