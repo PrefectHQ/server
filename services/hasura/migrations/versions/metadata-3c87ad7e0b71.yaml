@@ -251,13 +251,6 @@ tables:
     using:
       foreign_key_constraint_on: task_run_id
   table:
-    name: task_run_artifact
-    schema: public
-- object_relationships:
-  - name: task_run
-    using:
-      foreign_key_constraint_on: task_run_id
-  table:
     name: task_run_state
     schema: public
 - table:

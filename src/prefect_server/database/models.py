@@ -359,6 +359,18 @@ class Agent(HasuraModel):
     last_queried: datetime.datetime = None
 
 
+@plugins.register_model("TaskRunArtifact")
+class TaskRunArtifact(HasuraModel):
+    __hasura_type__ = "task_run_artifact"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    tenant_id: UUIDString = None
+    task_run_id: UUIDString = None
+    kind: str = None
+    data: dict = None
+
+
 # process forward references for all Pydantic models (meaning string class names)
 for obj in list(locals().values()):
     if isinstance(obj, type) and issubclass(obj, pydantic.BaseModel):
