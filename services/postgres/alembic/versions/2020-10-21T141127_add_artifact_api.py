@@ -31,6 +31,12 @@ def upgrade():
             server_default=sa.func.now(),
         ),
         sa.Column(
+            "updated",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.Column(
             "tenant_id",
             UUID,
             sa.ForeignKey("tenant.id", ondelete="CASCADE"),
@@ -46,6 +52,15 @@ def upgrade():
         ),
         sa.Column("kind", sa.String, nullable=False),
         sa.Column("data", JSONB, nullable=False, server_default="{}"),
+    )
+
+    op.execute(
+        """
+        CREATE TRIGGER update_timestamp
+        BEFORE UPDATE ON task_run_artifact
+        FOR EACH ROW
+        EXECUTE PROCEDURE set_updated_timestamp();
+        """
     )
 
 
