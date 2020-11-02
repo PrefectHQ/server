@@ -74,7 +74,7 @@ async def delete_task_run_artifact(
         - bool: if the deletion was successful
     """
     if not task_run_artifact_id:
-        raise ValueError("Must supply a valid task run artifac ID to delete")
+        raise ValueError("Must supply a valid task run artifact ID to delete")
 
     result = await models.TaskRunArtifact.where(id=task_run_artifact_id).delete()
     return bool(result.affected_rows)  # type: ignore
