@@ -33,7 +33,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.apollo.image.repository }}:{{ .Values.apollo.image.version }}"
+          image: "{{ .Values.apollo.image.repository }}:{{ tpl .Values.apollo.image.version . }}"
           imagePullPolicy: {{ .Values.apollo.image.pullPolicy }}
           command:
           - bash

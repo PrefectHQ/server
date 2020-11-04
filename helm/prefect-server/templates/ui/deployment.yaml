@@ -33,7 +33,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.version }}"
+          image: "{{ .Values.ui.image.repository }}:{{ tpl .Values.ui.image.version . }}"
           imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
           command: 
           - "/intercept.sh"
