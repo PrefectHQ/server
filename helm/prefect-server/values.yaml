@@ -163,7 +163,7 @@ towel:
 apollo:
   image: 
     repository: prefecthq/apollo
-    version: "2020-08-21"
+    version: "{{ .Chart.AppVersion }}"
     pullPolicy: IfNotPresent
   options:
     telemetryEnabled: true
@@ -196,7 +196,7 @@ apollo:
 ui:
   image: 
     repository: prefecthq/ui
-    version: "2020-08-20"
+    version: "{{ .Chart.AppVersion }}"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP

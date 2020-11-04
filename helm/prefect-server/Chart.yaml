@@ -3,7 +3,7 @@ name: prefect-server
 description: Prefect server application bundle
 type: application
 version: "0.1.0"
-appVersion: "2020-08-21"
+appVersion: "2020-10-29"
 dependencies: 
 - name: postgresql
   version: "~9.3.2"
