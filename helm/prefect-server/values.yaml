@@ -25,16 +25,18 @@ global:
   postgresql:
     postgresqlDatabase: prefect
     postgresqlUsername: prefect
+    postgresqlPassword: password
 
     # see bitname/postgresql documentation; include at least keys:
     # * `postgresql-password` for `postgresqlUsername` user,
     # * `postgresql-postgres-password` for admin user.
     #
     # If not set, defaults to "{{ .Release.Name }}-postgresql", which
-    # is secret that bitnami/postgresql will create. For external 
+    # is secret that bitnami/postgresql will create. For external
     # postgres, should either specify `existingSecret` or create
     # default.
     existingSecret: null
+
     servicePort: 5432
     # if postgres is not enabled, set external host.
     # NOTE: `servicePort` still defines port; and `existingSecret`
