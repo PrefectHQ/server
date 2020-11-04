@@ -14,9 +14,21 @@
 {{- end -}}
 
 {{- define "apollo.api-url" -}}
-{{- $host := include "apollo.fqdn" . -}}
-{{- $port := .Values.global.apollo.port | toString -}}
-{{ printf "http://%s:%s/graphql/" $host $port }}
+{{- if .Values.apollo.ingress.enabled -}}
+    {{/*
+    Since the UI needs to point at a locally accessible version of the
+    Apollo API (the browser is making requests) we use the first fqdn
+    path rather than the in-cluster path
+    */}}
+    {{- $ingress := (index .Values.apollo.ingress.hosts 0) -}}
+    {{- $host := $ingress.host -}}
+    {{- $path := (index $ingress.paths 0) -}}
+    {{- printf "http://%s%s" $host $path -}}
+{{- else -}}
+    {{- $host := include "apollo.fqdn" . -}}
+    {{- $port := .Values.global.apollo.port | toString -}}
+    {{- printf "http://%s:%s/graphql" $host $port -}}
+{{- end -}}
 {{- end -}}
 
 {{- define "apollo.labels" -}}
