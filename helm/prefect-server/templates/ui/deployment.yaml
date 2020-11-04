@@ -38,8 +38,9 @@ spec:
           command: 
           - "/intercept.sh"
           env:
+          # TODO: Change to APOLLO_URL when the UI version is bumped
           - name: PREFECT_SERVER__GRAPHQL_URL
-            value: {{ include "graphql.api-url" . }}
+            value: {{ include "apollo.api-url" . }}
           ports:
             - name: http
               containerPort: {{ .Values.global.ui.port }}
