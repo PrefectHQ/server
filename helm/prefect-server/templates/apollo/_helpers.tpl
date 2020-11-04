@@ -6,6 +6,19 @@
 {{- printf "%s%s" (include "prefect-server.fullname" . ) "-apollo" -}}
 {{- end -}}
 
+{{- define "apollo.fqdn" -}}
+{{- $name := include "apollo.fullname" . -}}
+{{- $ns := include "global.namespace" . }}
+{{- $suffix := .Values.global.fqdnSuffix }}
+{{- printf "%s.%s.%s" $name $ns $suffix -}}
+{{- end -}}
+
+{{- define "apollo.api-url" -}}
+{{- $host := include "apollo.fqdn" . -}}
+{{- $port := .Values.global.apollo.port | toString -}}
+{{ printf "http://%s:%s/graphql/" $host $port }}
+{{- end -}}
+
 {{- define "apollo.labels" -}}
 {{ include "apollo.selectorLabels" . }}
 {{- include "prefect-server.otherLabels" . }}
