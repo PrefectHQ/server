@@ -38,8 +38,7 @@ spec:
           command: 
           - "/intercept.sh"
           env:
-          # TODO: Change to APOLLO_URL when the UI version is bumped
-          - name: PREFECT_SERVER__GRAPHQL_URL
+          - name: PREFECT_SERVER__APOLLO_URL
             value: {{ include "apollo.api-url" . }}
           ports:
             - name: http
