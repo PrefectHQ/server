@@ -33,8 +33,8 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.towel.image.repository }}:{{ tpl .Values.towel.image.version . }}"
-          imagePullPolicy: {{ .Values.towel.image.pullPolicy }}
+          image: "{{ .Values.towel.image.repository }}:{{ or .Values.towel.image.version .Values.global.images.version }}"
+          imagePullPolicy: {{ or .Values.towel.image.pullPolicy .Values.global.images.pullPolicy }}
           command:
           - python 
           - src/prefect_server/services/towel/__main__.py

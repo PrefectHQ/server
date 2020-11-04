@@ -9,6 +9,12 @@ global:
   # suffix for service FQDN
   fqdnSuffix: "svc.cluster.local"
 
+  # Default image tag to use for all images
+  # Each
+  images:
+    version: "latest"
+    pullPolicy: IfNotPresent
+
   # labels to merge into all configs
   labels: {}
 
@@ -101,7 +107,7 @@ hasura:
   image:
     repository: hasura/graphql-engine
     version: v1.3.0
-    pullPolicy: IfNotPresent
+    pullPolicy: null
   options:
     queryPlanCacheSize: "100"
   service:
@@ -122,8 +128,8 @@ hasura:
 graphql:
   image:
     repository: prefecthq/server
-    version: "{{ .Chart.AppVersion }}"
-    pullPolicy: IfNotPresent
+    version: null
+    pullPolicy: null
   service:
     type: ClusterIP
     # port set to global.graphql.port
@@ -144,8 +150,8 @@ graphql:
 towel:
   image:
     repository: prefecthq/server
-    version: "{{ .Chart.AppVersion }}"
-    pullPolicy: IfNotPresent
+    version: null
+    pullPolicy: null
   service:
     type: ClusterIP
     # port set to global.towel.port
@@ -164,8 +170,8 @@ towel:
 apollo:
   image: 
     repository: prefecthq/apollo
-    version: "{{ .Chart.AppVersion }}"
-    pullPolicy: IfNotPresent
+    version: null
+    pullPolicy: null
   options:
     telemetryEnabled: true
   service:
@@ -197,8 +203,8 @@ apollo:
 ui:
   image: 
     repository: prefecthq/ui
-    version: "{{ .Chart.AppVersion }}"
-    pullPolicy: IfNotPresent
+    version: null
+    pullPolicy: null
   service:
     type: LoadBalancer
     # port set to global.ui.port
