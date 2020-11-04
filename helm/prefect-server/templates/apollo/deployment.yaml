@@ -48,7 +48,6 @@ spec:
             value: {{ include "graphql.health-url" . }}
           - name: GRAPHQL_SERVICE_HOST
             value: "http://{{ include "graphql.fqdn" . }}"
-            # value: {{ printf "%s%s" "http://" (include "graphql.fqdn" . ) }}
           - name: GRAPHQL_SERVICE_PORT
             value: {{ .Values.global.graphql.port | quote }}
           {{- (include "prefect.env-config" .) | nindent 10 }}

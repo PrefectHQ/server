@@ -171,15 +171,15 @@ apollo:
     type: ClusterIP
     # port set to global.apollo.port
   ingress:
-    enabled: false
+    enabled: true
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
 
     # specify at least one host if ingress is enabled
-    hosts: []
-#       - host: foo.bar
-#         paths: [ "/" ]
+    hosts:
+       - host: localhost
+         paths: [ "/graphql" ]
     tls: null
 
   labels: {}
@@ -202,15 +202,15 @@ ui:
     type: ClusterIP
     # port set to global.ui.port
   ingress:
-    enabled: false
+    enabled: true
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
 
     # specify at least one host if ingress is enabled
     hosts:
-#       - host: foo.bar
-#         paths: [ "/" ]
+       - host: localhost
+         paths: [ "/" ]
     tls: []
 
   labels: {}
