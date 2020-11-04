@@ -87,6 +87,7 @@ postgresql:
     enabled: true
     size: 8Gi
   initdbUser: postgres
+  # TODO: Determine if this should be deleted
   # initdbPassword: "$POSTGRESQL_POSTGRES_PASSWORD"
   initdbScripts:
     create_pgcrypto.sql: |
@@ -168,10 +169,10 @@ apollo:
   options:
     telemetryEnabled: true
   service:
-    type: ClusterIP
+    type: LoadBalancer
     # port set to global.apollo.port
   ingress:
-    enabled: true
+    enabled: false
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
@@ -199,10 +200,10 @@ ui:
     version: "{{ .Chart.AppVersion }}"
     pullPolicy: IfNotPresent
   service:
-    type: ClusterIP
+    type: LoadBalancer
     # port set to global.ui.port
   ingress:
-    enabled: true
+    enabled: false
     annotations: {}
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
