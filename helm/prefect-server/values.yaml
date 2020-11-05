@@ -96,7 +96,6 @@ prefectConfig:
   telemetry:
     enabled: "true"
 
-
 hasura:
   port: 3000
   nameOverride: null
@@ -151,6 +150,8 @@ towel:
     repository: prefecthq/server
     version: null
     pullPolicy: null
+    pullSecrets: []
+
   service:
     type: ClusterIP
 
@@ -193,14 +194,17 @@ ui:
     repository: prefecthq/ui
     version: null
     pullPolicy: null
+    pullSecrets: []
+
+  # apolloApiUrl defines the default gateway to the Apollo
+  # GraphQL server. This location must be accessible by the
+  # user of the API because the browser is making requests
+  # (not the ui server)
+  apolloApiUrl: http://localhost:4200/graphql
+
   service:
     type: LoadBalancer
     port: 8080
-    # apolloApiUrl defines the default gateway to the Apollo
-    # GraphQL server. This location must be accessible by the
-    # user of the API because the browser is making requests
-    # (not the ui server)
-    apolloApiUrl: localhost:4200/graphql
 
   labels: {}
   annotations: null
@@ -216,8 +220,10 @@ serviceAccount:
   # create specifies whether a service account should be created to manage
   # the prefect-server infrastructure
   create: true
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  
+  # name sets the name of the service account to use
+  # If not set and create is true, a name is generated using the 
+  # prefect-server.nameField template
   name: null
 
 

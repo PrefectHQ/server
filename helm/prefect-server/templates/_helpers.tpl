@@ -26,27 +26,6 @@
 {{ .Values.nameOverride | default .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-
-{{/*
-  prefect-server.fullname:
-    Create a fully qualified name as {release}-{chart-name}
-    If release name contains chart name it will be used as a full name.
-    NOTE: name fields are limited to 63 characters by the DNS naming spec
-*/}}
-{{- define "prefect-server.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-  {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-  {{- $name := default .Chart.Name .Values.nameOverride -}}
-  {{- if contains $name .Release.Name -}}
-    {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-  {{- else -}}
-    {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-  {{- end -}}
-{{- end -}}
-{{- end -}}
-
-
 {{- /*
   prefect-server.componentName:
     Infers the name for a component. The component name is determined by:
@@ -134,7 +113,8 @@ strings become the name keys' values into $_.res */}}
 */}}
 {{- define "prefect-server.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{- .Values.serviceAccount.name | default (include "prefect-server.fullname" .) -}}
+    {{- $createName := include "prefect-server.nameField"  (merge (dict "componentName" "graphql") .) -}}
+    {{- .Values.serviceAccount.name | default $createName -}}
 {{- else -}}
     {{- .Values.serviceAccount.name | default "default" -}}
 {{- end -}}
@@ -187,6 +167,7 @@ strings become the name keys' values into $_.res */}}
   {{- printf "%s-%s" .Release.Name "postgresql" -}}
 {{- end -}}
 {{- end -}}
+
 
 {{/*
   prefect-server.postgres-secret-ref:

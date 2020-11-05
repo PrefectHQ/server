@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prefect-server.nameField" . }}
+  labels: 
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+  {{- if .Values.towel.annotations -}}
+  annotations:
+    {{ toYaml .Values.towel.annotations }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.towel.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "prefect-server.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "prefect-server.matchLabels" . | nindent 8 }}
+    spec:
+      {{- with include "prefect-server.imagePullSecrets" (dict "root" . "image" .Values.towel.image) }}
+      imagePullSecrets: {{ . }}
+      {{- end }}
+      serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
+      {{- with .Values.towel.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: towel
+          {{- with .Values.towel.securityContext -}}          
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.towel.image.repository }}:{{ .Values.towel.image.version | default .Values.image.version }}"
+          imagePullPolicy: {{ .Values.towel.image.pullPolicy | default .Values.image.pullPolicy }}
+          command:
+            - python 
+            - src/prefect_server/services/towel/__main__.py
+          env:
+            - name: PREFECT_SERVER__HASURA__HOST
+              value: {{ include "prefect-server.hasura-hostname" . }}
+            - name: PGPASSWORD
+              valueFrom:
+              {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
+          {{- with .Values.towel.resources -}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.towel.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.towel.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.towel.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

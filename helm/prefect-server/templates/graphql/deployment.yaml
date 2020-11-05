@@ -18,10 +18,9 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
     spec:
-    {{- with .Values.graphql.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- with include "prefect-server.imagePullSecrets" (dict "root" . "image" .Values.graphql.image) }}
+      imagePullSecrets: {{ . }}
+      {{- end }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.graphql.podSecurityContext }}
       securityContext:
