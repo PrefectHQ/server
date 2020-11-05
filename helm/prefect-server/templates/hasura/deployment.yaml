@@ -1,27 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "hasura.fullname" . }}
+  name: {{ include "prefect-server.nameField" . }}
   labels: 
-    {{- include "hasura.labels" . | nindent 6 }}
-  {{- if ( include "hasura.annotations" . ) }}
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+  {{- if .Values.hasura.annotations -}}
   annotations:
-    {{- ( include "hasura.annotations" . ) | nindent 4 }}
+    {{ toYaml .Values.hasura.annotations }}
   {{- end }}
 spec:
   replicas: {{ .Values.hasura.replicaCount }}
   selector:
     matchLabels:
-      {{- include "hasura.selectorLabels" . | nindent 6 }}
+      {{- include "prefect-server.matchLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "hasura.selectorLabels" . | nindent 8 }}
+        {{- include "prefect-server.matchLabels" . | nindent 8 }}
     spec:
-    {{- with .Values.hasura.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- with include "prefect-server.imagePullSecrets" (dict "root" . "image" .Values.hasura.image) }}
+      imagePullSecrets: {{ . }}
+      {{- end }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.hasura.podSecurityContext }}
       securityContext:
@@ -33,27 +32,28 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.hasura.image.repository }}:{{ or .Values.hasura.image.version .Values.global.images.version }}"
-          imagePullPolicy: {{ or .Values.hasura.image.pullPolicy .Values.global.images.pullPolicy }}
+          image: {{ .Values.hasura.image.repository }}:{{ .Values.hasura.image.version }}
+          imagePullPolicy: {{ .Values.hasura.image.pullPolicy | default .Values.image.pullPolicy }}
           command:
-          - "graphql-engine" 
-          - "serve"
+            - "graphql-engine" 
+            - "serve"
           env:
-          - name: HASURA_GRAPHQL_DATABASE_URL
-            value: {{ include "postgresql-url" . }}
-          - name: PGPASSWORD
-            valueFrom:
-            {{- include "postgresql.password-secret-ref" . | nindent 14 }}            
-          - name: HASURA_GRAPHQL_ENABLE_CONSOLE
-            value: "true"
-          - name: HASURA_GRAPHQL_SERVER_PORT
-            value: {{ include "hasura.container-port" . | quote }}
-          - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
-            value: {{ .Values.hasura.options.queryPlanCacheSize | quote }}
+            - name: HASURA_GRAPHQL_DATABASE_URL
+              value: {{ include "prefect-server.postgres-connstr" . }}
+            - name: PGPASSWORD
+              valueFrom:
+                {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}            
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: "true"
+            - name: HASURA_GRAPHQL_SERVER_PORT
+              value: {{ .Values.hasura.port | quote }}
+            - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
+              value: {{ .Values.hasura.options.queryPlanCacheSize | quote }}
           ports:
-          - name: http
-            containerPort: {{ include "hasura.container-port" . }}
-            protocol: TCP
+            - name: http
+              # Note: This port technically differ from that in the config
+              containerPort: {{ .Values.hasura.port }}
+              protocol: TCP
           livenessProbe:
             httpGet:
               path: /healthz

@@ -1,142 +1,200 @@
-{{/* vim: set filetype=mustache: */}}
 {{/*
-Expand the name of the chart.
+  Helper templates for prefect-server
+
+  Includes:
+    name
+    fullname
+    componentName
+    nameField
+    matchLabels
+    commonLabels
+    imagePullSecrets
+    serviceAccountName
+    postgresql-hostname
+    postgresql-connstr
+    postgresql-secret-name
+    postgresql-secret-ref
 */}}
-{{- define "prefect-server.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
+
 
 {{/*
-Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
+  prefect-server.name:
+    Define a name for the application as {chart-name}
+    NOTE: name fields are limited to 63 characters by the DNS naming spec
+*/}}
+{{- define "prefect-server.name" -}}
+{{ .Values.nameOverride | default .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+
+{{/*
+  prefect-server.fullname:
+    Create a fully qualified name as {release}-{chart-name}
+    If release name contains chart name it will be used as a full name.
+    NOTE: name fields are limited to 63 characters by the DNS naming spec
 */}}
 {{- define "prefect-server.fullname" -}}
 {{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+  {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
+  {{- $name := default .Chart.Name .Values.nameOverride -}}
+  {{- if contains $name .Release.Name -}}
+    {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+  {{- else -}}
+    {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 
-{{/*
-Create chart name and version as used by the chart label.
+
+{{- /*
+  prefect-server.componentName:
+    Infers the name for a component. The component name is determined by:
+    - 1: The provided scope's .componentName
+    - 2: The template's filename if living in the root folder
+    - 3: The template parent folder's name
 */}}
-{{- define "prefect-server.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{- define "prefect-server.otherLabels" }}
-{{- if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
-{{- end -}}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- define "prefect-server.componentName" -}}
+{{- $file := .Template.Name | base | trimSuffix ".yaml" -}}
+{{- $parent := .Template.Name | dir | base | trimPrefix "templates" -}}
+{{- $component := .componentName | default $parent | default $file -}}
+{{ $component }}
 {{- end }}
+
+
+{{- /*
+  prefect-server.nameField:
+    Populates the name field's value.
+    NOTE: name fields are limited to 63 characters by the DNS naming spec
+*/}}
+{{- define "prefect-server.nameField" -}}
+{{- $name := print (.namePrefix | default "") (include "prefect-server.componentName" .) (.nameSuffix | default "") -}}
+{{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+
+{{/*
+  prefect-server.matchLabels:
+    Provides K8s selection labels
+*/}}
+{{- define "prefect-server.matchLabels" -}}
+{{- $composedName := printf "%s-%s" (include "prefect-server.name" .) (include "prefect-server.componentName" .) -}}
+app.kubernetes.io/name: {{ .name | default $composedName }}
+app.kubernetes.io/instance:  {{ .Release.Name }}
+{{- if .Values.matchLabels }}
+  {{- toYaml .Values.matchLabels }}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+  prefect-server.commonLabels:
+    Provides common K8s labels, including "prefect-server.matchLabels"
+*/}}
+{{- define "prefect-server.commonLabels" -}}
+{{ include "prefect-server.matchLabels" . }}
+helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end -}}
-
-{{/*
-Common labels
-*/}}
-{{- define "prefect-server.labels" -}}
-helm.sh/chart: {{ include "prefect-server.chart" . }}
-{{ include "prefect-server.selectorLabels" . }}
-{{- include "prefect-server.otherLabels" . }}
-{{- end -}}
-
-{{/*
-Selector labels
-*/}}
-{{- define "prefect-server.selectorLabels" -}}
 app.kubernetes.io/part-of: {{ include "prefect-server.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- if .Values.global.selectorLabels }}
-{{ toYaml .Values.global.selectorLabels }}
-{{- end -}}
+app.kubernetes.io/component: {{ include "prefect-server.componentName" . }}
 {{- end -}}
 
+
+{{- /*
+  prefect-server.imagePullSecrets
+    Augments passed .pullSecrets with $.Values.imagePullSecrets
+*/}}
+{{- define "prefect-server.imagePullSecrets" -}}
+{{- /* Populate $_.list with all relevant entries */}}
+{{- $_ := dict "list" (concat .image.pullSecrets .root.Values.imagePullSecrets | uniq) }}
+
+{{- /* Decide if something should be written */}}
+{{- if not (eq ($_.list | toJson) "[]") }}
+
+{{- /* Process the $_.list where strings become dicts with a name key and the
+strings become the name keys' values into $_.res */}}
+{{- $_ := set $_ "res" list }}
+{{- range $_.list }}
+{{- if eq (typeOf .) "string" }}
+{{- $__ := set $_ "res" (append $_.res (dict "name" .)) }}
+{{- else }}
+{{- $__ := set $_ "res" (append $_.res .) }}
+{{- end }}
+{{- end }}
+{{- /* Write the results */}}
+{{- $_.res | toJson }}
+{{- end }}
+{{- end }}
+
+
 {{/*
-Create the name of the service account to use
+  prefect-server.serviceAccountName: 
+    Create the name of the service account to use
 */}}
 {{- define "prefect-server.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{ default (include "prefect-server.fullname" .) .Values.serviceAccount.name }}
+    {{- .Values.serviceAccount.name | default (include "prefect-server.fullname" .) -}}
 {{- else -}}
-    {{ default "default" .Values.serviceAccount.name }}
+    {{- .Values.serviceAccount.name | default "default" -}}
 {{- end -}}
 {{- end -}}
+
 
 {{/*
-Postgresql FQDN.
-
-Uses subchart "postgreql.fullname" evaluated with subchart values.
-
-Thanks to https://stackoverflow.com/a/61816134/435563, and
-https://stackoverflow.com/a/49604964/435563
-
-TODO: following is not working ... for the moment, hard-coded
-  {{- $name := include "postgresql.fullname" (set (deepCopy .) "Values" .Values.postgresql) -}}
-
+  prefect-server.postgres-hostname: 
+    Generate the hostname of the postgresql service
+    If a subchart is used, evaluate using its fullname function
+      as {subchart.fullname}-{namespace}-{fqdnSuffix}
+    Otherwise, the configured external hostname will be returned
 */}}
-{{- define "postgresql.fqdn" -}}
-{{- if .Values.postgresqlEnabled -}}
-  {{- $name := "prefect-server-postgresql" -}}
-  {{- $ns := include "global.namespace" . }}
-  {{- $suffix := .Values.global.fqdnSuffix }}
-  {{- printf "%s.%s.%s" $name $ns $suffix -}}
+{{- define "prefect-server.postgres-hostname" -}}
+{{- if .Values.postgresql.useSubChart -}}
+  {{- $subchart_overrides := .Values.postgresql -}}
+  {{- $name := include "postgresql.fullname" (dict "Values" $subchart_overrides "Chart" (dict "Name" "postgresql") "Release" .Release) -}}
+  {{- printf "%s.%s.%s" $name .Release.Namespace .Values.fqdnSuffix -}}
 {{- else -}}
-  {{- .Values.postgresqlExternalHost -}}
+  {{- .Values.postgresql.externalHostname -}}
 {{- end -}}
 {{- end -}}
 
 
 {{/* 
-Postgresl db connect url.
-
-Does not include password, which should be set via
-secret in PGPASSWORD on containers.
+  prefect-server.postgres-connstr:
+    Generates the connection string for the postgresql service
+    NOTE: Does not include password, which should be set via
+      secret in PGPASSWORD on containers.
 */}}
-{{- define "postgresql-url" -}}
-{{- $user := .Values.global.postgresql.postgresqlUsername -}}
-{{- $host := include "postgresql.fqdn" . -}}
-{{- $port := .Values.global.postgresql.servicePort | toString -}}
-{{- $db := .Values.global.postgresql.postgresqlDatabase -}}
+{{- define "prefect-server.postgres-connstr" -}}
+{{- $user := .Values.postgresql.postgresqlUsername -}}
+{{- $host := include "prefect-server.postgres-hostname" . -}}
+{{- $port := .Values.postgresql.servicePort | toString -}}
+{{- $db := .Values.postgresql.postgresqlDatabase -}}
 {{- printf "postgresql://%s@%s:%s/%s" $user $host $port $db -}}
 {{- end -}}
-{{/*
-Namespace: for the moment, just release namespace.
-*/}}
-{{- define "global.namespace" -}}
-{{- .Release.Namespace -}}
-{{- end -}}
+
 
 {{/*
-Name for default postgres secret (if not existing).
+  prefect-server.postgres-secret-name:
+    Get the name of the secret to be used for the postgresql
+    user password. Generates {release-name}-postgresql if
+    an existing secret is not set.
 */}}
-{{- define "postgresql.default-secret-name" -}}
-{{ printf "%s%s" .Release.Name "-postgresql" }}
-{{- end -}}
-
-{{/*
-Secret key reference for postgres database password
-*/}}
-{{- define "postgresql.password-secret-ref" -}}
-{{- $secret := dict "name" "" "key" "postgresql-password" -}}
-{{- if .Values.global.postgresql.existingSecret -}}
-  {{- $_ := set $secret "name" .Values.global.postgresql.existingSecret -}}
-{{- else if .Values.postgresql.existingSecret -}}
-  {{- $_ := set $secret "name" .Values.postgresql.existingSecret -}}
+{{- define "prefect-server.postgres-secret-name" -}}
+{{- if .Values.postgresql.secretName -}}
+  {{- .Values.postgresql.secretName -}}
 {{- else -}}
-  {{- $secret_name := include "postgresql.default-secret-name" . -}}
-  {{- $_ := set $secret "name" $secret_name -}}
+  {{- printf "%s-%s" .Release.Name "postgresql" -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+  prefect-server.postgres-secret-ref:
+    Generates a reference to the postgreqsql user password
+    secret. 
+*/}}
+{{- define "prefect-server.postgres-secret-ref" -}}
 secretKeyRef:
-  name: {{ get $secret "name" }}
-  key: {{ get $secret "key" }}
+  name: {{ include "prefect-server.postgres-secret-name" . }}
+  key: postgresql-password
 {{- end -}}

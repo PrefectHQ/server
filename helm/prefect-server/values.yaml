@@ -1,100 +1,74 @@
-# Default values for prefect-server.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# prefect-server configuration
 
-global:
-  # namespace to deploy into (NB for the moment just Release.Namespace)
-  # namespace: prefect-server
 
-  # suffix for service FQDN
-  fqdnSuffix: "svc.cluster.local"
+# image is configuration for all prefect images
+image:
+  version: "latest"
+  pullPolicy: IfNotPresent
 
-  # Default image tag to use for all images
-  # Each
-  images:
-    version: "latest"
-    pullPolicy: IfNotPresent
+# imagePullSecrets is configuration to reference the k8s Secret resources the
+# Helm chart's pods can get credentials from to pull their images.
+imagePullSecrets: []
 
-  # labels to merge into all configs
-  labels: {}
+# labels to merge into all object configurations
+labels: {}
 
-  # selector labels to merge into all configs
-  # used for pod matching
-  selectorLabels: {}
+# matchLabels defines extra selection labels to merge into all  
+# object configurations
+matchLabels: {}
 
-  # annotations to merge into all configs
-  annotations: null
+# annotations to merge into all object configurations
+annotations: null
 
-  # In accordance with https://hub.helm.sh/charts/bitnami/postgresql
-  # Use these whether or not postgres is installed as dependency, as
-  # they are used to build the postgres url.
-  postgresql:
-    postgresqlDatabase: prefect
-    postgresqlUsername: prefect
-    postgresqlPassword: password
+# fqdnSuffix determines the string appended to names when 
+# determining the fully qualified domain name of services for 
+# internal communication
+fqdnSuffix: "svc.cluster.local"
 
-    # see bitname/postgresql documentation; include at least keys:
-    # * `postgresql-password` for `postgresqlUsername` user,
-    # * `postgresql-postgres-password` for admin user.
-    #
-    # If not set, defaults to "{{ .Release.Name }}-postgresql", which
-    # is secret that bitnami/postgresql will create. For external
-    # postgres, should either specify `existingSecret` or create
-    # default.
-    existingSecret: null
-
-    servicePort: 5432
-    # if postgres is not enabled, set external host.
-    # NOTE: `servicePort` still defines port; and `existingSecret`
-    # should still contain passwords.
-    postgresqlExternalHost: ""
-
-  hasura:
-    port: 3000
-  graphql:
-    port: 4201
-  towel: {}
-  apollo:
-    port: 4200
-  ui:
-    port: 8080
-
-  prefect:
-    # Fed through to config.toml in 
-    # graphql and towel via environment variables. See 
-    # src/prefect_server/config.toml for (a bit of) explanation.
-    #
-    # Any values can be put here, will result in environment
-    # variable definitions starting with "PREFECT_SERVER__"
-    config:
-      env: "local"
-      debug: "false"
-      queued_runs_returned_limit: "25"
-      hasura:
-        execute_retry_seconds: "10"
-      logging:
-        level: "DEBUG"
-        format: "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
-      services:
-        scheduler:
-          scheduler_loop_seconds: "300"
-        lazarus:
-          resurrection_attempt_limit: "3"
-      telemetry:
-        enabled: "true"
-
-# whether to use postgres dependency (true) or external postgres (false)
-postgresqlEnabled: true
-
-# postgresql configuration
-# see https://hub.helm.sh/charts/bitnami/postgresql for all options
+# postgresql configures the backing database
+# NOTE: the variables names must remain as is to match the
+# bitnami subchart even if the bitnami subchart is not being
+# used, these variables are used to create the connection 
+# string
 postgresql:
+  postgresqlDatabase: prefect
+  postgresqlUsername: prefect
+
+  # existingSecret configures which secret should be referenced
+  # for access to the database. If null and `useSubChart` is
+  # enabled, the secret will be generated. If using an external
+  # postgres service, this value should be set to a secret 
+  # containing the key `postgresql-password`
+  existingSecret: null
+
+  # postgresqlPassword sets the password to be used if
+  # `existingSecret` is not set. This is the password for 
+  # `postgresqlUsername` and will be set within the secret at 
+  # the key `postgresql-password`
+  postgresqlPassword: password
+
+  # servicePort configures the port that the database should be
+  # accessed at
+  servicePort: 5432
+
+  # externalHostname defines the address to contact an externally
+  # managed postgres database instance at. This is not required if
+  # `internalPostgres` is `true`
+  externalHostname: ""
+
+  # useSubChart determines if a this chart should deploy a
+  # user-manager postgres database or use an externally managed
+  # postgres instance. If `useSubChart` is `true`, the
+  # bitnami/postgresql subchart will be deployed
+  useSubChart: true
+
+  # postgresql configuration below here is only used if using
+  # the subchart
+
   persistence:
     enabled: true
     size: 8Gi
   initdbUser: postgres
-  # TODO: Determine if this should be deleted
-  # initdbPassword: "$POSTGRESQL_POSTGRES_PASSWORD"
   initdbScripts:
     create_pgcrypto.sql: |
       -- create pgcrypto extension, required for UUID
@@ -102,17 +76,40 @@ postgresql:
       CREATE EXTENSION IF NOT EXISTS "pg_trgm";
       SET TIME ZONE 'UTC';
 
+# prefectConfig allows override of prefect_server/config.toml values
+# Values placed here will result in environment variable definitions
+# starting with "PREFECT_SERVER__" and will be passed to TODO
+prefectConfig:
+  env: "local"
+  debug: "false"
+  queued_runs_returned_limit: "25"
+  hasura:
+    execute_retry_seconds: "10"
+  logging:
+    level: "DEBUG"
+    format: "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
+  services:
+    scheduler:
+      scheduler_loop_seconds: "300"
+    lazarus:
+      resurrection_attempt_limit: "3"
+  telemetry:
+    enabled: "true"
+
+
 hasura:
-  nameOverride:
+  port: 3000
+  nameOverride: null
   image:
     repository: hasura/graphql-engine
     version: v1.3.0
     pullPolicy: null
+    pullSecrets: []
+
   options:
     queryPlanCacheSize: "100"
   service:
     type: ClusterIP
-    # port set to global.hasura.port
 
   labels: {}
   annotations: {}
@@ -123,16 +120,19 @@ hasura:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  imagePullSecrets: []
 
 graphql:
+  port: 4201
+  containerPort: 3000
+
   image:
     repository: prefecthq/server
     version: null
     pullPolicy: null
+    pullSecrets: []
+
   service:
     type: ClusterIP
-    # port set to global.graphql.port
 
   labels: {}
   annotations: null
@@ -143,7 +143,6 @@ graphql:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  imagePullSecrets: []
   init:
     resources: {}
 
@@ -154,7 +153,6 @@ towel:
     pullPolicy: null
   service:
     type: ClusterIP
-    # port set to global.towel.port
 
   labels: {}
   annotations: null
@@ -165,29 +163,19 @@ towel:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  imagePullSecrets: []
 
 apollo:
+  port: 4200
   image: 
     repository: prefecthq/apollo
     version: null
     pullPolicy: null
+    pullSecrets: []
   options:
     telemetryEnabled: true
   service:
     type: LoadBalancer
-    # port set to global.apollo.port
-  ingress:
-    enabled: false
-    annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-
-    # specify at least one host if ingress is enabled
-    hosts:
-       - host: localhost
-         paths: [ "/graphql" ]
-    tls: null
+    port: 4200
 
   labels: {}
   annotations: null
@@ -198,27 +186,21 @@ apollo:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  imagePullSecrets: []
 
 ui:
+  port: 8080
   image: 
     repository: prefecthq/ui
     version: null
     pullPolicy: null
   service:
     type: LoadBalancer
-    # port set to global.ui.port
-  ingress:
-    enabled: false
-    annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-
-    # specify at least one host if ingress is enabled
-    hosts:
-       - host: localhost
-         paths: [ "/" ]
-    tls: []
+    port: 8080
+    # apolloApiUrl defines the default gateway to the Apollo
+    # GraphQL server. This location must be accessible by the
+    # user of the API because the browser is making requests
+    # (not the ui server)
+    apolloApiUrl: localhost:4200/graphql
 
   labels: {}
   annotations: null
@@ -229,23 +211,13 @@ ui:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  imagePullSecrets: []
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # create specifies whether a service account should be created to manage
+  # the prefect-server infrastructure
   create: true
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: null
 
-# podSecurityContext: {}
-#   # fsGroup: 2000
-
-# securityContext: {}
-#   # capabilities:
-#   #   drop:
-#   #   - ALL
-#   # readOnlyRootFilesystem: true
-#   # runAsNonRoot: true
-#   # runAsUser: 1000
 

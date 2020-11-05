@@ -1,19 +1,19 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "apollo.fullname" . }}
+  name: {{ include "prefect-server.nameField" . }}
   labels: 
-    {{- include "apollo.labels" . | nindent 4 }}
-  {{- if ( include "apollo.annotations" . ) }}
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+  {{- if .Values.apollo.annotations }}
   annotations:
-    {{- ( include "apollo.annotations" . ) | nindent 4 }}
+    {{- .Values.apollo.annotations | nindent 4 }}
   {{- end }}
 spec:
   type: {{ .Values.apollo.service.type }}
   ports:
-    - port: {{ .Values.global.apollo.port }}
+    - port: {{ .Values.apollo.port }}
       targetPort: http
       protocol: TCP
       name: http
   selector:
-    {{- include "apollo.selectorLabels" . | nindent 4 }}
+    {{- include "prefect-server.matchLabels" . | nindent 4 }}

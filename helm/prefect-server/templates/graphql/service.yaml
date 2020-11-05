@@ -1,19 +1,19 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "graphql.fullname" . }}
-  labels:
-    {{- include "graphql.labels" . | nindent 4 }}
-  {{- if ( include "graphql.annotations" . ) }}
+  name: {{ include "prefect-server.nameField" . }}
+  labels: 
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+  {{- if .Values.graphql.annotations -}}
   annotations:
-    {{- ( include "graphql.annotations" . ) | nindent 4 }}
+    {{ toYaml .Values.graphql.annotations }}
   {{- end }}
 spec:
   type: {{ .Values.graphql.service.type }}
   ports:
-    - port: {{ .Values.global.graphql.port }}
+    - port: {{ .Values.graphql.port }}
       targetPort: http
       protocol: TCP
       name: http
   selector:
-    {{- include "graphql.selectorLabels" . | nindent 4 }}
+    {{- include "prefect-server.matchLabels" . | nindent 4 }}

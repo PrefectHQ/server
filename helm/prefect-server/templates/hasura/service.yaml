@@ -1,19 +1,19 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "hasura.fullname" . }}
+  name: {{ include "prefect-server.nameField" . }}
   labels: 
-    {{- include "hasura.labels" . | nindent 4 }}
-  {{- if ( include "hasura.annotations" . ) }}
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+  {{- if .Values.hasura.annotations -}}
   annotations:
-    {{- ( include "hasura.annotations" . ) | nindent 4 }}
+    {{ toYaml .Values.hasura.annotations }}
   {{- end }}
 spec:
   type: {{ .Values.hasura.service.type }}
   ports:
-    - port: {{ .Values.global.hasura.port }}
+    - port: {{ .Values.hasura.port }}
       targetPort: http
       protocol: TCP
       name: http
   selector:
-    {{- include "hasura.selectorLabels" . | nindent 4 }}
+    {{- include "prefect-server.matchLabels" . | nindent 4 }}

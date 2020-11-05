@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "graphql.fullname" . }}
+  name: {{ include "prefect-server.nameField" . }}
   labels: 
-    {{- include "graphql.labels" . | nindent 6 }}
-  {{- if ( include "graphql.annotations" . ) }}
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+  {{- if .Values.graphql.annotations -}}
   annotations:
-    {{- ( include "graphql.annotations" . ) | nindent 4 }}
+    {{ toYaml .Values.graphql.annotations }}
   {{- end }}
 spec:
   replicas: {{ .Values.graphql.replicaCount }}
   selector:
     matchLabels:
-      {{- include "graphql.selectorLabels" . | nindent 6 }}
+      {{- include "prefect-server.matchLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "graphql.selectorLabels" . | nindent 8 }}
+        {{- include "prefect-server.matchLabels" . | nindent 8 }}
     spec:
     {{- with .Values.graphql.imagePullSecrets }}
       imagePullSecrets:
@@ -33,21 +33,21 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.graphql.image.repository }}:{{ or .Values.graphql.image.version .Values.global.images.version }}"
-          imagePullPolicy: {{ or .Values.graphql.image.pullPolicy .Values.global.images.pullPolicy }}
+          image: "{{ .Values.graphql.image.repository }}:{{ .Values.graphql.image.version | default .Values.image.version }}"
+          imagePullPolicy: {{ .Values.graphql.image.pullPolicy | default .Values.image.pullPolicy }}
           command:
-          - "bash"
-          - "-c"
-          - "/usr/local/bin/prefect-server database upgrade --yes"
+            - "bash"
+            - "-c"
+            - "/usr/local/bin/prefect-server database upgrade --yes"
           env:
-          - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
-            value: {{ include "postgresql-url" . }}
-          - name: PGPASSWORD
-            valueFrom:
-            {{- include "postgresql.password-secret-ref" . | nindent 14 }}
-          - name: PREFECT_SERVER__HASURA__HOST
-            value: {{ include "hasura.fqdn" . }}
-          {{- (include "prefect.env-config" .) | nindent 10 }}
+            - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
+              value: {{ include "prefect-server.postgres-connstr" . }}
+            - name: PGPASSWORD
+              valueFrom:
+                {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
+            - name: PREFECT_SERVER__HASURA__HOST
+              value: {{ include "prefect-server.hasura-hostname" . }}
+            {{- (include "prefect.env-config" .) | nindent 12 }}
           {{- with .Values.graphql.init.resources -}}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -58,26 +58,26 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.graphql.image.repository }}:{{ or .Values.graphql.image.version .Values.global.images.version }}"
-          imagePullPolicy: {{ or .Values.graphql.image.pullPolicy .Values.global.images.pullPolicy }}
+          image: "{{ .Values.graphql.image.repository }}:{{ .Values.graphql.image.version | default .Values.image.version }}"
+          imagePullPolicy: {{ .Values.graphql.image.pullPolicy | default .Values.image.pullPolicy }}
           command: 
-          - bash 
-          - "-c" 
-          - "python src/prefect_server/services/graphql/server.py"
+            - bash 
+            - "-c" 
+            - "python src/prefect_server/services/graphql/server.py"
           env:
-          - name: PREFECT_SERVER_DB_CMD
-            value: "echo 'DATABASE MIGRATIONS SKIPPED'"
-          - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
-            value: {{ include "postgresql-url" . }}
-          - name: PGPASSWORD
-            valueFrom:
-            {{- include "postgresql.password-secret-ref" . | nindent 14 }}            
-          - name: PREFECT_SERVER__HASURA__HOST
-            value: {{ include "hasura.fqdn" . }}
-          {{- (include "prefect.env-config" .) | nindent 10 }}
+            - name: PREFECT_SERVER_DB_CMD
+              value: "echo 'DATABASE MIGRATIONS SKIPPED'"
+            - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
+              value: {{ include "prefect-server.postgres-connstr" . }}
+            - name: PGPASSWORD
+              valueFrom:
+                {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}            
+            - name: PREFECT_SERVER__HASURA__HOST
+              value: {{ include "prefect-server.hasura-hostname" . }}
+            {{- (include "prefect.env-config" .) | nindent 12 }}
           ports:
             - name: http
-              containerPort: {{ .Values.global.graphql.port }}
+              containerPort: {{ .Values.graphql.port }}
               protocol: TCP
           livenessProbe:
             httpGet:

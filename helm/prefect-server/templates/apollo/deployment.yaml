@@ -1,27 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "apollo.fullname" . }}
+  name: {{ include "prefect-server.nameField" . }}
   labels: 
-    {{- include "apollo.labels" . | nindent 6 }}
-  {{- if ( include "apollo.annotations" . ) }}
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+  {{- if .Values.apollo.annotations -}}
   annotations:
-    {{- ( include "apollo.annotations" . ) | nindent 4 }}
+    {{ toYaml .Values.apollo.annotations }}
   {{- end }}
 spec:
   replicas: {{ .Values.apollo.replicaCount }}
   selector:
     matchLabels:
-      {{- include "apollo.selectorLabels" . | nindent 6 }}
+      {{- include "prefect-server.matchLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "apollo.selectorLabels" . | nindent 8 }}
+        {{- include "prefect-server.matchLabels" . | nindent 8 }}
     spec:
-    {{- with .Values.apollo.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- with include "prefect-server.imagePullSecrets" (dict "root" . "image" .Values.apollo.image) }}
+      imagePullSecrets: {{ . }}
+      {{- end }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.apollo.podSecurityContext }}
       securityContext:
@@ -33,27 +32,27 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.apollo.image.repository }}:{{ or .Values.apollo.image.version .Values.global.images.Version }}"
-          imagePullPolicy: {{ or .Values.apollo.image.pullPolicy .Values.global.images.pullPolicy }}
+          image: "{{ .Values.apollo.image.repository }}:{{ .Values.apollo.image.version | default .Values.image.version }}"
+          imagePullPolicy: {{ .Values.apollo.image.pullPolicy | default .Values.image.pullPolicy }}
           command:
-          - bash
-          - "-c"
-          - "/apollo/post-start.sh && npm run serve"
+            - bash
+            - "-c"
+            - "/apollo/post-start.sh && npm run serve"
           env:
-          - name: HASURA_API_URL
-            value: {{ include "hasura.api-url" . }}
-          - name: PREFECT_API_URL
-            value: {{ include "graphql.api-url" . }}
-          - name: PREFECT_API_HEALTH_URL
-            value: {{ include "graphql.health-url" . }}
-          - name: GRAPHQL_SERVICE_HOST
-            value: "http://{{ include "graphql.fqdn" . }}"
-          - name: GRAPHQL_SERVICE_PORT
-            value: {{ .Values.global.graphql.port | quote }}
-          {{- (include "prefect.env-config" .) | nindent 10 }}
+            - name: HASURA_API_URL
+              value: {{ include "prefect-server.hasura-api-url" . }}
+            - name: PREFECT_API_URL
+              value: {{ include "prefect-server.graphql-api-url" . }}
+            - name: PREFECT_API_HEALTH_URL
+              value: {{ include "prefect-server.graphql-health-url" . }}
+            - name: GRAPHQL_SERVICE_HOST
+              value: "http://{{ include "prefect-server.graphql-hostname" . }}"
+            - name: GRAPHQL_SERVICE_PORT
+              value: {{ .Values.graphql.port | quote }}
+            {{- (include "prefect.env-config" .) | nindent 12 }}
           ports:
             - name: http
-              containerPort: {{ .Values.global.apollo.port }}
+              containerPort: {{ .Values.apollo.port }}
               protocol: TCP
           livenessProbe:
             httpGet:

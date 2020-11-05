@@ -1,4 +1,7 @@
 1. Get the application UI URL by running these commands:
+{{/*
+
+
 {{- if .Values.ui.ingress.enabled }}
 {{- range $host := .Values.ui.ingress.hosts }}
   {{- range .paths }}
@@ -41,3 +44,5 @@
   echo "Visit http://127.0.0.1:8080 to use your application"
   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:80
 {{- end }}
+
+*/}}

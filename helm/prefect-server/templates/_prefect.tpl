@@ -2,7 +2,7 @@
    * Helpers for prefect configuration.
    */}}
 {{/*
-global.unwrap writes env toml overrides for dict
+unwrap writes env toml overrides for dict
 
 Converts a nested dictionary with keys:
 `prefix` and `map`, into a list of environment
@@ -10,7 +10,7 @@ variable definitions, where each key is concat
 of uppercased keys starting with original prefix
 and the values are quoted leaf values.
 */}}
-{{- define "global.env-unwrap" -}}
+{{- define "env-unwrap" -}}
 {{- $prefix := .prefix -}}
 {{- range $key, $val := .map -}}
 {{- $key := upper $key -}}
@@ -20,7 +20,7 @@ and the values are quoted leaf values.
 {{- else -}}
 {{- $prefix := (printf "%s__%s" $prefix $key) -}}
 {{- $args := (dict "prefix" $prefix "map" $val)  -}}
-{{- include "global.env-unwrap" $args -}}
+{{- include "env-unwrap" $args -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -28,30 +28,30 @@ and the values are quoted leaf values.
 Define environment variables for prefect config.
 
 We define environment variables for all specified
-values in "global.prefect.config" plus some specific
+values in "prefect.config" plus some specific
 ones based on other settings (ports, hosts).
 */}}
 {{- define "prefect.env-config" -}}
 - name: PREFECT_SERVER__API__URL
-  value: {{ include "hasura.api-url" . }}
+  value: {{ include "prefect-server.hasura-api-url" . }}
 - name: PREFECT_SERVER__DATABASE__HOST
-  value: {{ include "postgresql.fqdn" . }}
+  value: {{ include "prefect-server.postgres-hostname" . }}
 - name: PREFECT_SERVER__DATABASE__PORT
-  value: {{ .Values.global.postgresql.servicePort | quote }}
+  value: {{ .Values.postgresql.servicePort | quote }}
 - name: PREFECT_SERVER__DATABASE__USERNAME
-  value: {{ .Values.global.postgresql.postgresqlUsername }}
+  value: {{ .Values.postgresql.postgresqlUsername }}
 - name: PREFECT_SERVER__DATABASE__PASSWORD
   valueFrom:
-    {{- include "postgresql.password-secret-ref" . | nindent 4 }}
+    {{- include "prefect-server.postgres-secret-ref" . | nindent 4 }}
 - name: PREFECT_SERVER__HASURA__HOST
-  value: {{ include "hasura.fqdn" . }}
+  value: {{ include "prefect-server.hasura-hostname" . }}
 - name: PREFECT_SERVER__HASURA__PORT
-  value: {{ .Values.global.hasura.port | quote }}
+  value: {{ .Values.hasura.port | quote }}
 - name: PREFECT_SERVER__SERVICES__APOLLO__PORT
-  value: {{ .Values.global.apollo.port | quote }}
+  value: {{ .Values.apollo.port | quote }}
 - name: PREFECT_SERVER__SERVICES__GRAPHQL__PORT
-  value: {{ .Values.global.graphql.port | quote }}
-{{- $args := (dict "prefix" "PREFECT_SERVER" "map" .Values.global.prefect.config) -}}
-{{- include "global.env-unwrap" $args -}}
+  value: {{ .Values.graphql.port | quote }}
+{{- $args := (dict "prefix" "PREFECT_SERVER" "map" .Values.prefectConfig) -}}
+{{- include "env-unwrap" $args -}}
 {{- end }}
 
