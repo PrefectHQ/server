@@ -181,11 +181,6 @@ secretKeyRef:
   key: postgresql-password
 {{- end -}}
 
-
-{{/*
-  Helpers for prefect configuration
-*/}}
-
   
 {{/*
   env-unrap: 
@@ -212,6 +207,7 @@ secretKeyRef:
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
 
 {{/*
   prefect-server.envConfig:
