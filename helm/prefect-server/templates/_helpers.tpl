@@ -3,7 +3,6 @@
 
   Includes:
     name
-    fullname
     componentName
     nameField
     matchLabels
@@ -43,7 +42,8 @@
 
 {{- /*
   prefect-server.nameField:
-    Populates the name field's value.
+    Populates a configuration name field's value by as {release}-{component}
+    also allows prefix and suffix values to be passed
     NOTE: name fields are limited to 63 characters by the DNS naming spec
 */}}
 {{- define "prefect-server.nameField" -}}
@@ -54,7 +54,7 @@
 
 {{/*
   prefect-server.matchLabels:
-    Provides K8s selection labels
+    Provides K8s selection labels typically for use within the spec
 */}}
 {{- define "prefect-server.matchLabels" -}}
 {{- $composedName := printf "%s-%s" (include "prefect-server.name" .) (include "prefect-server.componentName" .) -}}
@@ -69,6 +69,7 @@ app.kubernetes.io/instance:  {{ .Release.Name }}
 {{/*
   prefect-server.commonLabels:
     Provides common K8s labels, including "prefect-server.matchLabels"
+    typically for use within the top-level metadata
 */}}
 {{- define "prefect-server.commonLabels" -}}
 {{ include "prefect-server.matchLabels" . }}
