@@ -4,10 +4,7 @@ metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
-  {{- if .Values.apollo.annotations -}}
-  annotations:
-    {{ toYaml .Values.apollo.annotations }}
-  {{- end }}
+  {{- include "prefect-server.annotations" . | nindent 2 -}}
 spec:
   replicas: {{ .Values.apollo.replicaCount }}
   selector:

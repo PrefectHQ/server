@@ -25,6 +25,7 @@
 {{ .Values.nameOverride | default .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+
 {{- /*
   prefect-server.componentName:
     Infers the name for a component. The component name is determined by:
@@ -38,6 +39,26 @@
 {{- $component := .componentName | default $parent | default $file -}}
 {{ $component }}
 {{- end }}
+
+
+{{/*
+  prefect-server.annotations:
+    Infers the annotations for a component merging both global
+    and local values
+*/}}
+{{- define "prefect-server.annotations" -}}
+{{- $atns := .Values.annotations -}}
+{{- $component_config := get .Values (include "prefect-server.componentName" .) -}}
+{{/* Check if the component exists before getting annotations */}}
+{{- if ne (typeOf $component_config) "string" -}}
+  {{- $component_atns := $component_config.annotations -}}
+  {{- $atns = merge $component_atns $atns -}}
+{{- end -}}
+{{- if $atns -}}
+annotations:
+  {{- $atns | toYaml | nindent 2 }}
+{{ end -}}
+{{- end -}}
 
 
 {{- /*

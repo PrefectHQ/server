@@ -3,11 +3,8 @@ kind: Service
 metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
-    {{- include "prefect-server.commonLabels" . | nindent 4 }}
-  {{- if .Values.hasura.annotations -}}
-  annotations:
-    {{ toYaml .Values.hasura.annotations }}
-  {{- end }}
+    {{- include "prefect-server.commonLabels" . | nindent 4 -}}
+  {{- include "prefect-server.annotations" . | nindent 2 -}}
 spec:
   type: {{ .Values.hasura.service.type }}
   ports:

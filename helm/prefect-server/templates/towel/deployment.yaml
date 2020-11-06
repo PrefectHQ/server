@@ -4,10 +4,7 @@ metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
-  {{- if .Values.towel.annotations -}}
-  annotations:
-    {{ toYaml .Values.towel.annotations }}
-  {{- end }}
+  {{- include "prefect-server.annotations" . | nindent 2 -}}
 spec:
   replicas: {{ .Values.towel.replicaCount }}
   selector:

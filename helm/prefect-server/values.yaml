@@ -19,7 +19,9 @@ labels: {}
 matchLabels: {}
 
 # annotations to merge into all object configurations
-# TODO: These are not merged into components yet
+# NOTE: These will not apply to the postgresql subchart
+# and must be defined within `postgresql` as well if that
+# is desired
 annotations: null
 
 # fqdnSuffix determines the string appended to names when
@@ -132,7 +134,7 @@ hasura:
     type: ClusterIP
 
   labels: {}
-  annotations: {}
+  annotations: []
   replicaCount: 1
   podSecurityContext: {}
   securityContext: {}
