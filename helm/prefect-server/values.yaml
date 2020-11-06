@@ -69,9 +69,13 @@ postgresql:
 
   # persistence enables a PVC that stores the database between
   # deployments. If making changes to the database deployment, this
-  # PVC will need to be deleted for database changes to take effect
+  # PVC will need to be deleted for database changes to take effect.
+  # This is especially notable when the authentication password
+  # changes on redeploys.
+  # This is disabled by default because we do not recommend using
+  # the subchart deployment for production deployments.
   persistence:
-    enabled: true
+    enabled: false
     size: 8Gi
 
   initdbUser: postgres
