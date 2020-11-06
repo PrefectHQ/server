@@ -1,28 +1,28 @@
-1. Get the application UI URL by running these commands:
+{{- if contains "LoadBalancer" .Values.ui.service.type }}
+ {{- $ui := include "prefect-server.nameField" (merge (dict "componentName" "ui") .) -}}
+
+Run the following command to get the UI URL:
+
+  HOST=$( \
+    kubectl get svc \
+    --namespace {{ .Release.Namespace }} \
+    --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
+    {{ $ui }} \
+  ) \
+  && echo "UI available at: http://$HOST:{{ .Values.ui.service.port |  default .Values.ui.port }}"
+
+NOTE: It may take a few minutes for the LoadBalancer IP to be available. 
+      You can watch the status of by running:
+        kubectl get --namespace {{ .Release.Namespace }} svc -w {{ $ui }}
+
+{{- else -}}
+
+The UI has been deployed as a non-default service type '{{ .Values.ui.service.type }}' and will not be immediately accessible.
+Please contact your Kubernetes administrator for help getting access.
+
+{{- end }}
+
 {{/*
-
-
-{{- if .Values.ui.ingress.enabled }}
-{{- range $host := .Values.ui.ingress.hosts }}
-  {{- range .paths }}
-  http{{ if $.Values.ui.ingress.tls }}s{{ end }}://{{ $host.host }}{{ . }}
-  {{- end }}
-{{- end }}
-{{- else if contains "NodePort" .Values.ui.service.type }}
-  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "prefect-server.fullname" . }}-ui)
-  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
-  echo http://$NODE_IP:$NODE_PORT
-{{- else if contains "LoadBalancer" .Values.ui.service.type }}
-     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
-           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "prefect-server.fullname" . }}-ui'
-  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "prefect-server.fullname" . }}-ui --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-  echo http://$SERVICE_IP:{{ .Values.ui.service.port }}
-{{- else if contains "ClusterIP" .Values.ui.service.type }}
-  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "prefect-server.name" . }}-ui,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
-  echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:80
-{{- end }}
-
 2. Get the application graphql URL by running these commands:
 {{- if .Values.apollo.ingress.enabled }}
 {{- range $host := .Values.apollo.ingress.hosts }}
