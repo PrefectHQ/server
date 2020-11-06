@@ -46,7 +46,7 @@ spec:
                 {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
             - name: PREFECT_SERVER__HASURA__HOST
               value: {{ include "prefect-server.hasura-hostname" . }}
-            {{- (include "prefect.env-config" .) | nindent 12 }}
+            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
           {{- with .Values.graphql.init.resources -}}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -73,7 +73,7 @@ spec:
                 {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}            
             - name: PREFECT_SERVER__HASURA__HOST
               value: {{ include "prefect-server.hasura-hostname" . }}
-            {{- (include "prefect.env-config" .) | nindent 12 }}
+            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.graphql.port }}

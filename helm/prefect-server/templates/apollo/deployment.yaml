@@ -49,7 +49,7 @@ spec:
               value: "http://{{ include "prefect-server.graphql-hostname" . }}"
             - name: GRAPHQL_SERVICE_PORT
               value: {{ .Values.graphql.port | quote }}
-            {{- (include "prefect.env-config" .) | nindent 12 }}
+            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.apollo.port }}
