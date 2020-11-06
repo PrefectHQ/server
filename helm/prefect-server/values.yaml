@@ -47,7 +47,7 @@ postgresql:
   # `existingSecret` is not set. This is the password for
   # `postgresqlUsername` and will be set within the secret at
   # the key `postgresql-password`
-  postgresqlPassword: password
+  # postgresqlPassword: use-a-strong-password
 
   # servicePort configures the port that the database should be
   # accessed at
