@@ -1,7 +1,7 @@
 {{- if contains "LoadBalancer" .Values.ui.service.type }}
  {{- $ui := include "prefect-server.nameField" (merge (dict "componentName" "ui") .) -}}
 
-Run the following command to get the UI URL:
+- Run the following command to get the UI URL:
 
   HOST=$( \
     kubectl get svc \
@@ -11,9 +11,8 @@ Run the following command to get the UI URL:
   ) \
   && echo "UI available at: http://$HOST:{{ .Values.ui.service.port |  default .Values.ui.port }}"
 
-NOTE: It may take a few minutes for the LoadBalancer IP to be available. 
-      You can watch the status of by running:
-        kubectl get --namespace {{ .Release.Namespace }} svc -w {{ $ui }}
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available. 
+        You can watch the status of by running: kubectl get --namespace {{ .Release.Namespace }} svc -w {{ $ui }}
 
 {{- else -}}
 
