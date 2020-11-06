@@ -1,34 +1,36 @@
 # prefect-server configuration
 
-
-# image is configuration for all prefect images
+# image provides configuration for all prefect images
+# this notably excludes the hasura image
 image:
   version: "latest"
   pullPolicy: IfNotPresent
 
-# imagePullSecrets is configuration to reference the k8s Secret resources the
-# Helm chart's pods can get credentials from to pull their images.
+# imagePullSecrets provides configuration to reference the k8s Secret
+# resources the Helm chart's pods can get credentials from to pull
+# their images.
 imagePullSecrets: []
 
 # labels to merge into all object configurations
 labels: {}
 
-# matchLabels defines extra selection labels to merge into all  
+# matchLabels defines extra selection labels to merge into all
 # object configurations
 matchLabels: {}
 
 # annotations to merge into all object configurations
+# TODO: These are not merged into components yet
 annotations: null
 
-# fqdnSuffix determines the string appended to names when 
-# determining the fully qualified domain name of services for 
+# fqdnSuffix determines the string appended to names when
+# determining the fully qualified domain name of services for
 # internal communication
 fqdnSuffix: "svc.cluster.local"
 
 # postgresql configures the backing database
 # NOTE: the variables names must remain as is to match the
 # bitnami subchart even if the bitnami subchart is not being
-# used, these variables are used to create the connection 
+# used, these variables are used to create the connection
 # string
 postgresql:
   postgresqlDatabase: prefect
@@ -37,13 +39,13 @@ postgresql:
   # existingSecret configures which secret should be referenced
   # for access to the database. If null and `useSubChart` is
   # enabled, the secret will be generated. If using an external
-  # postgres service, this value should be set to a secret 
+  # postgres service, this value should be set to a secret
   # containing the key `postgresql-password`
   existingSecret: null
 
   # postgresqlPassword sets the password to be used if
-  # `existingSecret` is not set. This is the password for 
-  # `postgresqlUsername` and will be set within the secret at 
+  # `existingSecret` is not set. This is the password for
+  # `postgresqlUsername` and will be set within the secret at
   # the key `postgresql-password`
   postgresqlPassword: password
 
@@ -65,10 +67,15 @@ postgresql:
   # postgresql configuration below here is only used if using
   # the subchart
 
+  # persistence enables a PVC that stores the database between
+  # deployments. If making changes to the database deployment, this
+  # PVC will need to be deleted for database changes to take effect
   persistence:
     enabled: true
     size: 8Gi
+
   initdbUser: postgres
+
   initdbScripts:
     create_pgcrypto.sql: |
       -- create pgcrypto extension, required for UUID
@@ -96,9 +103,15 @@ prefectConfig:
   telemetry:
     enabled: "true"
 
+
+# hasura configures the Prefect hasura deployment and service
+# which creates a graphql api from the postgres database
 hasura:
   port: 3000
-  nameOverride: null
+
+  # hasura.image configures the docker image used for hasura
+  # and is the only image in the chart that is not hosted by
+  # Prefect
   image:
     repository: hasura/graphql-engine
     version: v1.3.0
@@ -107,7 +120,11 @@ hasura:
 
   options:
     queryPlanCacheSize: "100"
+
   service:
+    # type defines the service type and defaults to ClusterIP
+    # because this service does not need to be exposed outside
+    # the cluster
     type: ClusterIP
 
   labels: {}
@@ -120,8 +137,14 @@ hasura:
   tolerations: []
   affinity: {}
 
+
+# graphql configures the Prefect graphql deployment and service
+# which provides a python graphql server on starlette
 graphql:
   port: 4201
+
+  # containerPort is currently hardcoded in the container and
+  # should not be changed (?)
   containerPort: 3000
 
   image:
@@ -145,6 +168,72 @@ graphql:
   init:
     resources: {}
 
+# apollo configures the Prefect apollo deployment and service
+# which provides a unified graphql schema for users and the UI
+# to interact with
+apollo:
+  port: 4200
+  image:
+    repository: prefecthq/apollo
+    version: null
+    pullPolicy: null
+    pullSecrets: []
+  options:
+    telemetryEnabled: true
+
+  service:
+    # type defines the service type and defaults to LoadBalancer
+    # to expose the apollo service to users and the UI.
+    type: LoadBalancer
+    # port allows specification of a service port different than
+    # the value at apollo.port
+    port: null
+
+  labels: {}
+  annotations: null
+  replicaCount: 1
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ui configures the Prefect ui deployment and service
+ui:
+  port: 8080
+  image:
+    repository: prefecthq/ui
+    version: null
+    pullPolicy: null
+    pullSecrets: []
+
+  # apolloApiUrl defines the default gateway to the Apollo
+  # GraphQL server. This location must be accessible by the
+  # user of the API because the browser is making requests
+  # (not the ui server)
+  apolloApiUrl: http://localhost:4200/graphql
+
+  service:
+    # type defines the service type and defaults to LoadBalancer
+    # to expose the ui service to users and the UI.
+    type: LoadBalancer
+    # port allows specification of a service port different than
+    # the value at ui.port
+    port: null
+
+  labels: {}
+  annotations: null
+  replicaCount: 1
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# towel configures the Prefect towel deployment which provides
+# a group of useful services
 towel:
   image:
     repository: prefecthq/server
@@ -165,64 +254,13 @@ towel:
   tolerations: []
   affinity: {}
 
-apollo:
-  port: 4200
-  image: 
-    repository: prefecthq/apollo
-    version: null
-    pullPolicy: null
-    pullSecrets: []
-  options:
-    telemetryEnabled: true
-  service:
-    type: LoadBalancer
-    port: 4200
-
-  labels: {}
-  annotations: null
-  replicaCount: 1
-  podSecurityContext: {}
-  securityContext: {}
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-
-ui:
-  port: 8080
-  image: 
-    repository: prefecthq/ui
-    version: null
-    pullPolicy: null
-    pullSecrets: []
-
-  # apolloApiUrl defines the default gateway to the Apollo
-  # GraphQL server. This location must be accessible by the
-  # user of the API because the browser is making requests
-  # (not the ui server)
-  apolloApiUrl: http://localhost:4200/graphql
-
-  service:
-    type: LoadBalancer
-    port: 8080
-
-  labels: {}
-  annotations: null
-  replicaCount: 1
-  podSecurityContext: {}
-  securityContext: {}
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-
 serviceAccount:
   # create specifies whether a service account should be created to manage
   # the prefect-server infrastructure
   create: true
-  
+
   # name sets the name of the service account to use
-  # If not set and create is true, a name is generated using the 
+  # If not set and create is true, a name is generated using the
   # prefect-server.nameField template
   name: null
 

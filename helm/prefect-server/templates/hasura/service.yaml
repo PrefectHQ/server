@@ -11,7 +11,7 @@ metadata:
 spec:
   type: {{ .Values.hasura.service.type }}
   ports:
-    - port: {{ .Values.hasura.port }}
+    - port: {{ .Values.hasura.service.port | default .Values.hasura.port }}
       targetPort: http
       protocol: TCP
       name: http

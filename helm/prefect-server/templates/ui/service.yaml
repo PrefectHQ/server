@@ -11,7 +11,7 @@ metadata:
 spec:
   type: {{ .Values.ui.service.type }}
   ports:
-    - port: {{ .Values.ui.port }}
+    - port: {{ .Values.ui.service.port | default .Values.ui.port }}
       targetPort: http
       protocol: TCP
       name: http
