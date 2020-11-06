@@ -121,9 +121,3 @@ node_modules/
 
 # profilng
 /prof
-
-# devspace (during helm chart development)
-devspace.yaml
-
-# Ignore DevSpace cache and log folder
-.devspace/
