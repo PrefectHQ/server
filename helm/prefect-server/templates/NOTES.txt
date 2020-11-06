@@ -1,47 +1,48 @@
 {{- if contains "LoadBalancer" .Values.ui.service.type }}
- {{- $ui := include "prefect-server.nameField" (merge (dict "componentName" "ui") .) -}}
+{{- $ui := include "prefect-server.nameField" (merge (dict "componentName" "ui") .) }}
 
 - Run the following command to get the UI URL:
 
-  HOST=$( \
+  UI_HOST=$( \
     kubectl get svc \
     --namespace {{ .Release.Namespace }} \
     --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
     {{ $ui }} \
   ) \
-  && echo "UI available at: http://$HOST:{{ .Values.ui.service.port |  default .Values.ui.port }}"
+  && echo "UI available at: http://$UI_HOST:{{ .Values.ui.service.port |  default .Values.ui.port }}"
 
   NOTE: It may take a few minutes for the LoadBalancer IP to be available. 
         You can watch the status of by running: kubectl get --namespace {{ .Release.Namespace }} svc -w {{ $ui }}
 
 {{- else -}}
 
-The UI has been deployed as a non-default service type '{{ .Values.ui.service.type }}' and will not be immediately accessible.
+The UI has been deployed as a non-default service type '{{ .Values.ui.service.type }}' and may not be immediately accessible.
 Please contact your Kubernetes administrator for help getting access.
 
 {{- end }}
 
-{{/*
-2. Get the application graphql URL by running these commands:
-{{- if .Values.apollo.ingress.enabled }}
-{{- range $host := .Values.apollo.ingress.hosts }}
-  {{- range .paths }}
-  http{{ if $.Values.apollo.ingress.tls }}s{{ end }}://{{ $host.host }}{{ . }}
-  {{- end }}
-{{- end }}
-{{- else if contains "NodePort" .Values.apollo.service.type }}
-  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "prefect-server.fullname" . }}-apollo)
-  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
-  echo http://$NODE_IP:$NODE_PORT
-{{- else if contains "LoadBalancer" .Values.apollo.service.type }}
-     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
-           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "prefect-server.fullname" . }}-apollo'
-  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "prefect-server.fullname" . }}-apollo --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-  echo http://$SERVICE_IP:{{ .Values.apollo.service.port }}
-{{- else if contains "ClusterIP" .Values.apollo.service.type }}
-  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "prefect-server.name" . }}-apollo,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
-  echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:80
+{{- if contains "LoadBalancer" .Values.apollo.service.type }}
+{{- $apollo := include "prefect-server.nameField" (merge (dict "componentName" "apollo") .) }}
+
+- Run the following command to get the Apollo GraphQL API URL:
+
+  API_HOST=$( \
+      kubectl get svc \
+      --namespace {{ .Release.Namespace }} \
+      --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
+      {{ $apollo }} \
+    ) \
+    && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port |  default .Values.apollo.port }}/graphql"
+
+{{- else -}}
+
+The API has been deployed as a non-default service type '{{ .Values.apollo.service.type }}' and may not be immediately accessible.
+Please contact your Kubernetes administrator for help getting access.
+
 {{- end }}
 
-*/}}
+- The UI has been configured to point to '{{ .Values.ui.apolloApiUrl }}' by default. 
+  - The API location you retrieved above should match this url. 
+  - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect. 
+  - The location can also be changed within the UI itself.
+  - The API must be accessible from the the user's machine for the UI to work
