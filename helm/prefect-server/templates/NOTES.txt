@@ -27,12 +27,12 @@ Please contact your Kubernetes administrator for help getting access.
 - Run the following command to get the Apollo GraphQL API URL:
 
   API_HOST=$( \
-      kubectl get svc \
-      --namespace {{ .Release.Namespace }} \
-      --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
-      {{ $apollo }} \
-    ) \
-    && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port |  default .Values.apollo.port }}/graphql"
+    kubectl get svc \
+    --namespace {{ .Release.Namespace }} \
+    --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
+    {{ $apollo }} \
+  ) \
+  && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port |  default .Values.apollo.port }}/graphql"
 
 {{- else -}}
 
