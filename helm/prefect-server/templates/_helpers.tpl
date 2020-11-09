@@ -43,16 +43,18 @@
 
 {{/*
   prefect-server.annotations:
-    Infers the annotations for a component merging both global
+    Provides the annotations for a component merging both global
     and local values
 */}}
 {{- define "prefect-server.annotations" -}}
 {{- $atns := .Values.annotations -}}
 {{- $component_config := get .Values (include "prefect-server.componentName" .) -}}
 {{/* Check if the component exists before getting annotations */}}
-{{- if ne (typeOf $component_config) "string" -}}
+{{- if eq (typeOf $component_config | toString) "map[string]interface {}" -}}
   {{- $component_atns := $component_config.annotations -}}
-  {{- $atns = merge $component_atns $atns -}}
+  {{- if eq (typeOf $component_atns | toString) "map[string]interface {}" -}}
+    {{- $atns = merge $component_atns $atns -}}
+  {{- end -}}
 {{- end -}}
 {{- if $atns -}}
 annotations:
@@ -104,28 +106,24 @@ app.kubernetes.io/component: {{ include "prefect-server.componentName" . }}
 
 {{- /*
   prefect-server.imagePullSecrets
-    Augments passed .pullSecrets with $.Values.imagePullSecrets
+    Provides the imagePullSecerts for a component merging global values
+    from `.Values.imagePullSecrets` with `.Values.<component>.image.pullSecrets`
 */}}
 {{- define "prefect-server.imagePullSecrets" -}}
-{{- /* Populate $_.list with all relevant entries */}}
-{{- $_ := dict "list" (concat .image.pullSecrets .root.Values.imagePullSecrets | uniq) }}
+{{- $pullSecrets := .Values.imagePullSecrets -}}
+
+{{- $component_config := get .Values (include "prefect-server.componentName" .) -}}
+{{/* Check if the component exists and concat secrets */}}
+{{- if eq (typeOf $component_config | toString) "map[string]interface {}" -}}
+  {{- $component_pullSecrets := $component_config.image.pullSecrets -}}
+  {{- $pullSecrets = (concat $component_pullSecrets $pullSecrets) | uniq -}}
+{{- end -}}
 
 {{- /* Decide if something should be written */}}
-{{- if not (eq ($_.list | toJson) "[]") }}
+{{- if ne ($pullSecrets | toJson) "[]" }}
+imagePullSecrets: {{ $pullSecrets | toJson }}
+{{ end -}}
 
-{{- /* Process the $_.list where strings become dicts with a name key and the
-strings become the name keys' values into $_.res */}}
-{{- $_ := set $_ "res" list }}
-{{- range $_.list }}
-{{- if eq (typeOf .) "string" }}
-{{- $__ := set $_ "res" (append $_.res (dict "name" .)) }}
-{{- else }}
-{{- $__ := set $_ "res" (append $_.res .) }}
-{{- end }}
-{{- end }}
-{{- /* Write the results */}}
-{{- $_.res | toJson }}
-{{- end }}
 {{- end }}
 
 

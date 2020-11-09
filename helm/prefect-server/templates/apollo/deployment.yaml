@@ -15,9 +15,7 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
     spec:
-      {{- with include "prefect-server.imagePullSecrets" (dict "root" . "image" .Values.apollo.image) }}
-      imagePullSecrets: {{ . }}
-      {{- end }}
+      {{- include "prefect-server.imagePullSecrets" . | nindent 6 -}}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.apollo.podSecurityContext }}
       securityContext:
