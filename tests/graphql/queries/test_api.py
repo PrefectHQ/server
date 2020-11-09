@@ -9,6 +9,7 @@ QUERY = """
             backend
             mode
             version
+            core_version
             release_timestamp
         }
     }
@@ -23,6 +24,11 @@ async def test_backend(run_query):
 async def test_mode(run_query):
     result = await run_query(query=QUERY)
     assert result.data.api.mode == "normal"
+
+
+async def test_core_version(run_query):
+    result = await run_query(query=QUERY)
+    assert result.data.api.core_version == prefect.__version__
 
 
 async def test_server_version_picks_up_dunder_version_if_no_server_env_var(
