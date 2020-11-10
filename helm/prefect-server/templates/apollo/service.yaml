@@ -4,7 +4,7 @@ metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
-  {{- include "prefect-server.annotations" . | nindent 2 -}}
+  {{- include "prefect-server.annotations" . | nindent 2 }}
 spec:
   type: {{ .Values.apollo.service.type }}
   ports:

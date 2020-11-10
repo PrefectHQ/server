@@ -43,8 +43,9 @@
 
 {{/*
   prefect-server.annotations:
-    Provides the annotations for a component merging both global
-    and local values
+    Provides the annotations for a component merging both global and local 
+    values where the local values are pulled from the config for the
+    component in the current scope inferred by "prefect-server-componentName"
 */}}
 {{- define "prefect-server.annotations" -}}
 {{- $atns := .Values.annotations -}}
@@ -58,8 +59,8 @@
 {{- end -}}
 {{- if $atns -}}
 annotations:
-  {{- $atns | toYaml | nindent 2 }}
-{{ end -}}
+  {{- $atns | toYaml | nindent 2 -}}
+{{- end -}}
 {{- end -}}
 
 
