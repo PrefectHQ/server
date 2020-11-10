@@ -1,7 +1,7 @@
 {{- if contains "LoadBalancer" .Values.ui.service.type }}
 {{- $ui := include "prefect-server.nameField" (merge (dict "componentName" "ui") .) }}
 
-- Run the following command to get the UI URL:
+#1 Run the following command to get the UI URL:
 
   UI_HOST=$( \
     kubectl get svc \
@@ -24,7 +24,7 @@ Please contact your Kubernetes administrator for help getting access.
 {{- if contains "LoadBalancer" .Values.apollo.service.type }}
 {{- $apollo := include "prefect-server.nameField" (merge (dict "componentName" "apollo") .) }}
 
-- Run the following command to get the Apollo GraphQL API URL:
+#2 Run the following command to get the Apollo GraphQL API URL:
 
   API_HOST=$( \
     kubectl get svc \
@@ -41,8 +41,8 @@ Please contact your Kubernetes administrator for help getting access.
 
 {{- end }}
 
-- The UI has been configured to point to '{{ .Values.ui.apolloApiUrl }}' by default. 
-  - The API location you retrieved above should match this url. 
-  - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect. 
-  - The location can also be changed within the UI itself.
+#3 The UI has been configured to point to '{{ .Values.ui.apolloApiUrl }}' by default. 
+  - The API location you retrieved in #2 should match this url
+  - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect
+  - The location can also be changed within the UI itself per user
   - The API must be accessible from the the user's machine for the UI to work
