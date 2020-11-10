@@ -46,3 +46,6 @@ Please contact your Kubernetes administrator for help getting access.
   - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect
   - The location can also be changed within the UI itself per user
   - The API must be accessible from the the user's machine for the UI to work
+
+#4 You or your admin will likely have to create a tenant before the dashboard in the UI will work. 
+The UI home page should have a 'Create tenant' tab to walk you through this process.
