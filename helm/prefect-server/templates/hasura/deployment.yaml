@@ -19,7 +19,7 @@ spec:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: hasura
     spec:
-      {{- include "prefect-server.imagePullSecrets" . | nindent 6 -}}
+      imagePullSecrets: {{ concat .Values.hasura.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.hasura.podSecurityContext }}
       securityContext:

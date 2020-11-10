@@ -81,30 +81,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 
-{{- /*
-  prefect-server.imagePullSecrets
-    Provides the imagePullSecerts for a component merging global values
-    from `.Values.imagePullSecrets` with `.Values.<component>.image.pullSecrets`
-    where <component> is inferred from the scope by "prefect-server.componentName"
-*/}}
-{{- define "prefect-server.imagePullSecrets" -}}
-{{- $pullSecrets := .Values.imagePullSecrets -}}
-
-{{- $component_config := get .Values (include "prefect-server.componentName" .) -}}
-{{/* Check if the component exists and concat secrets */}}
-{{- if eq (typeOf $component_config | toString) "map[string]interface {}" -}}
-  {{- $component_pullSecrets := $component_config.image.pullSecrets -}}
-  {{- $pullSecrets = (concat $component_pullSecrets $pullSecrets) | uniq -}}
-{{- end -}}
-
-{{- /* Decide if something should be written */}}
-{{- if ne ($pullSecrets | toJson) "[]" }}
-imagePullSecrets: {{ $pullSecrets | toJson }}
-{{ end -}}
-
-{{- end }}
-
-
 {{/*
   prefect-server.serviceAccountName: 
     Create the name of the service account to use

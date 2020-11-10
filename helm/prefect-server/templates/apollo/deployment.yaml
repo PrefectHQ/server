@@ -19,7 +19,7 @@ spec:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: apollo
     spec:
-      {{- include "prefect-server.imagePullSecrets" . | nindent 6 -}}
+      imagePullSecrets: {{ concat .Values.apollo.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.apollo.podSecurityContext }}
       securityContext:
