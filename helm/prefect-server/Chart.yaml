@@ -1,6 +1,6 @@
 apiVersion: v2
 name: prefect-server
-description: Prefect server application bundle
+description: Prefect Server application bundle
 type: application
 version: "0.1.0"
 appVersion: "0.1.0"

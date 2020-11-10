@@ -19,6 +19,7 @@ See comments in `values.yaml`.
 
 The database can be deployed by this chart or be provided externally. 
 We strongly recommend that you do not deploy a production database using this chart, the provided database is primarily for testing purposes.
+The provided database will **not** persist your data by default.
 
 An external database will require some minimal setup for Hasura.
 The following needs to be run or the user should have permissions to execute it and Hasura will run it on startup:
