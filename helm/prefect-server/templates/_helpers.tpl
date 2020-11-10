@@ -153,7 +153,7 @@ imagePullSecrets: {{ $pullSecrets | toJson }}
 {{- if .Values.postgresql.useSubChart -}}
   {{- $subchart_overrides := .Values.postgresql -}}
   {{- $name := include "postgresql.fullname" (dict "Values" $subchart_overrides "Chart" (dict "Name" "postgresql") "Release" .Release) -}}
-  {{- printf "%s.%s.%s" $name .Release.Namespace .Values.fqdnSuffix -}}
+  {{- printf "%s.%s" $name .Release.Namespace -}}
 {{- else -}}
   {{- .Values.postgresql.externalHostname -}}
 {{- end -}}

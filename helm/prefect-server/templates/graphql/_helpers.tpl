@@ -4,7 +4,7 @@
     that need this url do not insert their name instead
 */}}
 {{- $name := (include "prefect-server.nameField" (merge (dict "componentName" "graphql") .)) -}}
-{{ printf "%s.%s.%s" $name .Release.Namespace .Values.fqdnSuffix }}
+{{ printf "%s.%s" $name .Release.Namespace }}
 {{- end -}}
 
 {{- define "prefect-server.graphql-api-url" -}}

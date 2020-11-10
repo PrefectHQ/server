@@ -12,15 +12,9 @@ image:
 imagePullSecrets: []
 
 # annotations to merge into all object configurations
-# NOTE: These will not apply to the postgresql subchart
-# and must be defined within `postgresql` as well if that
-# is desired
+# NOTE: These will not apply to the postgresql subchart and must be 
+# defined within `postgresql` as well if that is desired
 annotations: {}
-
-# fqdnSuffix determines the string appended to names when
-# determining the fully qualified domain name of services for
-# internal communication
-fqdnSuffix: "svc.cluster.local"
 
 # postgresql configures the backing database
 # NOTE: the variables names must remain as is to match the
