@@ -12,12 +12,10 @@ spec:
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: hasura
   template:
     metadata:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
-        app.kubernetes.io/component: hasura
     spec:
       imagePullSecrets: {{ concat .Values.hasura.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}

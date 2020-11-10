@@ -12,12 +12,10 @@ spec:
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/component: apollo
   template:
     metadata:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
-        app.kubernetes.io/component: apollo
     spec:
       imagePullSecrets: {{ concat .Values.apollo.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
