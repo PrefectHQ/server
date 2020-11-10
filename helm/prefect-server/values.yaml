@@ -4,7 +4,6 @@
 # this notably excludes the hasura image
 image:
   tag: "latest"
-  pullPolicy: IfNotPresent
 
 # imagePullSecrets provides configuration to reference the k8s Secret
 # resources the Helm chart's pods can get credentials from to pull
@@ -108,7 +107,7 @@ hasura:
   image:
     name: hasura/graphql-engine
     tag: v1.3.0
-    pullPolicy: null
+    pullPolicy: IfNotPresent
     pullSecrets: []
 
   options:
@@ -139,7 +138,7 @@ graphql:
   image:
     name: prefecthq/server
     tag: null
-    pullPolicy: null
+    pullPolicy: IfNotPresent
     pullSecrets: []
 
   service:
@@ -169,7 +168,7 @@ apollo:
   image:
     name: prefecthq/apollo
     tag: null
-    pullPolicy: null
+    pullPolicy: IfNotPresent
     pullSecrets: []
   options:
     telemetryEnabled: true
@@ -196,7 +195,7 @@ ui:
   image:
     name: prefecthq/ui
     tag: null
-    pullPolicy: null
+    pullPolicy: IfNotPresent
     pullSecrets: []
 
   # apolloApiUrl defines the default gateway to the Apollo
@@ -227,7 +226,7 @@ towel:
   image:
     name: prefecthq/server
     tag: null
-    pullPolicy: null
+    pullPolicy: IfNotPresent
     pullSecrets: []
 
   labels: {}

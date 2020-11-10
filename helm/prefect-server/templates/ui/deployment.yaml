@@ -32,7 +32,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.ui.image.name }}:{{ .Values.ui.image.tag | default .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.ui.image.pullPolicy | default .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy  }}
           command: 
             - "/intercept.sh"
           env:

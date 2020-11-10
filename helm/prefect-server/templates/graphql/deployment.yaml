@@ -29,7 +29,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.graphql.image.name }}:{{ .Values.graphql.image.tag | default .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.graphql.image.pullPolicy | default .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.graphql.image.pullPolicy  }}
           command:
             - "bash"
             - "-c"
@@ -54,7 +54,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.graphql.image.name }}:{{ .Values.graphql.image.tag | default .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.graphql.image.pullPolicy | default .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.graphql.image.pullPolicy  }}
           command: 
             - bash 
             - "-c" 

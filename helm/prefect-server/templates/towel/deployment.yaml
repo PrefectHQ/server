@@ -32,7 +32,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.towel.image.name }}:{{ .Values.towel.image.tag | default .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.towel.image.pullPolicy | default .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.towel.image.pullPolicy  }}
           command:
             - python 
             - src/prefect_server/services/towel/__main__.py
