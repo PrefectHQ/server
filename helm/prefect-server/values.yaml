@@ -11,18 +11,11 @@ image:
 # their images.
 imagePullSecrets: []
 
-# labels to merge into all object configurations
-labels: {}
-
-# matchLabels defines extra selection labels to merge into all
-# object configurations
-matchLabels: {}
-
 # annotations to merge into all object configurations
 # NOTE: These will not apply to the postgresql subchart
 # and must be defined within `postgresql` as well if that
 # is desired
-annotations: null
+annotations: {}
 
 # fqdnSuffix determines the string appended to names when
 # determining the fully qualified domain name of services for
@@ -135,7 +128,7 @@ hasura:
     port: 3000
 
   labels: {}
-  annotations: []
+  annotations: {}
   replicas: 1
   podSecurityContext: {}
   securityContext: {}
@@ -160,7 +153,7 @@ graphql:
     port: 4201
 
   labels: {}
-  annotations: null
+  annotations: {}
   replicas: 1
   podSecurityContext: {}
   securityContext: {}
@@ -168,7 +161,11 @@ graphql:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+
   init:
+    # init.resources configures resources for the initContainer
+    # which upgrades the database
     resources: {}
 
 # apollo configures the Prefect apollo deployment and service
@@ -190,7 +187,7 @@ apollo:
     port: 4200
 
   labels: {}
-  annotations: null
+  annotations: {}
   replicas: 1
   podSecurityContext: {}
   securityContext: {}
@@ -221,7 +218,7 @@ ui:
     port: 8080
 
   labels: {}
-  annotations: null
+  annotations: {}
   replicas: 1
   podSecurityContext: {}
   securityContext: {}
@@ -240,7 +237,7 @@ towel:
     pullSecrets: []
 
   labels: {}
-  annotations: null
+  annotations: {}
   replicas: 1
   podSecurityContext: {}
   securityContext: {}
@@ -250,8 +247,8 @@ towel:
   affinity: {}
 
 serviceAccount:
-  # create specifies whether a service account should be created to manage
-  # the prefect-server infrastructure
+  # create specifies whether a service account should be created to be
+  # associated with the prefect-server infrastructure
   create: true
 
   # name sets the name of the service account to use
