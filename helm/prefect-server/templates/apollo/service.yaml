@@ -4,6 +4,7 @@ metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: apollo
   annotations:
     {{- merge .Values.apollo.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
