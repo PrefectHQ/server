@@ -180,8 +180,8 @@ graphql:
 apollo:
   port: 4200
   image:
-    repository: prefecthq/apollo
-    version: null
+    name: prefecthq/apollo
+    tag: null
     pullPolicy: null
     pullSecrets: []
   options:
@@ -209,8 +209,8 @@ apollo:
 ui:
   port: 8080
   image:
-    repository: prefecthq/ui
-    version: null
+    name: prefecthq/ui
+    tag: null
     pullPolicy: null
     pullSecrets: []
 
@@ -242,8 +242,8 @@ ui:
 # a group of useful services
 towel:
   image:
-    repository: prefecthq/server
-    version: null
+    name: prefecthq/server
+    tag: null
     pullPolicy: null
     pullSecrets: []
 
@@ -269,4 +269,3 @@ serviceAccount:
   # If not set and create is true, a name is generated using the
   # prefect-server.nameField template
   name: null
-
