@@ -119,8 +119,8 @@ hasura:
   # and is the only image in the chart that is not hosted by
   # Prefect
   image:
-    repository: hasura/graphql-engine
-    version: v1.3.0
+    name: hasura/graphql-engine
+    tag: v1.3.0
     pullPolicy: null
     pullSecrets: []
 
@@ -269,5 +269,4 @@ serviceAccount:
   # If not set and create is true, a name is generated using the
   # prefect-server.nameField template
   name: null
-
 
