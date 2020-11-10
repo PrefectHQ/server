@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "prefect-server.nameField" . }}
+  name: {{ include "prefect-server.nameField" (merge (dict "component" "hasura") .) }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
     app.kubernetes.io/component: hasura

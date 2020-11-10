@@ -3,7 +3,6 @@
 
   Includes:
     name
-    componentName
     nameField
     matchLabels
     commonLabels
@@ -12,13 +11,17 @@
     postgresql-connstr
     postgresql-secret-name
     postgresql-secret-ref
+
+  See also:
+    hasura/_helpers.tpl: Provides helpers to generate the hasura API path
+    graphql/_helpers.tpl: Provides helpers to generate the graphql API path
 */}}
 
 
 {{/*
   prefect-server.name:
     Define a name for the application as {chart-name}
-    NOTE: name fields are limited to 63 characters by the DNS naming spec
+    Name fields are limited to 63 characters by the DNS naming spec
 */}}
 {{- define "prefect-server.name" -}}
 {{ .Values.nameOverride | default .Chart.Name | trunc 63 | trimSuffix "-" }}
@@ -26,29 +29,15 @@
 
 
 {{- /*
-  prefect-server.componentName:
-    Infers the name for a component. The component name is determined by:
-    - 1: The provided scope's .componentName
-    - 2: The template's filename if living in the root folder
-    - 3: The template parent folder's name
-*/}}
-{{- define "prefect-server.componentName" -}}
-{{- $file := .Template.Name | base | trimSuffix ".yaml" -}}
-{{- $parent := .Template.Name | dir | base | trimPrefix "templates" -}}
-{{- $component := .componentName | default $parent | default $file -}}
-{{ $component }}
-{{- end }}
-
-
-{{- /*
-  prefect-server.nameField:
+  prefect-server.nameField(component, [namePrefix], [nameSuffix]):
     Populates a configuration name field's value by as {release}-{component}
-    where <component> is inferred from the scope by "prefect-server.componentName"
-    also allows prefix and suffix values to be passed
-    NOTE: name fields are limited to 63 characters by the DNS naming spec
+    Request the component name to be passed by adding to the context e.g.
+      include "prefect-server.nameField (merge (dict "component" "apollo") .)
+    Also allows prefix and suffix values to be passed
+    Name fields are limited to 63 characters by the DNS naming spec
 */}}
 {{- define "prefect-server.nameField" -}}
-{{- $name := print (.namePrefix | default "") (include "prefect-server.componentName" .) (.nameSuffix | default "") -}}
+{{- $name := print (.namePrefix | default "") ( .component ) (.nameSuffix | default "") -}}
 {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -86,7 +75,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 */}}
 {{- define "prefect-server.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{- $createName := include "prefect-server.nameField"  (merge (dict "componentName" "serviceaccount") .) -}}
+    {{- $createName := include "prefect-server.nameField" (merge (dict "component" "serviceaccount") .) -}}
     {{- .Values.serviceAccount.name | default $createName -}}
 {{- else -}}
     {{- .Values.serviceAccount.name | default "default" -}}

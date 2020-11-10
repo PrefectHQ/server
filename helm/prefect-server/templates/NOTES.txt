@@ -1,5 +1,5 @@
 {{- if contains "LoadBalancer" .Values.ui.service.type }}
-{{- $ui := include "prefect-server.nameField" (merge (dict "componentName" "ui") .) }}
+{{- $ui := include "prefect-server.nameField" (merge (dict "component" "ui") .) }}
 
 #1 Run the following command to get the UI URL:
 
@@ -22,7 +22,7 @@
 {{- end }}
 
 {{- if contains "LoadBalancer" .Values.apollo.service.type }}
-{{- $apollo := include "prefect-server.nameField" (merge (dict "componentName" "apollo") .) }}
+{{- $apollo := include "prefect-server.nameField" (merge (dict "component" "apollo") .) }}
 
 #2 Run the following command to get the Apollo GraphQL API URL:
 

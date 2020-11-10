@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "prefect-server.nameField" . }}
+  name: {{ include "prefect-server.nameField" (merge (dict "component" "graphql") .) }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
     app.kubernetes.io/component: graphql
