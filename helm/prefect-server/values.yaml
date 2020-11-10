@@ -3,7 +3,7 @@
 # image provides configuration for all prefect images
 # this notably excludes the hasura image
 image:
-  version: "latest"
+  tag: "latest"
   pullPolicy: IfNotPresent
 
 # imagePullSecrets provides configuration to reference the k8s Secret
@@ -155,8 +155,8 @@ graphql:
   containerPort: 3000
 
   image:
-    repository: prefecthq/server
-    version: null
+    name: prefecthq/server
+    tag: null
     pullPolicy: null
     pullSecrets: []
 
