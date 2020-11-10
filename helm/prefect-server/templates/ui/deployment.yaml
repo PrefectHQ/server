@@ -6,7 +6,7 @@ metadata:
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
   {{- include "prefect-server.annotations" . | nindent 2 -}}
 spec:
-  replicas: {{ .Values.ui.replicaCount }}
+  replicas: {{ .Values.ui.replicas }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}

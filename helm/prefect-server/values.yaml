@@ -135,7 +135,7 @@ hasura:
 
   labels: {}
   annotations: []
-  replicaCount: 1
+  replicas: 1
   podSecurityContext: {}
   securityContext: {}
   resources: {}
@@ -164,7 +164,7 @@ graphql:
 
   labels: {}
   annotations: null
-  replicaCount: 1
+  replicas: 1
   podSecurityContext: {}
   securityContext: {}
   resources: {}
@@ -197,7 +197,7 @@ apollo:
 
   labels: {}
   annotations: null
-  replicaCount: 1
+  replicas: 1
   podSecurityContext: {}
   securityContext: {}
   resources: {}
@@ -230,7 +230,7 @@ ui:
 
   labels: {}
   annotations: null
-  replicaCount: 1
+  replicas: 1
   podSecurityContext: {}
   securityContext: {}
   resources: {}
@@ -252,7 +252,7 @@ towel:
 
   labels: {}
   annotations: null
-  replicaCount: 1
+  replicas: 1
   podSecurityContext: {}
   securityContext: {}
   resources: {}
