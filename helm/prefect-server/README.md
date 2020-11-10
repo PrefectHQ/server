@@ -1,3 +1,5 @@
+**EXPERIMENTAL: This chart guarantees no compatability with future versions and is subject to change**
+
 # Prefect Server Helm Chart
 
 ## Usage
