@@ -133,7 +133,7 @@ imagePullSecrets: {{ $pullSecrets | toJson }}
 */}}
 {{- define "prefect-server.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{- $createName := include "prefect-server.nameField"  (merge (dict "componentName" "graphql") .) -}}
+    {{- $createName := include "prefect-server.nameField"  (merge (dict "componentName" "serviceaccount") .) -}}
     {{- .Values.serviceAccount.name | default $createName -}}
 {{- else -}}
     {{- .Values.serviceAccount.name | default "default" -}}
