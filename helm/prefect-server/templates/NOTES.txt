@@ -16,8 +16,8 @@
 
 {{- else -}}
 
-The UI has been deployed as a non-default service type '{{ .Values.ui.service.type }}' and may not be immediately accessible.
-Please contact your Kubernetes administrator for help getting access.
+#1 The UI has been deployed as a non-default service type '{{ .Values.ui.service.type }}' and may not be immediately accessible.
+   Please contact your Kubernetes administrator for help getting access.
 
 {{- end }}
 
@@ -36,8 +36,8 @@ Please contact your Kubernetes administrator for help getting access.
 
 {{- else -}}
 
-The API has been deployed as a non-default service type '{{ .Values.apollo.service.type }}' and may not be immediately accessible.
-Please contact your Kubernetes administrator for help getting access.
+#2 The API has been deployed as a non-default service type '{{ .Values.apollo.service.type }}' and may not be immediately accessible.
+   Please contact your Kubernetes administrator for help getting access.
 
 {{- end }}
 
@@ -48,4 +48,4 @@ Please contact your Kubernetes administrator for help getting access.
   - The API must be accessible from the the user's machine for the UI to work
 
 #4 You or your admin will likely have to create a tenant before the dashboard in the UI will work. 
-The UI home page should have a 'Create tenant' tab to walk you through this process.
+   The UI home page should have a 'Create tenant' tab to walk you through this process.
