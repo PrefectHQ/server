@@ -1,5 +1,13 @@
 # Changelog
 
+## November 10, 2020 <Badge text="beta" type="success" />
+
+Released on November 10, 2020.
+
+### Features
+
+- Add API for persisting and retrieving task run artifacts - [#121](https://github.com/PrefectHQ/server/pull/121)
+
 ## October 29, 2020 <Badge text="beta" type="success" />
 
 Released on October 29, 2020.
