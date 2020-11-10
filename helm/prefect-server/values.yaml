@@ -91,23 +91,24 @@ postgresql:
 
 # prefectConfig allows override of prefect_server/config.toml values
 # Values placed here will result in environment variable definitions
-# starting with "PREFECT_SERVER__" and will be passed to TODO
+# starting with "PREFECT_SERVER__" and will be passed to relevant
+# services
 prefectConfig:
-  env: "local"
-  debug: "false"
-  queued_runs_returned_limit: "25"
-  hasura:
-    execute_retry_seconds: "10"
-  logging:
-    level: "DEBUG"
-    format: "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
-  services:
-    scheduler:
-      scheduler_loop_seconds: "300"
-    lazarus:
-      resurrection_attempt_limit: "3"
-  telemetry:
-    enabled: "true"
+  # env: "local"
+  # debug: "false"
+  # queued_runs_returned_limit: "25"
+  # hasura:
+  #   execute_retry_seconds: "10"
+  # logging:
+  #   level: "DEBUG"
+  #   format: "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
+  # services:
+  #   scheduler:
+  #     scheduler_loop_seconds: "300"
+  #   lazarus:
+  #     resurrection_attempt_limit: "3"
+  # telemetry:
+  #   enabled: "true"
 
 
 # hasura configures the Prefect hasura deployment and service
