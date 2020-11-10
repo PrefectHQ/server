@@ -8,7 +8,7 @@ metadata:
 spec:
   type: {{ .Values.graphql.service.type }}
   ports:
-    - port: {{ .Values.graphql.port }}
+    - port: {{ .Values.graphql.service.port }}
       targetPort: http
       protocol: TCP
       name: http

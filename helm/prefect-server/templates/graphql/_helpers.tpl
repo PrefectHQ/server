@@ -9,12 +9,12 @@
 
 {{- define "prefect-server.graphql-api-url" -}}
 {{- $host := include "prefect-server.graphql-hostname" . -}}
-{{- $port := .Values.graphql.port | toString -}}
+{{- $port := "4201" -}}
 {{ printf "http://%s:%s/graphql/" $host $port }}
 {{- end -}}
 
 {{- define "prefect-server.graphql-health-url" -}}
 {{- $host := include "prefect-server.graphql-hostname" . -}}
-{{- $port := .Values.graphql.port | toString -}}
+{{- $port := "4201" -}}
 {{ printf "http://%s:%s/health" $host $port }}
 {{- end -}}

@@ -41,13 +41,12 @@ spec:
             - name: HASURA_GRAPHQL_ENABLE_CONSOLE
               value: "true"
             - name: HASURA_GRAPHQL_SERVER_PORT
-              value: {{ .Values.hasura.port | quote }}
+              value: "3000"
             - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
               value: {{ .Values.hasura.options.queryPlanCacheSize | quote }}
           ports:
             - name: http
-              # Note: This port technically differ from that in the config
-              containerPort: {{ .Values.hasura.port }}
+              containerPort: 3000
               protocol: TCP
           livenessProbe:
             httpGet:

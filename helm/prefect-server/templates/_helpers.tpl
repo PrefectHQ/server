@@ -261,11 +261,11 @@ secretKeyRef:
 - name: PREFECT_SERVER__HASURA__HOST
   value: {{ include "prefect-server.hasura-hostname" . }}
 - name: PREFECT_SERVER__HASURA__PORT
-  value: {{ .Values.hasura.port | quote }}
+  value: {{ .Values.hasura.service.port | quote }}
 - name: PREFECT_SERVER__SERVICES__APOLLO__PORT
-  value: {{ .Values.apollo.port | quote }}
+  value: {{ .Values.apollo.service.port | quote }}
 - name: PREFECT_SERVER__SERVICES__GRAPHQL__PORT
-  value: {{ .Values.graphql.port | quote }}
+  value: {{ .Values.graphql.service.port | quote }}
 {{- $args := (dict "prefix" "PREFECT_SERVER" "map" .Values.prefectConfig) -}}
 {{- include "env-unwrap" $args -}}
 {{- end }}

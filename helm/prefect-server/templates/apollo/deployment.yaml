@@ -43,11 +43,11 @@ spec:
             - name: GRAPHQL_SERVICE_HOST
               value: "http://{{ include "prefect-server.graphql-hostname" . }}"
             - name: GRAPHQL_SERVICE_PORT
-              value: {{ .Values.graphql.port | quote }}
+              value: "4201"
             {{- (include "prefect-server.envConfig" .) | nindent 12 }}
           ports:
             - name: http
-              containerPort: {{ .Values.apollo.port }}
+              containerPort: 4200
               protocol: TCP
           livenessProbe:
             httpGet:

@@ -71,7 +71,7 @@ spec:
             {{- (include "prefect-server.envConfig" .) | nindent 12 }}
           ports:
             - name: http
-              containerPort: {{ .Values.graphql.port }}
+              containerPort: 4201
               protocol: TCP
           livenessProbe:
             httpGet:

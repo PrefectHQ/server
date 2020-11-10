@@ -114,7 +114,6 @@ prefectConfig:
 # hasura configures the Prefect hasura deployment and service
 # which creates a graphql api from the postgres database
 hasura:
-  port: 3000
 
   # hasura.image configures the docker image used for hasura
   # and is the only image in the chart that is not hosted by
@@ -133,6 +132,7 @@ hasura:
     # because this service does not need to be exposed outside
     # the cluster
     type: ClusterIP
+    port: 3000
 
   labels: {}
   annotations: []
@@ -148,11 +148,6 @@ hasura:
 # graphql configures the Prefect graphql deployment and service
 # which provides a python graphql server on starlette
 graphql:
-  port: 4201
-
-  # containerPort is currently hardcoded in the container and
-  # should not be changed (?)
-  containerPort: 3000
 
   image:
     name: prefecthq/server
@@ -162,6 +157,7 @@ graphql:
 
   service:
     type: ClusterIP
+    port: 4201
 
   labels: {}
   annotations: null
@@ -179,7 +175,6 @@ graphql:
 # which provides a unified graphql schema for users and the UI
 # to interact with
 apollo:
-  port: 4200
   image:
     name: prefecthq/apollo
     tag: null
@@ -192,9 +187,7 @@ apollo:
     # type defines the service type and defaults to LoadBalancer
     # to expose the apollo service to users and the UI.
     type: LoadBalancer
-    # port allows specification of a service port different than
-    # the value at apollo.port
-    port: null
+    port: 4200
 
   labels: {}
   annotations: null
@@ -208,7 +201,7 @@ apollo:
 
 # ui configures the Prefect ui deployment and service
 ui:
-  port: 8080
+
   image:
     name: prefecthq/ui
     tag: null
@@ -225,9 +218,7 @@ ui:
     # type defines the service type and defaults to LoadBalancer
     # to expose the ui service to users and the UI.
     type: LoadBalancer
-    # port allows specification of a service port different than
-    # the value at ui.port
-    port: null
+    port: 8080
 
   labels: {}
   annotations: null
@@ -247,9 +238,6 @@ towel:
     tag: null
     pullPolicy: null
     pullSecrets: []
-
-  service:
-    type: ClusterIP
 
   labels: {}
   annotations: null

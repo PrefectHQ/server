@@ -36,7 +36,7 @@ spec:
               value: {{ .Values.ui.apolloApiUrl }}
           ports:
             - name: http
-              containerPort: {{ .Values.ui.port }}
+              containerPort: 8080
               protocol: TCP
           livenessProbe:
             httpGet:

@@ -9,7 +9,7 @@
     --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
     {{ $ui }} \
   ) \
-  && echo "UI available at: http://$UI_HOST:{{ .Values.ui.service.port |  default .Values.ui.port }}"
+  && echo "UI available at: http://$UI_HOST:{{ .Values.ui.service.port }}"
 
   NOTE: It may take a few minutes for the LoadBalancer IP to be available. 
         You can watch the status of by running: kubectl get --namespace {{ .Release.Namespace }} svc -w {{ $ui }}
@@ -32,7 +32,7 @@ Please contact your Kubernetes administrator for help getting access.
     --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
     {{ $apollo }} \
   ) \
-  && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port |  default .Values.apollo.port }}/graphql"
+  && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port }}/graphql"
 
 {{- else -}}
 
