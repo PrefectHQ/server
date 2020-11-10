@@ -27,7 +27,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.towel.image.repository }}:{{ .Values.towel.image.version | default .Values.image.version }}"
+          image: "{{ .Values.towel.image.name }}:{{ .Values.towel.image.tag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.towel.image.pullPolicy | default .Values.image.pullPolicy }}
           command:
             - python 

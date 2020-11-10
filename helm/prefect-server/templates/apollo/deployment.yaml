@@ -27,7 +27,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.apollo.image.repository }}:{{ .Values.apollo.image.version | default .Values.image.version }}"
+          image: "{{ .Values.apollo.image.name }}:{{ .Values.apollo.image.tag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.apollo.image.pullPolicy | default .Values.image.pullPolicy }}
           command:
             - bash

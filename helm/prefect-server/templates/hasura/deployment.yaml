@@ -27,7 +27,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: {{ .Values.hasura.image.repository }}:{{ .Values.hasura.image.version }}
+          image: {{ .Values.hasura.image.name }}:{{ .Values.hasura.image.tag }}
           imagePullPolicy: {{ .Values.hasura.image.pullPolicy | default .Values.image.pullPolicy }}
           command:
             - "graphql-engine" 
