@@ -3,17 +3,21 @@ kind: Deployment
 metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
-    {{- include "prefect-server.commonLabels" . | nindent 4 -}}
-  {{- include "prefect-server.annotations" . | nindent 2 }}
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: hasura
+  annotations:
+    {{- merge .Values.hasura.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.hasura.replicas }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: hasura
   template:
     metadata:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
+        app.kubernetes.io/component: hasura
     spec:
       {{- include "prefect-server.imagePullSecrets" . | nindent 6 -}}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}

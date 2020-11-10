@@ -4,16 +4,20 @@ metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
-  {{- include "prefect-server.annotations" . | nindent 2 }}
+    app.kubernetes.io/component: towel
+  annotations:
+    {{- merge .Values.towel.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.towel.replicas }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: towel
   template:
     metadata:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
+        app.kubernetes.io/component: towel
     spec:
       {{- include "prefect-server.imagePullSecrets" . | nindent 6 -}}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}

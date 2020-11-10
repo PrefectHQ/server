@@ -4,7 +4,8 @@ metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
-  {{- include "prefect-server.annotations" . | nindent 2 }}
+  annotations:
+    {{- merge .Values.graphql.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   type: {{ .Values.graphql.service.type }}
   ports:

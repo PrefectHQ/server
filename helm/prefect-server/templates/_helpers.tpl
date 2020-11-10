@@ -41,29 +41,6 @@
 {{- end }}
 
 
-{{/*
-  prefect-server.annotations:
-    Provides the annotations for a component merging both global and local 
-    values where the local values are pulled from the config for the
-    component in the current scope inferred by "prefect-server-componentName"
-*/}}
-{{- define "prefect-server.annotations" -}}
-{{- $atns := .Values.annotations -}}
-{{- $component_config := get .Values (include "prefect-server.componentName" .) -}}
-{{/* Check if the component exists before getting annotations */}}
-{{- if eq (typeOf $component_config | toString) "map[string]interface {}" -}}
-  {{- $component_atns := $component_config.annotations -}}
-  {{- if eq (typeOf $component_atns | toString) "map[string]interface {}" -}}
-    {{- $atns = merge $component_atns $atns -}}
-  {{- end -}}
-{{- end -}}
-{{- if $atns -}}
-annotations:
-  {{- $atns | toYaml | nindent 2 -}}
-{{- end -}}
-{{- end -}}
-
-
 {{- /*
   prefect-server.nameField:
     Populates a configuration name field's value by as {release}-{component}

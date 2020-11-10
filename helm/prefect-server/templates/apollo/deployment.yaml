@@ -4,16 +4,20 @@ metadata:
   name: {{ include "prefect-server.nameField" . }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
-  {{- include "prefect-server.annotations" . | nindent 2 }}
+    app.kubernetes.io/component: apollo
+  annotations:
+    {{- merge .Values.apollo.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.apollo.replicas }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: apollo
   template:
     metadata:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
+        app.kubernetes.io/component: apollo
     spec:
       {{- include "prefect-server.imagePullSecrets" . | nindent 6 -}}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
