@@ -28,7 +28,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.graphql.image.name }}:{{ .Values.graphql.image.tag | default .Values.image.tag }}"
+          image: "{{ .Values.graphql.image.name }}:{{ .Values.graphql.image.tag |  default .Values.prefectVersionTag }}"
           imagePullPolicy: {{ .Values.graphql.image.pullPolicy  }}
           command:
             - "bash"
@@ -53,7 +53,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.graphql.image.name }}:{{ .Values.graphql.image.tag | default .Values.image.tag }}"
+          image: "{{ .Values.graphql.image.name }}:{{ .Values.graphql.image.tag |  default .Values.prefectVersionTag }}"
           imagePullPolicy: {{ .Values.graphql.image.pullPolicy  }}
           command: 
             - bash 

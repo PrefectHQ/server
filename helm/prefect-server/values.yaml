@@ -1,9 +1,10 @@
 # prefect-server configuration
 
-# image provides configuration for all prefect images
-# this notably excludes the hasura image
-image:
-  tag: "latest"
+# prefectVersionTag configures the default tag for prefect images
+# which are all tagged with the same name on release. To override
+# images for specific components, modify <component>.image.tag
+# NOTE: This notably excludes the hasura image
+prefectVersionTag:  "latest"
 
 # imagePullSecrets provides configuration to reference the k8s Secret
 # resources the Helm chart's pods can get credentials from to pull

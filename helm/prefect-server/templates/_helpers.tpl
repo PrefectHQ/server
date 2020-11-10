@@ -7,7 +7,6 @@
     nameField
     matchLabels
     commonLabels
-    imagePullSecrets
     serviceAccountName
     postgresql-hostname
     postgresql-connstr
