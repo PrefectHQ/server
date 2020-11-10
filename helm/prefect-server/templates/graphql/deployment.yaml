@@ -4,6 +4,7 @@ metadata:
   name: {{ include "prefect-server.nameField" (merge (dict "component" "graphql") .) }}
   labels: 
     {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: graphql
   annotations:
     {{- merge .Values.graphql.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
@@ -11,10 +12,12 @@ spec:
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: graphql
   template:
     metadata:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
+        app.kubernetes.io/component: graphql
     spec:
       imagePullSecrets: {{ concat .Values.graphql.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}

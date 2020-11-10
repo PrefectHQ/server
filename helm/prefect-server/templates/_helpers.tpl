@@ -46,6 +46,7 @@
   prefect-server.matchLabels:
     Provides K8s selection labels typically for use within the `spec` section
     Includes "name" and "instance"
+    "component" is not provided and should be added by the component
 */}}
 {{- define "prefect-server.matchLabels" -}}
 app.kubernetes.io/name: {{ include "prefect-server.name" . }}
