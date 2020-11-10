@@ -88,7 +88,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   prefect-server.postgres-hostname: 
     Generate the hostname of the postgresql service
     If a subchart is used, evaluate using its fullname function
-      as {subchart.fullname}-{namespace}-{fqdnSuffix}
+      as {subchart.fullname}-{namespace}
     Otherwise, the configured external hostname will be returned
 */}}
 {{- define "prefect-server.postgres-hostname" -}}
