@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prefect-server.nameField" (merge (dict "component" "apollo") .) }}
+  labels: 
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: apollo
+  annotations:
+    {{- merge .Values.apollo.annotations .Values.annotations | toYaml | nindent 4 }}
+spec:
+  replicas: {{ .Values.apollo.replicas }}
+  selector:
+    matchLabels:
+      {{- include "prefect-server.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: apollo
+  template:
+    metadata:
+      labels:
+        {{- include "prefect-server.matchLabels" . | nindent 8 }}
+        app.kubernetes.io/component: apollo
+    spec:
+      imagePullSecrets: {{ concat .Values.apollo.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
+      serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
+      {{- with .Values.apollo.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: apollo
+          {{- with .Values.apollo.securityContext -}}          
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.apollo.image.name }}:{{ .Values.apollo.image.tag |  default .Values.prefectVersionTag }}"
+          imagePullPolicy: {{ .Values.apollo.image.pullPolicy  }}
+          command:
+            - bash
+            - "-c"
+            - "/apollo/post-start.sh && npm run serve"
+          env:
+            - name: HASURA_API_URL
+              value: {{ include "prefect-server.hasura-api-url" . }}
+            - name: PREFECT_API_URL
+              value: {{ include "prefect-server.graphql-api-url" . }}
+            - name: PREFECT_API_HEALTH_URL
+              value: {{ include "prefect-server.graphql-health-url" . }}
+            - name: GRAPHQL_SERVICE_HOST
+              value: "http://{{ include "prefect-server.graphql-hostname" . }}"
+            - name: GRAPHQL_SERVICE_PORT
+              value: "4201"
+            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 4200
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /.well-known/apollo/server-health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /.well-known/apollo/server-health
+              port: http
+          {{- with .Values.apollo.resources -}}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.apollo.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.apollo.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.apollo.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

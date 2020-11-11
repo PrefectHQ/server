@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "prefect-server.nameField" (merge (dict "component" "hasura") .) }}
+  labels: 
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: hasura
+  annotations:
+    {{- merge .Values.hasura.annotations .Values.annotations | toYaml | nindent 4 }}
+spec:
+  type: {{ .Values.hasura.service.type }}
+  ports:
+    - port: {{ .Values.hasura.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "prefect-server.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: hasura
