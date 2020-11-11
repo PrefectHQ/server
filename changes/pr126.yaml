@@ -1,0 +1,2 @@
+enhancement:
+  - "Add the Prefect Core version to the api query - [#126](https://github.com/PrefectHQ/server/pull/126)"

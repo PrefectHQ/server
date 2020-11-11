@@ -119,6 +119,7 @@ type api_info {
   backend: String
   mode: String
   version: String
+  core_version: String
   release_timestamp: String
 }
 

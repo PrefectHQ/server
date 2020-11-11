@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict, List
 
+import prefect
 import prefect_server
 from prefect.engine import state
 from prefect_server.utilities import graphql
@@ -44,5 +45,6 @@ def resolve_reference(parent: Any, info):
         "backend": "SERVER",
         "mode": "normal",
         "version": os.getenv("PREFECT_SERVER_VERSION", prefect_server.__version__),
+        "core_version": os.getenv("PREFECT_CORE_VERSION", prefect.__version__),
         "release_timestamp": os.getenv("RELEASE_TIMESTAMP"),
     }
