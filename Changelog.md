@@ -1,5 +1,19 @@
 # Changelog
 
+## November 11, 2020 <Badge text="beta" type="success" />
+
+Released on November 11, 2020.
+
+### Features
+
+- Add experimental Helm chart for deploying in K8s - [#123](https://github.com/PrefectHQ/server/pull/123)
+
+### Contributors
+
+- [Jonas Bernhard](https://github.com/yolibernal)
+- [Joël Luijmes](https://github.com/joelluijmes)
+- [Shaun Cutts](https://github.com/shaunc)
+
 ## November 10, 2020 <Badge text="beta" type="success" />
 
 Released on November 10, 2020.
