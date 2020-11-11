@@ -26,7 +26,16 @@ async def test_mode(run_query):
     assert result.data.api.mode == "normal"
 
 
-async def test_core_version(run_query):
+async def test_core_version_uses_env_var(run_query, monkeypatch):
+    monkeypatch.setenv("PREFECT_CORE_VERSION", "core-version")
+    result = await run_query(query=QUERY)
+    assert result.data.api.core_version == "core-version"
+
+
+async def test_core_version_uses_dunder_if_no_env_var(run_query, monkeypatch):
+    if "PREFECT_CORE_VERSION" in os.environ:
+        monkeypatch.delenv("PREFECT_CORE_VERSION")
+
     result = await run_query(query=QUERY)
     assert result.data.api.core_version == prefect.__version__
 

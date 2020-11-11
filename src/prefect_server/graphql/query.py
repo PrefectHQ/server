@@ -45,6 +45,6 @@ def resolve_reference(parent: Any, info):
         "backend": "SERVER",
         "mode": "normal",
         "version": os.getenv("PREFECT_SERVER_VERSION", prefect_server.__version__),
-        "core_version": prefect.__version__,
+        "core_version": os.getenv("PREFECT_CORE_VERSION", prefect.__version__),
         "release_timestamp": os.getenv("RELEASE_TIMESTAMP"),
     }
