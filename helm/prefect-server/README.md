@@ -5,7 +5,16 @@
 ## Usage
 
 1. Clone repository
-2. From this directory:
+
+2. Change to this directory
+
+3. Download the postgresql dependency if you are not using an existing database
+
+```
+helm dependency update
+```
+
+4. Install the chart with your desired name e.g. "my-prefect-server"
 
 ```
 $ helm install <name-to-label-release> . [helm options]
