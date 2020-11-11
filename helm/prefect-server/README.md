@@ -11,7 +11,7 @@
 3. Download the postgresql dependency if you are not using an existing database
 
 ```
-helm dependency update
+$ helm dependency update
 ```
 
 4. Install the chart with your desired name e.g. "my-prefect-server"
