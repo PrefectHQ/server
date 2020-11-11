@@ -32,10 +32,11 @@ The provided database will **not** persist your data by default.
 
 An external database will require some minimal setup for Hasura.
 The following needs to be run or the user should have permissions to execute it and Hasura will run it on startup:
+
 ```sql
-      CREATE EXTENSION IF NOT EXISTS pgcrypto;
-      CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-      SET TIME ZONE 'UTC';
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+SET TIME ZONE 'UTC';
 ```
 
 ## Troubleshooting
