@@ -28,6 +28,7 @@ pip-wheel-metadata/
 
 # Helm packaging
 helm/prefect-server/charts
+Chart.lock
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
