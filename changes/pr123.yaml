@@ -1,2 +1,7 @@
 feature:
   - "Add experimental Helm chart for deploying in K8s - [#123](https://github.com/PrefectHQ/server/pull/123)"
+
+contributor:
+  - "[Shaun Cutts](https://github.com/shaunc)"
+  - "[Jonas Bernhard](https://github.com/yolibernal)"
+  - "[Joël Luijmes](https://github.com/joelluijmes)"
