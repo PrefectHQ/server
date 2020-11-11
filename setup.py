@@ -15,15 +15,16 @@ install_requires = [
     "graphql-core < 3.1",
     "httpx >= 0.13.0, < 0.14.0",
     "json_log_formatter >= 0.3.0, < 0.4.0",
+    "packaging >= 20.0, < 20.4",
     "psycopg2-binary >= 2.7, < 3.0",
     # pin below 1.6 pending https://github.com/samuelcolvin/pydantic/issues/1710
     "pydantic >= 1.5, < 1.6",
     "python-slugify >= 1.2,< 5.0",
+    "pyyaml >= 3.13, < 6.0",
     "starlette >= 0.13, < 0.14",
     "toml >= 0.9.0, < 0.11",
+    "urllib3 < 1.26",
     "uvicorn >= 0.11.4, < 0.12",
-    "pyyaml >= 3.13, < 6.0",
-    "packaging >= 20.0, < 20.4",
 ]
 
 dev_requires = [
