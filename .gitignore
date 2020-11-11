@@ -26,6 +26,9 @@ wheels/
 *.egg
 pip-wheel-metadata/
 
+# Helm packaging
+helm/prefect-server/charts
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
