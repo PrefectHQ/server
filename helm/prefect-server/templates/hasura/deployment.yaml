@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prefect-server.nameField" (merge (dict "component" "hasura") .) }}
+  labels: 
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: hasura
+  annotations:
+    {{- merge .Values.hasura.annotations .Values.annotations | toYaml | nindent 4 }}
+spec:
+  replicas: {{ .Values.hasura.replicas }}
+  selector:
+    matchLabels:
+      {{- include "prefect-server.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: hasura
+  template:
+    metadata:
+      labels:
+        {{- include "prefect-server.matchLabels" . | nindent 8 }}
+        app.kubernetes.io/component: hasura
+    spec:
+      imagePullSecrets: {{ concat .Values.hasura.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
+      serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
+      {{- with .Values.hasura.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: hasura
+          {{- with .Values.hasura.securityContext -}}          
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: {{ .Values.hasura.image.name }}:{{ .Values.hasura.image.tag }}
+          imagePullPolicy: {{ .Values.hasura.image.pullPolicy  }}
+          command:
+            - "graphql-engine" 
+            - "serve"
+          env:
+            - name: HASURA_GRAPHQL_DATABASE_URL
+              value: {{ include "prefect-server.postgres-connstr" . }}
+            - name: PGPASSWORD
+              valueFrom:
+                {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}            
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: "true"
+            - name: HASURA_GRAPHQL_SERVER_PORT
+              value: "3000"
+            - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
+              value: {{ .Values.hasura.options.queryPlanCacheSize | quote }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          {{- with .Values.hasura.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.hasura.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.hasura.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.hasura.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

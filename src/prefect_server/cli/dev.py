@@ -109,7 +109,8 @@ def infrastructure(tag, skip_pull, skip_upgrade):
                     break
                 # trap error during the SELECT 1
                 except sqlalchemy.exc.OperationalError as exc:
-                    if "Connection refused" in str(exc):
+                    msg = str(exc)
+                    if "Connection refused" in msg or "closed the connection" in msg:
                         click.echo(
                             "Database not ready yet. Waiting 1 second to retry upgrade."
                         )

@@ -1,0 +1,51 @@
+{{- if contains "LoadBalancer" .Values.ui.service.type }}
+{{- $ui := include "prefect-server.nameField" (merge (dict "component" "ui") .) }}
+
+#1 Run the following command to get the UI URL:
+
+  UI_HOST=$( \
+    kubectl get svc \
+    --namespace {{ .Release.Namespace }} \
+    --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
+    {{ $ui }} \
+  ) \
+  && echo "UI available at: http://$UI_HOST:{{ .Values.ui.service.port }}"
+
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available. 
+        You can watch the status of by running: kubectl get --namespace {{ .Release.Namespace }} svc -w {{ $ui }}
+
+{{- else -}}
+
+#1 The UI has been deployed as a non-default service type '{{ .Values.ui.service.type }}' and may not be immediately accessible.
+   Please contact your Kubernetes administrator for help getting access.
+
+{{- end }}
+
+{{- if contains "LoadBalancer" .Values.apollo.service.type }}
+{{- $apollo := include "prefect-server.nameField" (merge (dict "component" "apollo") .) }}
+
+#2 Run the following command to get the Apollo GraphQL API URL:
+
+  API_HOST=$( \
+    kubectl get svc \
+    --namespace {{ .Release.Namespace }} \
+    --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}" \
+    {{ $apollo }} \
+  ) \
+  && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port }}/graphql"
+
+{{- else -}}
+
+#2 The API has been deployed as a non-default service type '{{ .Values.apollo.service.type }}' and may not be immediately accessible.
+   Please contact your Kubernetes administrator for help getting access.
+
+{{- end }}
+
+#3 The UI has been configured to point to '{{ .Values.ui.apolloApiUrl }}' by default. 
+  - The API location you retrieved in #2 should match this url
+  - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect
+  - The location can also be changed within the UI itself per user
+  - The API must be accessible from the the user's machine for the UI to work
+
+#4 You or your admin will likely have to create a tenant before the dashboard in the UI will work. 
+   The UI home page should have a 'Create tenant' tab to walk you through this process.

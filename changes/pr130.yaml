@@ -1,0 +1,2 @@
+fix:
+  - "prefect-server dev infrastructure would sometimes fail to start with 'connection closed' - [#130](https://github.com/PrefectHQ/server/pull/130)"
