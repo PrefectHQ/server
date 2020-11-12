@@ -579,6 +579,18 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
     # schedule every event with an idempotent flow run
     for event in flow_schedule.next(n=max_runs, return_events=True):
 
+        # TODO: This has potential to miss scheduling runs that all need to be scheduled at the same time
+        # in the case of a restart while only a portion of that time's runs have been scheduled. There
+        # needs to be some external tracker or query here that looks to see if any of the runs have
+        # already been scheduled.
+        #
+        # For example, say there is a flow with a schedule that has 10 different clocks, each with a
+        # different parameter. This loop is running through to schedule the next 10 runs and half way
+        # through the service restartes (due to some external pressure). Then when it loads back up
+        # it will not schedule the remaining half of the runs because of the last_scheduled_run check
+        # below. Therefore something needs to check if all of the runs for that particular time had
+        # actually been scheduled.
+
         # if this run was already scheduled, continue
         if last_scheduled_run and event.start_time <= last_scheduled_run:
             continue
