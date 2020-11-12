@@ -1308,6 +1308,54 @@ class TestScheduledRunAttributes:
 
         assert len(set([fr.scheduled_start_time for fr in flow_runs])) == 5
 
+    @pytest.mark.parametrize(
+        "attrs",
+        [
+            [
+                dict(parameter_defaults=dict(x="a")),
+                dict(parameter_defaults=dict(x="b")),
+            ],
+            [dict(parameter_defaults=dict(x="a")), dict(parameter_defaults=None)],
+            [dict(parameter_defaults=dict(x="a")), dict(labels=["b"])],
+            [dict(labels=["c", "d"]), dict(labels=["c"])],
+            [dict(labels=None), dict(labels=["ef"])],
+            [
+                dict(labels=None),
+                dict(labels=[]),
+            ],  # the scheduler should distinguish between none vs. empty
+        ],
+    )
+    async def test_same_time_different_parameters_does_not_schedule_duplicates(
+        self, project_id, attrs
+    ):
+        now = pendulum.now("UTC")
+        clock1 = prefect.schedules.clocks.IntervalClock(
+            start_date=now.add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+            **attrs[0],
+        )
+        clock2 = prefect.schedules.clocks.IntervalClock(
+            start_date=now.add(minutes=1),
+            interval=datetime.timedelta(minutes=2),
+            **attrs[1],
+        )
+
+        flow = prefect.Flow(
+            name="Test Scheduled Flow",
+            schedule=prefect.schedules.Schedule(clocks=[clock1, clock2]),
+        )
+        flow.add_task(prefect.Parameter("x", default=1))
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=flow.serialize()
+        )
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
+        assert len(set((await api.flows.schedule_flow_runs(flow_id)))) == 10
+
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).update(
+            set=dict(idempotency_key=None)
+        )
+        assert len(set((await api.flows.schedule_flow_runs(flow_id)))) == 0
+
 
 class TestScheduleRuns:
     async def test_schedule_runs(self, flow_id):
