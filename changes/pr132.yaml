@@ -1,0 +1,5 @@
+fix:
+  - "Fix helm chart when using existing postgres instance - [#132](https://github.com/PrefectHQ/server/pull/132)"
+
+contributor:
+  - "[Joël Luijmes](https://github.com/joelluijmes)"
