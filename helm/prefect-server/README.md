@@ -24,6 +24,12 @@ $ helm install <name-to-label-release> . [helm options]
 
 See comments in `values.yaml`.
 
+
+### KubernetesAgent
+
+A [Prefect KubernetesAgent](https://docs.prefect.io/orchestration/agents/kubernetes.html) that queries for flows and runs them on your cluster can be installed but is not included by default.
+Add the flag `--set agent.enabled=true` to the `helm install` command to include the agent.
+
 ### Database
 
 The database can be deployed by this chart or be provided externally. 

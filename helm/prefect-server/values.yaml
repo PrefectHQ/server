@@ -246,7 +246,7 @@ towel:
 agent:
 
   # enabled determines if the Prefect Kubernetes agent is deployed
-  enabled: true
+  enabled: false
 
   # prefectLabels defines what scheduling labels (not K8s labels) should
   # be associated with the agent
