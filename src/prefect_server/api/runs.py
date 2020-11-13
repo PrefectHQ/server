@@ -50,7 +50,6 @@ async def create_flow_run(
 
         where = {
             "idempotency_key": {"_eq": idempotency_key},
-            "created": {"_gt": str(pendulum.now().subtract(days=1))},
         }
         if flow_id is not None:
             where.update({"flow_id": {"_eq": flow_id}})

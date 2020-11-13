@@ -1,5 +1,24 @@
 # Changelog
 
+## November 13, 2020 <Badge text="beta" type="success" />
+
+Released on November 13, 2020.
+
+### Enhancements
+
+- Add the Prefect Core version to the api query - [#126](https://github.com/PrefectHQ/server/pull/126)
+- Remove global 24 hour expiration on flow run idempotency keys - [#134](https://github.com/PrefectHQ/server/pull/134)
+
+### Fixes
+
+- prefect-server dev infrastructure would sometimes fail to start with 'connection closed' - [#130](https://github.com/PrefectHQ/server/pull/130)
+- Fix helm chart when using existing postgres instance - [#132](https://github.com/PrefectHQ/server/pull/132)
+- Fix scheduling duplicate runs due to expired idempotency keys - [#134](https://github.com/PrefectHQ/server/pull/134)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+
 ## November 11, 2020 <Badge text="beta" type="success" />
 
 Released on November 11, 2020.
