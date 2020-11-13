@@ -601,7 +601,11 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
             parameters=event.parameter_defaults,
             labels=event.labels,
             idempotency_key=idempotency_key,
-            flow_run_name=event.flow_run_name_template.format(**dict(event.parameter_defaults)) if event.flow_run_name_template is not None else None
+            flow_run_name=event.flow_run_name_template.format(
+                **dict(event.parameter_defaults)
+            )
+            if event.flow_run_name_template is not None
+            else None,
         )
 
         logger.debug(
