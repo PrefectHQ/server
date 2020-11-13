@@ -1349,12 +1349,13 @@ class TestScheduledRunAttributes:
             project_id=project_id, serialized_flow=flow.serialize()
         )
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
-        assert len(set((await api.flows.schedule_flow_runs(flow_id)))) == 10
 
-        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).update(
-            set=dict(idempotency_key=None)
-        )
-        assert len(set((await api.flows.schedule_flow_runs(flow_id)))) == 0
+        run_ids = set((await api.flows.schedule_flow_runs(flow_id)))
+        assert len(run_ids) == 10
+
+        run_ids_2 = set((await api.flows.schedule_flow_runs(flow_id)))
+
+        assert run_ids_2.issubset(run_ids)
 
 
 class TestScheduleRuns:
