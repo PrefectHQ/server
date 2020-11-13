@@ -61,7 +61,7 @@ spec:
             httpGet:
               path: /.well-known/apollo/server-health
               port: http
-          {{- with .Values.apollo.resources -}}
+          {{- with .Values.apollo.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}

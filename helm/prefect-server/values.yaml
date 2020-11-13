@@ -240,6 +240,58 @@ towel:
   tolerations: []
   affinity: {}
 
+
+# agent configures an optional Prefect Kubernetes agent which will
+# schedule flows as jobs in the cluster
+agent:
+
+  # enabled determines if the Prefect Kubernetes agent is deployed
+  enabled: true
+
+  # prefectLabels defines what scheduling labels (not K8s labels) should
+  # be associated with the agent
+  prefectLabels:
+
+  # image configures the container image for the agent deployment
+  image:
+    name: prefecthq/prefect
+    tag: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  labels: {}
+  annotations: {}
+  replicas: 1
+  podSecurityContext: {}
+  securityContext: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  # resources defines the computational resources for the Prefect Agent
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+  # job configures values associated with jobs the agent launches
+  job:
+    # resources defines the computational resources for flow jobs
+    resources:
+      limits:
+        memory: ""
+        cpu: ""
+      requests:
+        memory: ""
+        cpu: ""
+    
+    # imagePullPolicy configures the image pull policy for the flow job
+    imagePullPolicy: ""
+
+    # imagePullSecrets defines image pull secrets for the flow job
+    # NOTE: These secrets are not merged with the global imagePullSecrets
+    imagePullSecrets: []
+
 serviceAccount:
   # create specifies whether a service account should be created to be
   # associated with the prefect-server infrastructure
