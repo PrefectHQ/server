@@ -550,6 +550,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
         apply_schema=False,
     )
 
+
     if not flow:
         logger.debug(f"Flow {flow_id} can not be scheduled.")
         return run_ids
@@ -601,6 +602,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
             parameters=event.parameter_defaults,
             labels=event.labels,
             idempotency_key=idempotency_key,
+            flow_run_name=event.flow_run_name_template.format(**dict(event.parameter_defaults)) if event.flow_run_name_template is not None else None
         )
 
         logger.debug(
