@@ -1,5 +1,0 @@
-enhancement:
-  - "Remove global 24 hour expiration on flow run idempotency keys - [#134](https://github.com/PrefectHQ/server/pull/134)"
-
-fix:
-  - "Fix scheduling duplicate runs due to expired idempotency keys - [#134](https://github.com/PrefectHQ/server/pull/134)"
