@@ -250,7 +250,7 @@ agent:
 
   # prefectLabels defines what scheduling labels (not K8s labels) should
   # be associated with the agent
-  prefectLabels:
+  prefectLabels: []
 
   # image configures the container image for the agent deployment
   image:
