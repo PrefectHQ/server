@@ -39,8 +39,6 @@ spec:
           - "-c"
           - "prefect agent kubernetes start"
         env:
-          - name: PREFECT__CLOUD__AGENT__AUTH_TOKEN
-            value: ''
           - name: PREFECT__CLOUD__API
             value: {{ include "prefect-server.apollo-api-url" . }}
           - name: NAMESPACE
