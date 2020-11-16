@@ -80,6 +80,6 @@ query {
     }
 }
 variables {
-    {"input": {"before": "2020-11-13T19:16:01.973734+00:00", "labels": ["n", "u", "l", "l"], "tenant_id": null}}
+    {"input": {"before": "2020-11-13T19:16:01.973734+00:00", "labels": [], "tenant_id": null}}
 }
 ```
