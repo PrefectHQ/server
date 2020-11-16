@@ -50,7 +50,7 @@ spec:
             httpGet:
               path: /healthz
               port: http
-          {{- with .Values.ui.resources -}}
+          {{- with .Values.ui.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}

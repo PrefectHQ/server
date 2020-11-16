@@ -46,7 +46,7 @@ spec:
             - name: PREFECT_SERVER__HASURA__HOST
               value: {{ include "prefect-server.hasura-hostname" . }}
             {{- (include "prefect-server.envConfig" .) | nindent 12 }}
-          {{- with .Values.graphql.init.resources -}}
+          {{- with .Values.graphql.init.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -85,7 +85,7 @@ spec:
             httpGet:
               path: /health
               port: http
-          {{- with .Values.graphql.resources -}}
+          {{- with .Values.graphql.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
