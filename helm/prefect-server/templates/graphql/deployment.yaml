@@ -66,7 +66,7 @@ spec:
             - name: PREFECT_SERVER_DB_CMD
               value: "echo 'DATABASE MIGRATIONS SKIPPED'"
             - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
-              value: {{ include "prefect-server.postgres-connstr" . | replace "%40" "@" }}
+              value: {{ include "prefect-server.postgres-connstr" . }}
             - name: PGPASSWORD
               valueFrom:
                 {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}            
