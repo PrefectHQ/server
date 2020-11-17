@@ -23,6 +23,11 @@ annotations: {}
 # string
 postgresql:
   postgresqlDatabase: prefect
+
+  # postgresqlUsername defines the username to authenticate
+  # with. If you are using Azure, this will include an '@'
+  # which must be encoded as '%40' for the connection string
+  # to work with both Hasura and the Prefect GraphQL server
   postgresqlUsername: prefect
 
   # existingSecret configures which secret should be referenced
