@@ -39,7 +39,7 @@ spec:
             - "/usr/local/bin/prefect-server database upgrade --yes"
           env:
             - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
-              value: {{ include "prefect-server.postgres-connstr" . }}
+              value: {{ include "prefect-server.postgres-connstr" . | replace "%40" "@" }}
             - name: PGPASSWORD
               valueFrom:
                 {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
