@@ -80,12 +80,6 @@ def create(database_url):
 
 @database.command()
 @click.option(
-    "--database-url",
-    "-d",
-    help="The database connection URL",
-    default=prefect_server.config.database.connection_url,
-)
-@click.option(
     "-n",
     help="The argument to `alembic upgrade`. If not provided, runs all.",
     default=None,
