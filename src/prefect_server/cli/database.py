@@ -80,12 +80,6 @@ def create(database_url):
 
 @database.command()
 @click.option(
-    "--database-url",
-    "-d",
-    help="The database connection URL",
-    default=prefect_server.config.database.connection_url,
-)
-@click.option(
     "-n",
     help="The argument to `alembic upgrade`. If not provided, runs all.",
     default=None,
@@ -96,7 +90,7 @@ def create(database_url):
     help="Pass --yes to confirm that you want to upgrade the database",
     is_flag=True,
 )
-def upgrade(database_url, yes, n=None):
+def upgrade(yes, n=None):
     """
     Upgrades the Prefect database by running any Alembic migrations
     """
