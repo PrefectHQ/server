@@ -8,7 +8,7 @@ import pytest
 from prefect import api, models
 from prefect.engine.result import Result, SafeResult
 from prefect.engine.result_handlers import JSONResultHandler
-from prefect.engine.state import Retrying, Running, Submitted, Success
+from prefect.engine.state import Retrying, Running, Scheduled, Submitted, Success
 from prefect.serialization.state import StateSchema
 
 state_schema = StateSchema()
@@ -251,7 +251,7 @@ class TestSetFlowRunStates:
         )
         assert "State payload is too large" in result.errors[0].message
 
-    async def test_errors_when_trying_submit_flow_runs_without_slots(
+    async def test_doesnt_transition_when_trying_submit_flow_runs_without_slots(
         self,
         run_query,
         flow_id: str,
@@ -293,8 +293,9 @@ class TestSetFlowRunStates:
             ),
         )
 
-        assert result.errors is not None
-        assert "concurrency" in result.errors[0].message.lower()
+        assert result.get("errors") is None
+        run = await models.FlowRun.where(id=second_run_id).first({"state"})
+        assert run.state not in ("Submitted", "Running")
 
     async def test_set_flow_run_states_coerced_to_queued(
         self,
@@ -382,6 +383,123 @@ class TestSetFlowRunStates:
         fr = await models.FlowRun.where(id=second_run).first({"state", "version"})
         assert fr.version == 4
         assert fr.state == "Running"
+
+    async def test_concurrency_slots_race_conditions(
+        self,
+        run_query,
+        flow_id: str,
+        flow_concurrency_limit: models.FlowConcurrencyLimit,
+    ):
+        """
+        This test should test the known race conditions where multiple
+        runs were set into Submitted when there weren't slots available, which
+        occurs when an Agent receives multiple run IDs that all occupy the same slot(s),
+        as well as the race condition where multiple runs are moving from Submitted
+        to Running when there are either no slots available or the number
+        of slots are already overprovisioned.
+
+        We're going to fire off a bunch of calls concurrently, with
+        random but varying delays to emulate a real world scenario. This
+        can cause transient failure depending on the implement solution,
+        but should be a configuration option left to the user on how
+        "best effort" they need concurrency locking to be without
+        moving to Cloud.
+        """
+
+        # Not sure what fixture is auto generating 10 runs, but
+        # we need them to not be there
+        await models.FlowRun.where().delete()
+
+        async def agent_and_runner_process(run_query, flow_run_id: str, state):
+
+            # Agents receive flow runs in batches, so we aren't causing a delay here
+            # Manually alterting the state (without referencing the previous state)
+            # since that would create an opportunity for the processing of concurrent
+            # executions of this coroutine to continue, and we don't want that _yet_
+            submitted_state = await run_query(
+                query=self.mutation,
+                variables=dict(
+                    input=dict(
+                        states=[
+                            dict(
+                                flow_run_id=flow_run_id,
+                                state=Submitted(
+                                    message="Submitting flow run.", state=state
+                                ).serialize(),
+                            )
+                        ]
+                    )
+                ),
+            )
+            # Check that the transition from Scheduled -> Submitted "worked"
+            # Worked in this case means either being set to `Submitted` or
+            # failing to be set to `Submitted`, but if we failed to be
+            # set to `Submitted`, this concurrent execution of the
+            # function "succeeded", so we bail early
+
+            if (
+                not submitted_state.data.set_flow_run_states.states[0].status
+                == "SUCCESS"
+            ):
+                return
+
+            await run_query(
+                query=self.mutation,
+                variables=dict(
+                    input=dict(
+                        states=[
+                            dict(
+                                flow_run_id=flow_run_id,
+                                state=Running(
+                                    message="Attempting to enter a Running state."
+                                ).serialize(),
+                            )
+                        ]
+                    )
+                ),
+            )
+
+        runs = await asyncio.gather(
+            *[
+                api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name])
+                for _ in range(10)
+            ]
+        )
+
+        run_states = await asyncio.gather(
+            *[
+                models.FlowRun.where(id=flow_run_id).first({"id", "serialized_state"})
+                for flow_run_id in runs
+            ]
+        )
+
+        await asyncio.gather(
+            *[
+                agent_and_runner_process(
+                    run_query=run_query,
+                    flow_run_id=flow_run.id,
+                    state=StateSchema().load(flow_run.serialized_state),
+                )
+                for flow_run in run_states
+            ]
+        )
+        # All we care about is that we end up in a state where one flow run is
+        # Running and none have Failed
+
+        # In case we need to recursively call any state setting, we need to make
+        # sure we don't end up with extra runs somehow
+        assert await models.FlowRun.where().count() == 10
+
+        running_runs = await models.FlowRun.where({"state": {"_eq": "Running"}}).count()
+        assert running_runs == 1
+
+        failed_runs = await models.FlowRun.where({"state": {"_eq": "Failed"}}).count()
+        assert failed_runs == 0
+
+        other_runs = await models.FlowRun.where(
+            {"state": {"_in": ["Scheduled", "Queued"]}}
+        ).count()
+        assert other_runs == 9
 
 
 # ---------------------------------------------------------------

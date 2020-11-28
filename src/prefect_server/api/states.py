@@ -2,14 +2,16 @@
 # https://www.prefect.io/legal/prefect-community-license
 
 import asyncio
+import random
 import uuid
 
 import pendulum
 
 import prefect
 from prefect import api, models
-from prefect.engine.state import Cancelled, Cancelling, Queued, State
+from prefect.engine.state import Cancelled, Cancelling, Queued, State, Scheduled
 from prefect.utilities.plugins import register_api
+from prefect_server import config
 from prefect_server.utilities import events
 from prefect_server.utilities.logging import get_logger
 
@@ -115,11 +117,20 @@ async def set_flow_run_state(
     # Queueing runs if using concurency limits
     # --------------------------------------------------------
 
-    if state.is_running() or state.is_submitted():
+    # If the run is not labeled, we avoid this code branch
+    # as it's manually injecting a delay (and it isn't concurrency limited)
+    if (state.is_running() or state.is_submitted()) and flow_run.labels:
         # Flow Concurrency Limits
         # If the run is already occupying a slot (Submitted -> Running)
         # or is attempting to occupy a slot (X -> Submitted)
-        # OR if the flow_run isn't labeled / has "unlimited" labels
+
+        # Due to the Agent process submitting multiple runs from Scheduled
+        # to Submitted at once, we need to introduce a jitter to do
+        # a decent job at "best effort" flow concurrency locking. The
+        # larger number of queued runs that are sent to the agent,
+        # the larger a jitter we should introduce to make the race condition
+        # less frequent.
+        await asyncio.sleep(random.random() * config.queued_runs_returned_limit / 10)
         can_transition = (
             await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                 tenant_id=flow_run.tenant_id,
@@ -129,11 +140,20 @@ async def set_flow_run_state(
         )
 
         if not can_transition:
-            if state.is_submitted():
-                raise ValueError("Unable to get flow run concurrency slot. Aborting.")
-
             existing_state = state_schema.load(flow_run.serialized_state)
-            if existing_state.is_queued():
+            if state.is_submitted() and existing_state.is_scheduled():
+                buffer_seconds = random.randint(15, 45)
+
+                state = Queued(
+                    state=existing_state,
+                    message="Queued by flow run concurrency limit",
+                    start_time=pendulum.now("UTC").add(seconds=buffer_seconds),
+                )
+                logger.info(
+                    f"Flow concurrency slot unavailable. Setting next start time {buffer_seconds} in the future."
+                )
+
+            elif existing_state.is_queued():
 
                 # If the run is currently in a Queued state and is
                 # being coerced into a Queued state,
@@ -157,6 +177,10 @@ async def set_flow_run_state(
 
                 return flow_run_state
             else:
+                # Occurs when the flow run gets a concurrency slot by
+                # transitioning to Submitted when it shouldn't have. The
+                # 10 minute delay is only until the next agent picks it up again,
+                # not when it's able to execute.
                 state = Queued(
                     state=existing_state,
                     message="Queued by flow run concurrency limit",
@@ -188,7 +212,11 @@ async def set_flow_run_state(
 
     # FOR RUNNING STATES:
     #   - update the flow run heartbeat
-    if state.is_running() or state.is_submitted() or state.is_queued():
+    if (
+        state.is_running()
+        or state.is_submitted()
+        or (state.is_queued() and state.state.is_submitted())
+    ):
         await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
 
     # Set agent ID on flow run when submitted by agent

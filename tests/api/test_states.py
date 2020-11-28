@@ -502,7 +502,7 @@ class TestCancelFlowRun:
 
 
 class TestQueueFlowRun:
-    async def test_errors_on_submitted_transition_with_no_slots(
+    async def test_doeesnt_transition_on_submitted_transition_with_no_slots(
         self,
         flow_id: str,
         labeled_flow_run_id: str,
@@ -525,8 +525,7 @@ class TestQueueFlowRun:
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"state"})
         state_before = flow_run.state
 
-        with pytest.raises(ValueError):
-            await api.states.set_flow_run_state(flow_run_id, Submitted())
+        await api.states.set_flow_run_state(flow_run_id, Submitted())
 
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"state"})
         assert flow_run.state == state_before
