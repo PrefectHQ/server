@@ -409,6 +409,85 @@ class TestCreateIdempotentRun:
         assert flow_run_id_1 != flow_run_id_3
 
 
+class TestGetOrCreateTaskRunInfo:
+    async def test_get_or_create_task_run_info_hits_db(
+        self, tenant_id, flow_run_id, task_id
+    ):
+        task_run = models.TaskRun(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            flow_run_id=flow_run_id,
+            task_id=task_id,
+            map_index=12,
+            version=17,
+            state="Success",
+            serialized_state=dict(message="hi"),
+        )
+        await task_run.insert()
+
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=task_run.map_index
+        )
+
+        assert task_run_info["id"] == task_run.id
+        assert task_run_info["version"] == task_run.version
+        assert task_run_info["state"] == task_run.state
+        assert task_run_info["serialized_state"] == task_run.serialized_state
+
+    async def test_get_or_create_task_run_info_inserts_into_db(
+        self, flow_run_id, task_id
+    ):
+        assert not await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=12
+        )
+
+        task_run = await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+
+        assert task_run_info["id"] == task_run.id
+
+        task_run_state = await models.TaskRunState.where(
+            {
+                "task_run_id": {"_eq": task_run.id},
+            }
+        ).first({"task_run_id", "state"})
+
+        assert task_run_info["id"] == task_run_state.task_run_id
+        assert task_run_info["state"] == task_run_state.state
+
+    async def test_properly_inserts_run_and_state(
+        self, tenant_id, flow_run_id, task_id
+    ):
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=12
+        )
+
+        task_run = await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id": True, "states": {"state", "task_run_id"}})
+        assert task_run.id == task_run_info["id"]
+        assert len(task_run.states) == 1
+        assert task_run.states[0].state == "Pending"
+        assert task_run.states[0].task_run_id == task_run_info["id"]
+
+
 class TestGetTaskRunInfo:
     async def test_task_run(self, flow_run_id, task_id):
         tr_id = await api.runs.get_or_create_task_run(
