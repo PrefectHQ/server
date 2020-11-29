@@ -6,7 +6,7 @@ import pytest
 
 import prefect
 from prefect import api, models
-from prefect.engine.state import Pending, Scheduled
+from prefect.engine.state import Pending, Scheduled, Success
 
 
 class TestCreateFlowRun:
@@ -165,6 +165,59 @@ class TestCreateFlowRun:
         )
         assert result.data.create_flow_run is None
         assert "Required parameters" in result.errors[0].message
+
+
+class TestGetTaskRunInfo:
+    query = """
+        query($task_run_id: UUID!) {
+            get_task_run_info(task_run_id: $task_run_id) {
+                id
+                serialized_state
+                state
+                version
+            }
+        }
+    """
+
+    async def test_get_task_run_info(
+        self,
+        run_query,
+        task_run_id,
+    ):
+        result = await run_query(
+            query=self.query,
+            variables=dict(task_run_id=task_run_id),
+        )
+
+        output = result.data.get_task_run_info
+        assert output.id == task_run_id
+        assert output.version == 1
+        assert output.serialized_state.type == "Pending"
+        assert output.state == "Pending"
+
+        await api.states.set_task_run_state(task_run_id, state=Success("hi"))
+
+        result = await run_query(
+            query=self.query,
+            variables=dict(task_run_id=task_run_id),
+        )
+
+        assert result.data.get_task_run_info.version == 2
+        assert result.data.get_task_run_info.serialized_state.type == "Success"
+        assert result.data.get_task_run_info.state == "Success"
+        assert result.data.get_task_run_info.serialized_state.message == "hi"
+
+    async def test_get_task_run_info_handles_bad_ids(
+        self,
+        run_query,
+    ):
+        result = await run_query(
+            query=self.query,
+            variables=dict(task_run_id=str(uuid.uuid4())),
+        )
+
+        assert result.errors[0].message == "Invalid task run ID"
+        assert result.data.get_task_run_info is None
 
 
 class TestGetOrCreateTaskRun:

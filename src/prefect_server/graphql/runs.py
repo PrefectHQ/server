@@ -5,11 +5,32 @@ from graphql import GraphQLResolveInfo
 
 import prefect
 from prefect import api
-from prefect_server.database import postgres
+from prefect_server.database import models, postgres
 from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation, query
 
 state_schema = prefect.serialization.state.StateSchema()
+
+
+@query.field("get_task_run_info")
+async def resolve_get_task_run_info(
+    obj: Any, info: GraphQLResolveInfo, task_run_id: str
+) -> dict:
+    """
+    Retrieve details about a task run.
+    """
+    task_run = await models.TaskRun.where(id=task_run_id).first(
+        {"version", "serialized_state", "state"}
+    )
+    if not task_run:
+        raise ValueError("Invalid task run ID")
+
+    return {
+        "version": task_run.version,
+        "serialized_state": task_run.serialized_state,
+        "state": task_run.state,
+        "id": task_run_id,
+    }
 
 
 @query.field("mapped_children")

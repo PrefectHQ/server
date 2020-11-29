@@ -1,5 +1,12 @@
 extend type Query {
-    mapped_children(task_run_id: UUID!): mapped_children_payload
+  mapped_children(task_run_id: UUID!): mapped_children_payload
+
+  """
+  Given a task run ID, retrieve current task run info
+  """
+  get_task_run_info(
+    task_run_id: UUID!
+  ): task_run_info_payload
 
 }
 
@@ -125,6 +132,13 @@ type flow_run_id_payload {
 
 type task_run_id_payload {
   id: UUID
+}
+
+type task_run_info_payload {
+  id: UUID
+  version: Int
+  serialized_state: JSON
+  state: String 
 }
 
 type get_or_create_mapped_task_run_children_payload {
