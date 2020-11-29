@@ -33,6 +33,23 @@ async def resolve_get_task_run_info(
     }
 
 
+@mutation.field("get_or_create_task_run_info")
+async def resolve_get_or_create_task_run_info(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    info = await api.runs.get_or_create_task_run_info(
+        flow_run_id=input["flow_run_id"],
+        task_id=input["task_id"],
+        map_index=input.get("map_index"),
+    )
+    return {
+        "id": info["id"],
+        "version": info["version"],
+        "state": info["state"],
+        "serialized_state": info["serialized_state"],
+    }
+
+
 @query.field("mapped_children")
 async def resolve_mapped_children(
     obj: Any, info: GraphQLResolveInfo, task_run_id: str
@@ -150,18 +167,6 @@ async def resolve_get_or_create_task_run(
             map_index=input.get("map_index"),
         )
     }
-
-
-@mutation.field("get_or_create_mapped_task_run_children")
-async def resolve_get_or_create_mapped_task_run_children(
-    obj: Any, info: GraphQLResolveInfo, input: dict
-) -> List[dict]:
-    task_runs = await api.runs.get_or_create_mapped_task_run_children(
-        flow_run_id=input["flow_run_id"],
-        task_id=input["task_id"],
-        max_map_index=input["max_map_index"],
-    )
-    return {"ids": task_runs}
 
 
 @mutation.field("delete_flow_run")

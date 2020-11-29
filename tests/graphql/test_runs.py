@@ -167,6 +167,66 @@ class TestCreateFlowRun:
         assert "Required parameters" in result.errors[0].message
 
 
+class TestGetOrCreateTaskRunInfo:
+    mutation = """
+        mutation($input: get_or_create_task_run_info_input!) {
+            get_or_create_task_run_info(input: $input) {
+                id
+                version
+                state
+                serialized_state
+            }
+        }
+    """
+
+    async def test_get_existing_task_run_id(
+        self, run_query, task_run_id, task_id, flow_run_id
+    ):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_run_id=flow_run_id, task_id=task_id)),
+        )
+
+        task_run = await models.TaskRun.where(id=task_run_id).first(
+            {"id", "version", "state", "serialized_state"}
+        )
+
+        assert result.data.get_or_create_task_run_info.id == task_run.id
+        assert result.data.get_or_create_task_run_info.version == task_run.version
+        assert result.data.get_or_create_task_run_info.state == task_run.state
+        assert (
+            result.data.get_or_create_task_run_info.serialized_state
+            == task_run.serialized_state
+        )
+
+    async def test_get_new_task_run_id(
+        self, run_query, task_run_id, task_id, flow_run_id
+    ):
+        assert not await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(flow_run_id=flow_run_id, task_id=task_id, map_index=12)
+            ),
+        )
+
+        task_run = await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+        assert task_run.id == result.data.get_or_create_task_run_info.id
+
+
 class TestGetTaskRunInfo:
     query = """
         query($task_run_id: UUID!) {
@@ -261,77 +321,6 @@ class TestGetOrCreateTaskRun:
             await models.TaskRun.where({"flow_run_id": {"_eq": flow_run_id}}).count()
             == n_tr + 1
         )
-
-
-class TestGetOrCreateMappedTaskRunChildren:
-    mutation = """
-        mutation($input: get_or_create_mapped_task_run_children_input!) {
-            get_or_create_mapped_task_run_children(input: $input) {
-                ids
-            }
-        }
-    """
-
-    async def test_get_or_create_mapped_task_run_children(
-        self, run_query, flow_run_id, flow_id
-    ):
-        # grab the task ID
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first({"id"})
-        result = await run_query(
-            query=self.mutation,
-            variables=dict(
-                input=dict(flow_run_id=flow_run_id, task_id=task.id, max_map_index=5)
-            ),
-        )
-        # should have 6 children, indices 0-5
-        assert len(result.data.get_or_create_mapped_task_run_children.ids) == 6
-
-    async def test_get_or_create_mapped_task_run_children_with_partial_children(
-        self, run_query, flow_run_id, flow_id
-    ):
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first({"id"})
-        # create a couple of children
-        preexisting_run_1 = await models.TaskRun(
-            flow_run_id=flow_run_id,
-            task_id=task.id,
-            map_index=3,
-            cache_key=task.cache_key,
-        ).insert()
-        preexisting_run_2 = await models.TaskRun(
-            flow_run_id=flow_run_id,
-            task_id=task.id,
-            map_index=6,
-            cache_key=task.cache_key,
-            states=[
-                models.TaskRunState(
-                    **models.TaskRunState.fields_from_state(
-                        Pending(message="Task run created")
-                    ),
-                )
-            ],
-        ).insert()
-        # call the route
-        result = await run_query(
-            query=self.mutation,
-            variables=dict(
-                input=dict(flow_run_id=flow_run_id, task_id=task.id, max_map_index=10)
-            ),
-        )
-        mapped_children = result.data.get_or_create_mapped_task_run_children.ids
-        # should have 11 children, indices 0-10
-        assert len(mapped_children) == 11
-
-        # confirm the preexisting task runs were included in the results
-        assert preexisting_run_1 in mapped_children
-        assert preexisting_run_2 in mapped_children
-
-        # confirm the results are ordered
-        map_indices = []
-        for child in mapped_children:
-            map_indices.append(
-                (await models.TaskRun.where(id=child).first({"map_index"})).map_index
-            )
-        assert map_indices == sorted(map_indices)
 
 
 class TestUpdateFlowRunHeartbeat:
