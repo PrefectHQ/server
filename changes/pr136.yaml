@@ -1,2 +1,0 @@
-enhancement:
-  - "Add KubernetesAgent to the Helm chart - [#136](https://github.com/PrefectHQ/server/pull/136)"

@@ -1,2 +1,0 @@
-fix:
-  - "Fix handling for managed postgres usernames with `@` signs - [#139](https://github.com/PrefectHQ/server/pull/139)"

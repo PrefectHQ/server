@@ -1,5 +1,18 @@
 # Changelog
 
+## November 29, 2020 <Badge text="beta" type="success" />
+
+Released on November 29, 2020.
+
+### Enhancements
+
+- Add KubernetesAgent to the Helm chart - [#136](https://github.com/PrefectHQ/server/pull/136)
+- Add two new GraphQL routes for Core functionality - [#143](https://github.com/PrefectHQ/server/pull/143)
+
+### Fixes
+
+- Fix handling for managed postgres usernames with `@` signs - [#139](https://github.com/PrefectHQ/server/pull/139)
+
 ## November 13, 2020 <Badge text="beta" type="success" />
 
 Released on November 13, 2020.
