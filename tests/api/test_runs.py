@@ -409,6 +409,85 @@ class TestCreateIdempotentRun:
         assert flow_run_id_1 != flow_run_id_3
 
 
+class TestGetOrCreateTaskRunInfo:
+    async def test_get_or_create_task_run_info_hits_db(
+        self, tenant_id, flow_run_id, task_id
+    ):
+        task_run = models.TaskRun(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            flow_run_id=flow_run_id,
+            task_id=task_id,
+            map_index=12,
+            version=17,
+            state="Success",
+            serialized_state=dict(message="hi"),
+        )
+        await task_run.insert()
+
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=task_run.map_index
+        )
+
+        assert task_run_info["id"] == task_run.id
+        assert task_run_info["version"] == task_run.version
+        assert task_run_info["state"] == task_run.state
+        assert task_run_info["serialized_state"] == task_run.serialized_state
+
+    async def test_get_or_create_task_run_info_inserts_into_db(
+        self, flow_run_id, task_id
+    ):
+        assert not await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=12
+        )
+
+        task_run = await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+
+        assert task_run_info["id"] == task_run.id
+
+        task_run_state = await models.TaskRunState.where(
+            {
+                "task_run_id": {"_eq": task_run.id},
+            }
+        ).first({"task_run_id", "state"})
+
+        assert task_run_info["id"] == task_run_state.task_run_id
+        assert task_run_info["state"] == task_run_state.state
+
+    async def test_properly_inserts_run_and_state(
+        self, tenant_id, flow_run_id, task_id
+    ):
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=12
+        )
+
+        task_run = await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id": True, "states": {"state", "task_run_id"}})
+        assert task_run.id == task_run_info["id"]
+        assert len(task_run.states) == 1
+        assert task_run.states[0].state == "Pending"
+        assert task_run.states[0].task_run_id == task_run_info["id"]
+
+
 class TestGetTaskRunInfo:
     async def test_task_run(self, flow_run_id, task_id):
         tr_id = await api.runs.get_or_create_task_run(
@@ -582,156 +661,6 @@ class TestGetTaskRunInfo:
         ).count()
 
         assert new_task_run_state_count == task_run_state_count
-
-
-class TestGetOrCreateMappedChildren:
-    async def test_get_or_create_mapped_children_creates_children(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first({"id"})
-        task_runs = await models.TaskRun.where({"task_id": {"_eq": task.id}}).get()
-
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=10
-        )
-        # confirm 11 children were returned as a result (indices 0, through 10)
-        assert len(mapped_children) == 11
-        # confirm those 11 children are in the DB
-        assert len(task_runs) + 11 == len(
-            await models.TaskRun.where({"task_id": {"_eq": task.id}}).get()
-        )
-        # confirm that those 11 children have api.states and the map indices are ordered
-        map_indices = []
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first(
-                {
-                    "map_index": True,
-                    with_args(
-                        "states",
-                        {"order_by": {"version": EnumValue("desc")}, "limit": 1},
-                    ): {"id"},
-                }
-            )
-            map_indices.append(task_run.map_index)
-            assert task_run.states[0] is not None
-        assert map_indices == sorted(map_indices)
-
-    async def test_get_or_create_mapped_children_retrieves_children(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first(
-            {"id", "cache_key"}
-        )
-
-        # create some mapped children
-        task_run_ids = []
-        for i in range(11):
-            task_run_ids.append(
-                await models.TaskRun(
-                    flow_run_id=flow_run_id,
-                    task_id=task.id,
-                    map_index=i,
-                    cache_key=task.cache_key,
-                ).insert()
-            )
-        # retrieve those mapped children
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=10
-        )
-        # confirm we retrieved 11 mapped children (0 through 10)
-        assert len(mapped_children) == 11
-        # confirm those 11 children are the task api.runs we created earlier and that they're in order
-        map_indices = []
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first({"map_index"})
-            map_indices.append(task_run.map_index)
-            assert child in task_run_ids
-        assert map_indices == sorted(map_indices)
-
-    async def test_get_or_create_mapped_children_does_not_retrieve_parent(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first(
-            {"id", "cache_key"}
-        )
-        # create a parent and its mapped children
-        for i in range(3):
-            await models.TaskRun(
-                flow_run_id=flow_run_id,
-                task_id=task.id,
-                map_index=i,
-                cache_key=task.cache_key,
-            ).insert()
-
-        # retrieve those mapped children
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=2
-        )
-        # confirm we retrieved 3 mapped children (0, 1, and 2)
-        assert len(mapped_children) == 3
-        # but not the parent
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first({"map_index"})
-            assert task_run.map_index > -1
-
-    async def test_get_or_create_mapped_children_handles_partial_children(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first(
-            {"id", "cache_key"}
-        )
-
-        # create a few mapped children
-        await models.TaskRun(
-            flow_run_id=flow_run_id,
-            task_id=task.id,
-            map_index=3,
-            cache_key=task.cache_key,
-        ).insert()
-        stateful_child = await models.TaskRun(
-            flow_run_id=flow_run_id,
-            task_id=task.id,
-            map_index=6,
-            cache_key=task.cache_key,
-            states=[
-                models.TaskRunState(
-                    **models.TaskRunState.fields_from_state(
-                        Pending(message="Task run created")
-                    ),
-                )
-            ],
-        ).insert()
-
-        # retrieve mapped children
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=10
-        )
-        assert len(mapped_children) == 11
-        map_indices = []
-        # confirm each of the mapped children has a state and is ordered properly
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first(
-                {
-                    "map_index": True,
-                    with_args(
-                        "states",
-                        {"order_by": {"version": EnumValue("desc")}, "limit": 1},
-                    ): {"id"},
-                }
-            )
-            map_indices.append(task_run.map_index)
-            assert task_run.states[0] is not None
-        assert map_indices == sorted(map_indices)
-
-        # confirm the one child created with a state only has the one state
-        child_states = await models.TaskRunState.where(
-            {"task_run_id": {"_eq": stateful_child}}
-        ).get()
-        assert len(child_states) == 1
 
 
 class TestUpdateFlowRunHeartbeat:

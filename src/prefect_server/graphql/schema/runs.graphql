@@ -1,5 +1,12 @@
 extend type Query {
-    mapped_children(task_run_id: UUID!): mapped_children_payload
+  mapped_children(task_run_id: UUID!): mapped_children_payload
+
+  """
+  Given a task run ID, retrieve current task run info
+  """
+  get_task_run_info(
+    task_run_id: UUID!
+  ): task_run_info_payload
 
 }
 
@@ -26,10 +33,12 @@ extend type Mutation {
     input: get_or_create_task_run_input!
   ): task_run_id_payload
 
-  "Gets or creates all mapped task run children for a parent task run."
-  get_or_create_mapped_task_run_children(
-    input: get_or_create_mapped_task_run_children_input!
-  ): get_or_create_mapped_task_run_children_payload
+  """
+  Given a flow run, task, and map index, retrieve the corresponding task run id
+  """
+  get_or_create_task_run_info(
+    input: get_or_create_task_run_info_input!
+  ): get_or_create_task_run_info_payload
 
   "Update a flow run's heartbeat. This indicates the flow run is alive and is called automatically by Prefect Core."
   update_flow_run_heartbeat(
@@ -95,6 +104,12 @@ input get_or_create_task_run_input {
   map_index: Int
 }
 
+input get_or_create_task_run_info_input {
+  flow_run_id: UUID!
+  task_id: UUID!
+  map_index: Int
+}
+
 input get_or_create_mapped_task_run_children_input {
   flow_run_id: UUID!
   task_id: UUID!
@@ -127,8 +142,18 @@ type task_run_id_payload {
   id: UUID
 }
 
-type get_or_create_mapped_task_run_children_payload {
-  ids: [UUID!]
+type task_run_info_payload {
+  id: UUID
+  version: Int
+  serialized_state: JSON
+  state: String 
+}
+
+type get_or_create_task_run_info_payload {
+  id: UUID
+  version: Int
+  state: String
+  serialized_state: JSON
 }
 
 type runs_in_queue_payload {

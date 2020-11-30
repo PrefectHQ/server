@@ -5,11 +5,49 @@ from graphql import GraphQLResolveInfo
 
 import prefect
 from prefect import api
-from prefect_server.database import postgres
+from prefect_server.database import models, postgres
 from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation, query
 
 state_schema = prefect.serialization.state.StateSchema()
+
+
+@query.field("get_task_run_info")
+async def resolve_get_task_run_info(
+    obj: Any, info: GraphQLResolveInfo, task_run_id: str
+) -> dict:
+    """
+    Retrieve details about a task run.
+    """
+    task_run = await models.TaskRun.where(id=task_run_id).first(
+        {"version", "serialized_state", "state"}
+    )
+    if not task_run:
+        raise ValueError("Invalid task run ID")
+
+    return {
+        "version": task_run.version,
+        "serialized_state": task_run.serialized_state,
+        "state": task_run.state,
+        "id": task_run_id,
+    }
+
+
+@mutation.field("get_or_create_task_run_info")
+async def resolve_get_or_create_task_run_info(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    info = await api.runs.get_or_create_task_run_info(
+        flow_run_id=input["flow_run_id"],
+        task_id=input["task_id"],
+        map_index=input.get("map_index"),
+    )
+    return {
+        "id": info["id"],
+        "version": info["version"],
+        "state": info["state"],
+        "serialized_state": info["serialized_state"],
+    }
 
 
 @query.field("mapped_children")
@@ -129,18 +167,6 @@ async def resolve_get_or_create_task_run(
             map_index=input.get("map_index"),
         )
     }
-
-
-@mutation.field("get_or_create_mapped_task_run_children")
-async def resolve_get_or_create_mapped_task_run_children(
-    obj: Any, info: GraphQLResolveInfo, input: dict
-) -> List[dict]:
-    task_runs = await api.runs.get_or_create_mapped_task_run_children(
-        flow_run_id=input["flow_run_id"],
-        task_id=input["task_id"],
-        max_map_index=input["max_map_index"],
-    )
-    return {"ids": task_runs}
 
 
 @mutation.field("delete_flow_run")
