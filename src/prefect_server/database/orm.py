@@ -470,7 +470,7 @@ class ModelQuery:
         arguments = {}
 
         if selection_set is None:
-            selection_set = self.__primary_key__
+            selection_set = self.model.__primary_key__
 
         if self.where is not None:
             arguments["where"] = self.where
@@ -518,7 +518,7 @@ class ModelQuery:
             - dict: the fields in the `selection_set`
         """
         if selection_set is None:
-            selection_set = self.__primary_key__
+            selection_set = self.model.__primary_key__
         result = await self.get(
             selection_set=selection_set,
             limit=1,
