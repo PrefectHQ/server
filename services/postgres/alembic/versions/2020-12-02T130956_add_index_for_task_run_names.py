@@ -19,12 +19,15 @@ depends_on = None
 
 
 def upgrade():
-    op.create_index(
-        "ix_task_run_name",
-        "task_run",
-        ["name"],
+    op.execute(
+        """
+        CREATE INDEX
+        ix_task_run_name_trgm
+        ON task_run USING GIN (name gin_trgm_ops)
+        WHERE name IS NOT NULL
+        """
     )
 
 
 def downgrade():
-    op.drop_index("ix_task_run_name", table_name="task_run")
+    op.drop_index("ix_task_run_name_trgm", table_name="task_run")
