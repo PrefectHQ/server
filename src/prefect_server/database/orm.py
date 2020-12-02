@@ -289,7 +289,7 @@ class HasuraModel(ORMModel):
 
         if selection_set is None:
             return_id = True
-            selection_set = {"returning": self.__primary_key__}
+            selection_set = {"returning": cls.__primary_key__}
         else:
             return_id = False
 
@@ -308,7 +308,7 @@ class HasuraModel(ORMModel):
             run_mutation=run_mutation,
         )
         if run_mutation and return_id:
-            return [r[self.__primary_key__] for r in result["returning"]]
+            return [r[cls.__primary_key__] for r in result["returning"]]
         return result
 
     @classmethod
@@ -353,7 +353,7 @@ class HasuraModel(ORMModel):
             raise ValueError("The provided id was `None`, which is an invalid value.")
         # otherwise check if an ID was provided
         elif id is not sentinel:
-            where.update({self.__primary_key__: {"_eq": id}})
+            where.update({cls.__primary_key__: {"_eq": id}})
         return ModelQuery(model=cls, where=where)
 
 
