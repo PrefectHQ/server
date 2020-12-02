@@ -19,6 +19,9 @@ class LoopService:
     # if no loop_seconds_config_key is provided, this will be the default
     loop_seconds_default = 600
 
+    # shutdown flag for gracefully exiting the infinite loop
+    is_running = True
+
     def __init__(self, loop_seconds: Union[float, int] = None):
         if loop_seconds is None:
             if self.loop_seconds_config_key:
@@ -53,7 +56,7 @@ class LoopService:
         )
         await asyncio.sleep(startup_delay)
 
-        while True:
+        while self.is_running:
             try:
                 await self.run_once()
 

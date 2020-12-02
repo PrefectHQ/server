@@ -1,0 +1,2 @@
+enhancement:
+  - "Add flag for shutting down loop services - [#144](https://github.com/PrefectHQ/server/pull/144)"

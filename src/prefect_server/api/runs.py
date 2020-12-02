@@ -334,7 +334,7 @@ async def get_or_create_task_run_info(
         id=run.returning.id,
         version=db_task_run.version,
         state="Pending",
-        serialized_state=db_task_run.serialized_state,
+        serialized_state=db_task_run_state.serialized_state,
     )
 
 
