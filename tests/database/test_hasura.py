@@ -578,6 +578,82 @@ class TestGenerateUpdateGraphQL:
             Variable(name="update_inc", type="tenant_inc_input", value={"age": 1}),
         ]
 
+    async def test_generate_gql_update_tenants_append(self):
+        graphql = await hasura_client.update(
+            "tenant", where={}, append={"settings": "hello"}, run_mutation=False
+        )
+        expected_query = """
+            update: update_tenant(where: $update_where, _append: $update_append) {
+                affected_rows
+            }
+        """
+        assert parse_graphql(graphql["query"]) == dedent(expected_query).strip()
+        assert graphql["variables"] == [
+            Variable(name="update_where", type="tenant_bool_exp!", value={}),
+            Variable(
+                name="update_append",
+                type="tenant_append_input",
+                value={"settings": "hello"},
+            ),
+        ]
+
+    async def test_generate_gql_update_tenants_prepend(self):
+        graphql = await hasura_client.update(
+            "tenant", where={}, prepend={"settings": "hello"}, run_mutation=False
+        )
+        expected_query = """
+            update: update_tenant(where: $update_where, _prepend: $update_prepend) {
+                affected_rows
+            }
+        """
+        assert parse_graphql(graphql["query"]) == dedent(expected_query).strip()
+        assert graphql["variables"] == [
+            Variable(name="update_where", type="tenant_bool_exp!", value={}),
+            Variable(
+                name="update_prepend",
+                type="tenant_prepend_input",
+                value={"settings": "hello"},
+            ),
+        ]
+
+    async def test_generate_gql_update_tenants_delete_key(self):
+        graphql = await hasura_client.update(
+            "tenant", where={}, delete_key={"settings": "hello"}, run_mutation=False
+        )
+        expected_query = """
+            update: update_tenant(where: $update_where, _delete_key: $update_delete_key) {
+                affected_rows
+            }
+        """
+        assert parse_graphql(graphql["query"]) == dedent(expected_query).strip()
+        assert graphql["variables"] == [
+            Variable(name="update_where", type="tenant_bool_exp!", value={}),
+            Variable(
+                name="update_delete_key",
+                type="tenant_delete_key_input",
+                value={"settings": "hello"},
+            ),
+        ]
+
+    async def test_generate_gql_update_tenants_delete_elem(self):
+        graphql = await hasura_client.update(
+            "tenant", where={}, delete_elem={"settings": 2}, run_mutation=False
+        )
+        expected_query = """
+            update: update_tenant(where: $update_where, _delete_elem: $update_delete_elem) {
+                affected_rows
+            }
+        """
+        assert parse_graphql(graphql["query"]) == dedent(expected_query).strip()
+        assert graphql["variables"] == [
+            Variable(name="update_where", type="tenant_bool_exp!", value={}),
+            Variable(
+                name="update_delete_elem",
+                type="tenant_delete_elem_input",
+                value={"settings": 2},
+            ),
+        ]
+
     async def test_alias(self):
         graphql = await hasura_client.update(
             "tenant",

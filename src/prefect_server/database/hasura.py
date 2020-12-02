@@ -321,8 +321,12 @@ class HasuraClient(GraphQLClient):
         id: str = None,
         set: GQLObjectTypes = None,
         increment: GQLObjectTypes = None,
-        alias: str = None,
+        append: dict = None,
+        prepend: dict = None,
+        delete_key: dict = None,
+        delete_elem: dict = None,
         selection_set: GQLObjectTypes = "affected_rows",
+        alias: str = None,
         run_mutation: bool = True,
     ) -> Box:
         """
@@ -332,13 +336,33 @@ class HasuraClient(GraphQLClient):
 
         The `selection_set` is inserted directly into the graphql query, and should not
         be surrounded by curly braces. Valid top-level keys are `affected_rows` and `returning`.
+
+        Args:
+            - graphql_type (str): the Hasura type
+            - where (GQLObjectTypes): a Hasura where clause
+            - id (str): an object ID; will autogenerate a where clause if provided
+            - set (GQLObjectTypes): a Hasura `_set` clause
+            - increment (GQLObjectTypes): a Hasura `_increment` clause for int columns
+            - append (dict) a Hasura `_append` clause for JSONB columns
+            - prepend (dict) a Hasura `_prepend` clause for JSONB columns
+            - delete_key (dict) a Hasura `_delete_key` clause for JSONB columns
+            - delete_elem (dict) a Hasura `_delete_elem` clause for JSONB columns
+            - selection_set (GQLObjectTypes): a hasura selection_set. If None,
+                a list of ids will be returned.
+            - alias (str): a GraphQL alias, useful when running this mutation in a batch.
+            - run_mutation (bool): if True (default), the mutation is run immediately. If False,
+                an object is returned that can be passed to `HasuraClient.execute_mutations_in_transaction`.
+
         """
         if id is None and not isinstance(where, dict):
             raise TypeError(
                 "`where` must be provided as a dict if `id` is None; "
                 f"received {type(where).__name__}"
             )
-        elif all(op is None for op in [set, increment]):
+        elif all(
+            op is None
+            for op in [set, increment, append, prepend, delete_key, delete_elem]
+        ):
             raise ValueError("At least one update operation must be provided")
 
         where = where or {}
@@ -376,6 +400,46 @@ class HasuraClient(GraphQLClient):
                 name=f"{alias}_inc", type=f"{graphql_type}_inc_input", value=increment
             )
             variables.append(arguments["_inc"])
+
+        # --- variable: _append
+
+        if append:
+            arguments["_append"] = Variable(
+                name=f"{alias}_append",
+                type=f"{graphql_type}_append_input",
+                value=append,
+            )
+            variables.append(arguments["_append"])
+
+        # --- variable: _prepend
+
+        if prepend:
+            arguments["_prepend"] = Variable(
+                name=f"{alias}_prepend",
+                type=f"{graphql_type}_prepend_input",
+                value=prepend,
+            )
+            variables.append(arguments["_prepend"])
+
+        # --- variable: _delete_key
+
+        if delete_key:
+            arguments["_delete_key"] = Variable(
+                name=f"{alias}_delete_key",
+                type=f"{graphql_type}_delete_key_input",
+                value=delete_key,
+            )
+            variables.append(arguments["_delete_key"])
+
+        # --- variable: _append
+
+        if delete_elem:
+            arguments["_delete_elem"] = Variable(
+                name=f"{alias}_delete_elem",
+                type=f"{graphql_type}_delete_elem_input",
+                value=delete_elem,
+            )
+            variables.append(arguments["_delete_elem"])
 
         # -------------------------------------------------------------
         # build mutation
