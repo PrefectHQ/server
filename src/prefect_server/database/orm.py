@@ -372,6 +372,10 @@ class ModelQuery:
         self,
         set: GQLObjectTypes = None,
         increment: GQLObjectTypes = None,
+        append: dict = None,
+        prepend: dict = None,
+        delete_key: dict = None,
+        delete_elem: dict = None,
         selection_set: GQLObjectTypes = None,
         alias: str = None,
         run_mutation: bool = True,
@@ -381,7 +385,11 @@ class ModelQuery:
 
         Args:
             - set (GQLObjectTypes): a Hasura `_set` clause
-            - increment (GQLObjectTypes): a Hasura `_increment` clause
+            - increment (GQLObjectTypes): a Hasura `_increment` clause for int columns
+            - append (dict) a Hasura `_append` clause for JSONB columns
+            - prepend (dict) a Hasura `_prepend` clause for JSONB columns
+            - delete_key (dict) a Hasura `_delete_key` clause for JSONB columns
+            - delete_elem (dict) a Hasura `_delete_elem` clause for JSONB columns
             - selection_set (GQLObjectTypes): a hasura selection_set. If None,
                 a list of ids will be returned.
             - alias (str): a GraphQL alias, useful when running this mutation in a batch.
@@ -401,6 +409,10 @@ class ModelQuery:
             where=self.where,
             set=set,
             increment=increment,
+            append=append,
+            prepend=prepend,
+            delete_key=delete_key,
+            delete_elem=delete_elem,
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
