@@ -97,6 +97,20 @@ class TestModel:
             "child": {"data": {"grandchildren": {"data": [{"x": 1}, {"x": 2}]}}}
         }
 
+    def test_primary_key_property(self):
+        class Model(orm.HasuraModel):
+
+            id: int
+            custom_id: int
+
+        class CustomModel(orm.HasuraModel):
+            __primary_key__ = "custom_id"
+            id: int
+            custom_id: int
+
+        assert Model(id=1, custom_id=2).primary_key == 1
+        assert CustomModel(id=1, custom_id=2).primary_key == 2
+
 
 class TestFields:
     async def test_UUIDString_is_a_string(self):
