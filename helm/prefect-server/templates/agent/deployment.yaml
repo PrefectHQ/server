@@ -62,7 +62,7 @@ spec:
           - name: PREFECT__BACKEND
             value: server
           - name: PREFECT__CLOUD__AGENT__AGENT_ADDRESS
-            value: http://localhost:8080
+            value: http://0.0.0.0:8080
         livenessProbe:
           failureThreshold: 2
           httpGet:

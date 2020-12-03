@@ -180,8 +180,10 @@ async def _create_flow_run(
         run_labels = flow.flow_group.labels
     elif flow.run_config is not None:
         run_labels = flow.run_config.get("labels") or []
-    else:
+    elif flow.environment is not None:
         run_labels = flow.environment.get("labels") or []
+    else:
+        run_labels = []
     run_labels.sort()
 
     # check parameters

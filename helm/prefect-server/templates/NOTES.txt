@@ -34,7 +34,7 @@
   ) \
   && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port }}/graphql"
 
-{{- else -}}
+{{- else }}
 
 #2 The API has been deployed as a non-default service type '{{ .Values.apollo.service.type }}' and may not be immediately accessible.
    Please contact your Kubernetes administrator for help getting access.
