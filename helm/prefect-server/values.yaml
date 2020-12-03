@@ -146,7 +146,7 @@ graphql:
   image:
     name: prefecthq/server
     tag: null
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     pullSecrets: []
 
   service:
@@ -176,7 +176,7 @@ apollo:
   image:
     name: prefecthq/apollo
     tag: null
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     pullSecrets: []
   options:
     telemetryEnabled: true
@@ -203,7 +203,7 @@ ui:
   image:
     name: prefecthq/ui
     tag: null
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     pullSecrets: []
 
   # apolloApiUrl defines the default gateway to the Apollo
@@ -234,7 +234,7 @@ towel:
   image:
     name: prefecthq/server
     tag: null
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     pullSecrets: []
 
   labels: {}
@@ -263,7 +263,7 @@ agent:
   image:
     name: prefecthq/prefect
     tag: null
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     pullSecrets: []
 
   labels: {}
