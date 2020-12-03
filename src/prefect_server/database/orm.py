@@ -1,7 +1,7 @@
 import datetime
 import json
 import uuid
-from typing import List, Union, cast
+from typing import List, Union, cast, Any
 
 import pendulum
 import psycopg2
@@ -54,6 +54,13 @@ class ORMModel(pydantic.BaseModel):
     A Pydantic model that defaults to only including set fields,
     which is helpful when working with subsets of available data.
     """
+
+    # the model primary key
+    __primary_key__ = "id"
+
+    @property
+    def primary_key(self) -> Any:
+        return getattr(self, self.__primary_key__)
 
     def __repr_args__(self) -> List:
         """
@@ -194,7 +201,7 @@ class HasuraModel(ORMModel):
         """
         if selection_set is None:
             return_id = True
-            selection_set = {"returning": "id"}
+            selection_set = {"returning": self.__primary_key__}
         else:
             return_id = False
 
@@ -212,7 +219,7 @@ class HasuraModel(ORMModel):
             if "returning" in result:
                 result["returning"] = result["returning"][0]
             if return_id:
-                return result["returning"]["id"]
+                return result["returning"][self.__primary_key__]
         return result
 
     async def delete(
@@ -235,9 +242,6 @@ class HasuraModel(ORMModel):
             - dict: the fields in the `selection_set`
         """
 
-        if not hasattr(self, "id"):
-            raise ValueError("This instance has no ID; can not delete.")
-
         if selection_set is None:
             check_result = True
             selection_set = "affected_rows"
@@ -246,7 +250,9 @@ class HasuraModel(ORMModel):
 
         result = await prefect.plugins.hasura.client.delete(
             graphql_type=self.__hasura_type__,
-            id=str(self.id) if isinstance(self.id, uuid.UUID) else self.id,
+            id=str(self.primary_key)
+            if isinstance(self.primary_key, uuid.UUID)
+            else self.primary_key,
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
@@ -283,7 +289,7 @@ class HasuraModel(ORMModel):
 
         if selection_set is None:
             return_id = True
-            selection_set = {"returning": "id"}
+            selection_set = {"returning": cls.__primary_key__}
         else:
             return_id = False
 
@@ -302,7 +308,7 @@ class HasuraModel(ORMModel):
             run_mutation=run_mutation,
         )
         if run_mutation and return_id:
-            return [r["id"] for r in result["returning"]]
+            return [r[cls.__primary_key__] for r in result["returning"]]
         return result
 
     @classmethod
@@ -347,7 +353,7 @@ class HasuraModel(ORMModel):
             raise ValueError("The provided id was `None`, which is an invalid value.")
         # otherwise check if an ID was provided
         elif id is not sentinel:
-            where.update({"id": {"_eq": id}})
+            where.update({cls.__primary_key__: {"_eq": id}})
         return ModelQuery(model=cls, where=where)
 
 
@@ -476,7 +482,7 @@ class ModelQuery:
         arguments = {}
 
         if selection_set is None:
-            selection_set = "id"
+            selection_set = self.model.__primary_key__
 
         if self.where is not None:
             arguments["where"] = self.where
@@ -524,7 +530,7 @@ class ModelQuery:
             - dict: the fields in the `selection_set`
         """
         if selection_set is None:
-            selection_set = "id"
+            selection_set = self.model.__primary_key__
         result = await self.get(
             selection_set=selection_set,
             limit=1,
