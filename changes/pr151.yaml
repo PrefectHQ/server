@@ -1,2 +1,0 @@
-enhancement:
-  - "Helm chart: Always pull prefecthq docker images by default - [#151](https://github.com/PrefectHQ/server/pull/151)"

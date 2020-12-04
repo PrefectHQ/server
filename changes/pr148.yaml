@@ -1,5 +1,0 @@
-fix:
-  - "Listen on all agent interfaces for healthchecks - [#148](https://github.com/PrefectHQ/server/pull/148)"
-
-contributor:
-  - "[Vladimir Zoubritsky](https://github.com/vogre)"

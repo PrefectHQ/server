@@ -1,5 +1,28 @@
 # Changelog
 
+## December 4, 2020 <Badge text="beta" type="success" />
+
+Released on December 4, 2020.
+
+### Enhancements
+
+- Add flag for shutting down loop services - [#144](https://github.com/PrefectHQ/server/pull/144)
+- Support configurable primary keys in ORM - [#145](https://github.com/PrefectHQ/server/pull/145)
+- Add support for expanded Hasura update operations - [#146](https://github.com/PrefectHQ/server/pull/146)
+- Helm chart: Always pull prefecthq docker images by default - [#151](https://github.com/PrefectHQ/server/pull/151)
+
+### Fixes
+
+- Listen on all agent interfaces for healthchecks - [#148](https://github.com/PrefectHQ/server/pull/148)
+
+### Database Migrations
+
+- Add task run name index for text search - [#149](https://github.com/PrefectHQ/server/pull/149)
+
+### Contributors
+
+- [Vladimir Zoubritsky](https://github.com/vogre)
+
 ## November 29, 2020 <Badge text="beta" type="success" />
 
 Released on November 29, 2020.

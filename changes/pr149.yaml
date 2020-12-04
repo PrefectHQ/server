@@ -1,2 +1,0 @@
-migration:
-  - "Add task run name index for text search - [#149](https://github.com/PrefectHQ/server/pull/149)"
