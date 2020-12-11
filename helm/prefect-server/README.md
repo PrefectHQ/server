@@ -73,7 +73,26 @@ When the Helm chart is published to a chart repository, we will pin the version 
 ### The UI loads but the dashboard is blank
 
 If you go to the 'Home' page it will likely direct you to create a tenant. Without a tenant, the dashboard cannot display.
-Run `prefect backend server && prefect server create-tenant --name default --slug default` to create a default tenant.
+
+To create a default tenant we need to designate our local `prefect server` to point to our kubernetes server.
+We do that by changing the host in the user configuration file `~/.prefect/config.toml`.
+
+```
+[server]
+  host = "http://<EXTERNAL-IP>"
+  [server.ui]
+    apollo_url="http://<EXTERNAL-IP>:4200/graphql"
+```
+
+To find out what is the service external IP run the following command and add it to you `config.toml`:
+```
+kubectl get service prefect-server-apollo -n <namespace> -ojson | jq .status.loadBalancer.ingress[0].hostname
+<EXTERNAL-IP>
+```
+
+Once it's done, you can check your configuration were applied by typing `prefect config`.
+ 
+Finally, run `prefect backend server && prefect server create-tenant --name default --slug default` to create a default tenant.
 
 ### The UI loads but cannot connect to the API
 
