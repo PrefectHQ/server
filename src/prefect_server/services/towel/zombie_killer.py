@@ -100,8 +100,8 @@ class ZombieKiller(LoopService):
         return {
             # the task run is RUNNING
             "state": {"_eq": "Running"},
-            # ... but the heartbeat is stale
-            "heartbeat": {"_lte": str(heartbeat_cutoff)},
+            # ... but the flow run heartbeat is stale
+            "flow_run": {"heartbeat": {"_lte": str(heartbeat_cutoff)}},
             # ... and the flow has heartbeats enabled
             "task": {
                 "flow": {

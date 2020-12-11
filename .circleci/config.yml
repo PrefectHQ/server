@@ -3,8 +3,8 @@ aliases:
     run:
       name: Set environment variables
       command: |
-        # set prefect tag -- currently pinning to master across the board
-        echo 'export PREFECT_VERSION=master' >> $BASH_ENV
+        # set prefect tag -- currently pinning to 0.13.19 as 0.14 is prepared
+        echo 'export PREFECT_VERSION=0.13.19' >> $BASH_ENV
 
   - &install_prefect_server
     run:
