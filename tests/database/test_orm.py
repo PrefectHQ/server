@@ -495,7 +495,7 @@ class TestRootFields:
         mock = CoroutineMock()
         monkeypatch.setattr("prefect_server.database.hasura.HasuraClient.execute", mock)
         graphql = await self.TestModel().where().get()
-        assert mock.awaited_once_with(query={"query": {"abc(where: {})": "id"}})
+        assert mock.awaited_once_with(query={"query": {"select: abc(where: {})": "id"}})
 
     async def test_get_select_aggregate_root_field_graphql(self, monkeypatch):
         mock = CoroutineMock()
@@ -544,7 +544,11 @@ class TestRootFields:
     async def test_get_custom_update_root_field_graphql(self):
         graphql = await self.TestCustomModel().where().update(run_mutation=False)
         assert next(iter(graphql["query"])).startswith("update: custom_update_xyz(")
+        # recover correct fields for non-root types
+        assert graphql["variables"][0].type == "abc_bool_exp!"
 
     async def test_get_custom_delete_root_field_graphql(self):
         graphql = await self.TestCustomModel().where().delete(run_mutation=False)
         assert next(iter(graphql["query"])).startswith("delete: custom_delete_xyz(")
+        # recover correct fields for non-root types
+        assert graphql["variables"][0].type == "abc_bool_exp!"

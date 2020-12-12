@@ -512,12 +512,12 @@ class ModelQuery:
             obj = with_args(obj, arguments)
 
         result = await prefect.plugins.hasura.client.execute(
-            query={"query": {obj: selection_set}},
+            query={"query": {f"select: {obj}": selection_set}},
             # if we are applying the schema, don't retrieve a box object
             # if we are NOT applying the schema, DO retrieve a box object
             as_box=not apply_schema,
         )
-        data = result["data"][self.model.__hasura_type__]
+        data = result["data"]["select"]
         if apply_schema:
             return [self.model(**d) for d in data]
         else:

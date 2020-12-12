@@ -24,7 +24,7 @@ class Variable:
         return f"${self.name}"
 
     def __repr__(self) -> str:
-        return f"<GraphQL Variable: {self.name}>"
+        return f'<GraphQL Variable "{self.name}": {self.type}>'
 
     def __hash__(self) -> int:
         return id(self)
@@ -302,7 +302,9 @@ class HasuraClient(GraphQLClient):
         # --- variable: where
 
         arguments["where"] = Variable(
-            name=f"{alias}_where", type=f"{graphql_type}_bool_exp!", value=where
+            name=f"{alias}_where",
+            type=f"{graphql_type}_bool_exp!",
+            value=where,
         )
         variables.append(arguments["where"])
 
@@ -395,7 +397,9 @@ class HasuraClient(GraphQLClient):
         # --- variable: where
 
         arguments["where"] = Variable(
-            name=f"{alias}_where", type=f"{graphql_type}_bool_exp!", value=where
+            name=f"{alias}_where",
+            type=f"{graphql_type}_bool_exp!",
+            value=where,
         )
         variables.append(arguments["where"])
 
@@ -403,7 +407,9 @@ class HasuraClient(GraphQLClient):
 
         if set:
             arguments["_set"] = Variable(
-                name=f"{alias}_set", type=f"{graphql_type}_set_input", value=set
+                name=f"{alias}_set",
+                type=f"{graphql_type}_set_input",
+                value=set,
             )
             variables.append(arguments["_set"])
 
@@ -411,7 +417,9 @@ class HasuraClient(GraphQLClient):
 
         if increment:
             arguments["_inc"] = Variable(
-                name=f"{alias}_inc", type=f"{graphql_type}_inc_input", value=increment
+                name=f"{alias}_inc",
+                type=f"{graphql_type}_inc_input",
+                value=increment,
             )
             variables.append(arguments["_inc"])
 
