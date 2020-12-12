@@ -264,7 +264,7 @@ class HasuraModel(ORMModel):
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
-            insert_mutation_name=self.__root_fields__.get("insert"),
+            delete_mutation_name=self.__root_fields__.get("delete"),
         )
 
         if run_mutation and check_result:
