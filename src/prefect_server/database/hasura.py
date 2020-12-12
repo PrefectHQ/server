@@ -198,6 +198,7 @@ class HasuraClient(GraphQLClient):
         alias: str = None,
         selection_set: GQLObjectTypes = "affected_rows",
         run_mutation: bool = True,
+        insert_mutation_name: str = None,
     ) -> Box:
         """
         Runs an `insert` mutation against the provided Hasura type, evaluating the provided
@@ -206,6 +207,9 @@ class HasuraClient(GraphQLClient):
         The `selection_set` is inserted directly into the graphql query, and should not
         be surrounded by curly braces. Valid top-level keys are `affected_rows` and `returning`.
         """
+
+        if insert_mutation_name is None:
+            insert_mutation_name = f"insert_{graphql_type}"
 
         if not isinstance(objects, (list, set, tuple)):
             raise TypeError(
@@ -244,7 +248,7 @@ class HasuraClient(GraphQLClient):
         # -------------------------------------------------------------
         # build mutation
 
-        mutation_name = f"{alias}: insert_{graphql_type}"
+        mutation_name = f"{alias}: {insert_mutation_name}"
         selection_set = selection_set or "affected_rows"
 
         graphql = dict(
@@ -266,6 +270,7 @@ class HasuraClient(GraphQLClient):
         alias: str = None,
         selection_set: GQLObjectTypes = "affected_rows",
         run_mutation: bool = True,
+        delete_mutation_name: str = None,
     ) -> Box:
         """
         Runs an `delete` mutation against the provided Hasura type and `where` clause,
@@ -279,6 +284,9 @@ class HasuraClient(GraphQLClient):
                 "`where` must be provided as a dict if `id` is None; "
                 f"received {type(where).__name__}"
             )
+
+        if delete_mutation_name is None:
+            delete_mutation_name = f"delete_{graphql_type}"
 
         where = where or {}
         if id is not None:
@@ -301,7 +309,7 @@ class HasuraClient(GraphQLClient):
         # -------------------------------------------------------------
         # build mutation
 
-        mutation_name = f"{alias}: delete_{graphql_type}"
+        mutation_name = f"{alias}: {delete_mutation_name}"
         selection_set = selection_set or "affected_rows"
         graphql = dict(
             query={with_args(mutation_name, arguments): selection_set},
@@ -328,6 +336,7 @@ class HasuraClient(GraphQLClient):
         selection_set: GQLObjectTypes = "affected_rows",
         alias: str = None,
         run_mutation: bool = True,
+        update_mutation_name: str = None,
     ) -> Box:
         """
         Runs an `update` mutation against the provided Hasura type and `where` clause, applying
@@ -352,6 +361,8 @@ class HasuraClient(GraphQLClient):
             - alias (str): a GraphQL alias, useful when running this mutation in a batch.
             - run_mutation (bool): if True (default), the mutation is run immediately. If False,
                 an object is returned that can be passed to `HasuraClient.execute_mutations_in_transaction`.
+            - update_mutation_name (str): if provided, the name of the mutation. Otherwise inferred
+                from the graphql_type. This is useful if custom root mutations were created.
 
         """
         if id is None and not isinstance(where, dict):
@@ -364,6 +375,9 @@ class HasuraClient(GraphQLClient):
             for op in [set, increment, append, prepend, delete_key, delete_elem]
         ):
             raise ValueError("At least one update operation must be provided")
+
+        if update_mutation_name is None:
+            update_mutation_name = f"update_{graphql_type}"
 
         where = where or {}
 
@@ -444,7 +458,7 @@ class HasuraClient(GraphQLClient):
         # -------------------------------------------------------------
         # build mutation
 
-        mutation_name = f"{alias}: update_{graphql_type}"
+        mutation_name = f"{alias}: {update_mutation_name}"
         selection_set = selection_set or "affected_rows"
         graphql = dict(
             query={with_args(mutation_name, arguments): selection_set},

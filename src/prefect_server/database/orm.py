@@ -83,6 +83,13 @@ class HasuraModel(ORMModel):
     """
 
     __hasura_type__ = None
+    # if custom hasura root fields are set, supply any of these keys:
+    #   - select
+    #   - select_aggregate
+    #   - update
+    #   - insert
+    #   - delete
+    __root_fields__ = {}
 
     @pydantic.root_validator(pre=True)
     def _convert_types(cls, model_values: dict) -> dict:
@@ -212,6 +219,7 @@ class HasuraModel(ORMModel):
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            insert_mutation_name=self.__root_fields__.get("insert"),
         )
 
         if run_mutation:
@@ -256,6 +264,7 @@ class HasuraModel(ORMModel):
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            insert_mutation_name=self.__root_fields__.get("insert"),
         )
 
         if run_mutation and check_result:
@@ -306,6 +315,7 @@ class HasuraModel(ORMModel):
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            insert_mutation_name=cls.__root_fields__.get("insert"),
         )
         if run_mutation and return_id:
             return [r[cls.__primary_key__] for r in result["returning"]]
@@ -422,6 +432,7 @@ class ModelQuery:
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            update_mutation_name=self.model.__root_fields__.get("update"),
         )
         return result
 
@@ -451,6 +462,7 @@ class ModelQuery:
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            delete_mutation_name=self.model.__root_fields__.get("delete"),
         )
 
         return result
@@ -495,7 +507,7 @@ class ModelQuery:
         if limit is not None:
             arguments["limit"] = limit
 
-        obj = self.model.__hasura_type__
+        obj = self.model.__root_fields__.get("select", self.model.__hasura_type__)
         if arguments:
             obj = with_args(obj, arguments)
 
@@ -562,16 +574,16 @@ class ModelQuery:
         if distinct_on is not None:
             arguments["distinct_on"] = distinct_on
 
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
         query = {
             "query": {
-                with_args(
-                    f"count_query: {self.model.__hasura_type__}_aggregate",
-                    arguments,
-                ): {"aggregate": "count"}
+                with_args(f"count: {agg_type}", arguments): {"aggregate": "count"}
             }
         }
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
-        return result["data"]["count_query"]["aggregate"]["count"]
+        return result["data"]["count"]["aggregate"]["count"]
 
     async def max(self, columns) -> dict:
         """
@@ -582,12 +594,14 @@ class ModelQuery:
         Returns:
             - dict: the requested columns and corresponding minmums
         """
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
         query = {
             "query": {
-                with_args(
-                    f"max_query: {self.model.__hasura_type__}_aggregate",
-                    {"where": self.where},
-                ): {"aggregate": {"max": set(columns)}}
+                with_args(f"max_query: {agg_type}", {"where": self.where}): {
+                    "aggregate": {"max": set(columns)}
+                }
             }
         }
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
@@ -602,12 +616,14 @@ class ModelQuery:
         Returns:
             - dict: the requested columns and corresponding minmums
         """
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
         query = {
             "query": {
-                with_args(
-                    f"min_query: {self.model.__hasura_type__}_aggregate",
-                    {"where": self.where},
-                ): {"aggregate": {"min": set(columns)}}
+                with_args(f"min_query: {agg_type}", {"where": self.where}): {
+                    "aggregate": {"min": set(columns)}
+                }
             }
         }
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
