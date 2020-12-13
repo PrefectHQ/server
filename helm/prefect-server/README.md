@@ -68,14 +68,12 @@ For production usage, we recommend setting the `prefectVersion` value to a speci
 
 When the Helm chart is published to a chart repository, we will pin the version for you.
 
-## Troubleshooting
+##  Connecting to your Server
 
-### The UI loads but the dashboard is blank
+### Configure `prefect` to point to your service
 
-If you go to the 'Home' page it will likely direct you to create a tenant. Without a tenant, the dashboard cannot display.
-
-To create a default tenant we need to designate our local `prefect server` to point to our kubernetes server.
-We do that by changing the host in the user configuration file `~/.prefect/config.toml`.
+To designate your local `prefect` to point to the Kubernetes server, 
+you can change the host in the user configuration file `~/.prefect/config.toml`.
 
 ```
 [server]
@@ -83,15 +81,22 @@ We do that by changing the host in the user configuration file `~/.prefect/confi
   [server.ui]
     apollo_url="http://<EXTERNAL-IP>:4200/graphql"
 ```
-
-To find out what is the service external IP run the following command and add it to you `config.toml`:
-```
-kubectl get service prefect-server-apollo -n <namespace> -ojson | jq .status.loadBalancer.ingress[0].hostname
-<EXTERNAL-IP>
-```
-
-Once it's done, you can check your configuration were applied by typing `prefect config`.
+Run `kubectl get services --namespace <namespace>` to obtain the Apollo GraphQL external ip.
+To review the configuration file run `prefect config`.
  
+### Forward your service to localhost 
+
+Alternatively, you can port-forward the apollo service to your localhost 
+`kubectl port-forward svc/<APOLO-SERVICE> 4200:4200 -n <namespace>`. 
+
+
+## Troubleshooting
+
+### The UI loads but the dashboard is blank
+
+If you go to the 'Home' page it will likely direct you to create a tenant. Without a tenant, the dashboard cannot display.
+
+
 Finally, run `prefect backend server && prefect server create-tenant --name default --slug default` to create a default tenant.
 
 ### The UI loads but cannot connect to the API
