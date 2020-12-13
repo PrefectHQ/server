@@ -17,7 +17,6 @@ class TestCreateProject:
             query=self.mutation,
             variables=dict(input=dict(tenant_id=tenant_id, name="test-gql")),
         )
-        assert await models.Project.exists(result.data.create_project.id)
         project = await models.Project.where(id=result.data.create_project.id).first(
             {"name"}
         )
@@ -66,7 +65,7 @@ class TestDeleteProject:
             variables=dict(input=(dict(project_id=project_id))),
         )
         assert result.data.delete_project.success
-        assert not await models.Project.exists(project_id)
+        assert not await models.Project.where(id=project_id).first()
 
     async def test_delete_project_bad_id(self, run_query, project_id):
         result = await run_query(

@@ -50,7 +50,7 @@ class TestCreateFlow:
         flow_id = await api.flows.create_flow(
             project_id=project_id, serialized_flow=flow.serialize()
         )
-        assert await models.Flow.exists(flow_id)
+        assert await models.Flow.where(id=flow_id).first()
 
     async def test_create_flow_with_no_schedule_sets_schedule_inactive(
         self, project_id, flow
@@ -131,7 +131,7 @@ class TestCreateFlow:
         flow_id = await api.flows.create_flow(
             project_id=project_id, serialized_flow=prefect.Flow(name="test").serialize()
         )
-        assert await models.Flow.exists(flow_id)
+        assert await models.Flow.where(id=flow_id).first()
 
     async def test_create_flow_without_edges(self, project_id):
         flow = prefect.Flow(name="test")
@@ -141,7 +141,7 @@ class TestCreateFlow:
         flow_id = await api.flows.create_flow(
             project_id=project_id, serialized_flow=prefect.Flow(name="test").serialize()
         )
-        assert await models.Flow.exists(flow_id)
+        assert await models.Flow.where(id=flow_id).first()
 
     async def test_create_flow_also_creates_tasks(self, project_id, flow):
         flow_id = await api.flows.create_flow(

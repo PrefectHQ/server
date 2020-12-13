@@ -29,7 +29,7 @@ async def simple_flow_id(project_id):
 class TestCreateRun:
     async def test_create_flow_run(self, simple_flow_id):
         flow_run_id = await api.runs.create_flow_run(flow_id=simple_flow_id)
-        assert await models.FlowRun.exists(flow_run_id)
+        assert await models.FlowRun.where(id=flow_run_id).first()
 
     async def test_create_flow_run_accepts_labels(self, simple_flow_id):
         flow_run_id = await api.runs.create_flow_run(
@@ -493,7 +493,7 @@ class TestGetTaskRunInfo:
         tr_id = await api.runs.get_or_create_task_run(
             flow_run_id=flow_run_id, task_id=task_id, map_index=None
         )
-        assert await models.TaskRun.exists(tr_id)
+        assert await models.TaskRun.where(id=tr_id).first()
 
     async def test_task_run_populates_cache_key(self, flow_run_id, task_id):
         cache_key = "test"
@@ -556,7 +556,7 @@ class TestGetTaskRunInfo:
         tr_id = await api.runs.get_or_create_task_run(
             flow_run_id=flow_run_id, task_id=task_id, map_index=10
         )
-        assert await models.TaskRun.exists(tr_id)
+        assert await models.TaskRun.where(id=tr_id).first()
 
     async def test_task_run_fails_with_fake_flow_run_id(self, task_id):
         with pytest.raises(ValueError, match="Invalid ID"):

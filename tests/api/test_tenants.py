@@ -15,7 +15,7 @@ class TestCreateTenant:
         slug = random_id()
 
         tenant_id = await api.tenants.create_tenant(name=name, slug=slug)
-        assert await models.Tenant.exists(tenant_id)
+        assert await models.Tenant.where(id=tenant_id).first()
 
     async def test_create_tenant_stores_attributes(self):
         name = random_id()

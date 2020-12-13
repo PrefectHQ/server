@@ -322,19 +322,6 @@ class HasuraModel(ORMModel):
         return result
 
     @classmethod
-    async def exists(cls, id: str) -> bool:
-        """
-        Returns True if an object with the specified ID exists in the database; False otherwise.
-
-        Args:
-            - id (str): an object with this ID will be tested
-
-        Returns:
-            - bool: True if the object exists; False otherwise
-        """
-        return bool(cls.where(id=id).first())
-
-    @classmethod
     def where(cls, where: GQLObjectTypes = None, id: str = sentinel) -> "ModelQuery":
         """
         Constructs a "where" clause for this object type, allowing mutations like `update` and

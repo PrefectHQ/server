@@ -408,7 +408,7 @@ class TestDeleteFlowRun:
         )
 
         assert result.data.delete_flow_run.success
-        assert not await models.FlowRun.exists(flow_run_id)
+        assert not await models.FlowRun.where(id=flow_run_id).first()
 
     async def test_delete_flow_run_bad_id(self, run_query):
         result = await run_query(
