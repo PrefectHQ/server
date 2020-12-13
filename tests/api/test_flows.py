@@ -814,11 +814,11 @@ class TestUnarchiveFlow:
 class TestDeleteFlow:
     async def test_delete_tenant_deletes_flow(self, tenant_id, flow_id):
         await models.Tenant.where(id=tenant_id).delete()
-        assert not await models.Flow.exists(flow_id)
+        assert not await models.Flow.where(id=flow_id).first()
 
     async def test_delete_flow_does_not_delete_tenant(self, tenant_id, flow_id):
         assert await api.flows.delete_flow(flow_id)
-        assert await models.Tenant.exists(tenant_id)
+        assert await models.Tenant.where(id=tenant_id).first()
 
     async def test_delete_flow_deletes_flow_runs(self, flow_id, flow_run_id):
         await api.states.set_flow_run_state(
@@ -826,11 +826,11 @@ class TestDeleteFlow:
             state=prefect.engine.state.Scheduled(),
         )
 
-        assert await models.FlowRun.exists(flow_run_id)
+        assert await models.FlowRun.where(id=flow_run_id).first()
 
         assert await api.flows.delete_flow(flow_id)
 
-        assert not await models.FlowRun.exists(flow_run_id)
+        assert not await models.FlowRun.where(id=flow_run_id).first()
 
     async def test_delete_flow_with_none_id(self):
         with pytest.raises(ValueError, match="Must provide flow ID."):
