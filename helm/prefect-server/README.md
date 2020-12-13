@@ -98,7 +98,7 @@ Alternatively, you can port-forward the apollo service to your localhost
 If you go to the 'Home' page it will likely direct you to create a tenant. Without a tenant, the dashboard cannot display.
 Run `prefect backend server && prefect server create-tenant --name default --slug default` to create a default tenant.
 
-Checkout the section [Connecting to your Server](#connecting-to-your-server) to connect your local `prefect` to your server
+Check out [Connecting to your Server](#connecting-to-your-server) to connect your local `prefect` to your server before creating the tenant.
 
 ### The UI loads but cannot connect to the API
 
