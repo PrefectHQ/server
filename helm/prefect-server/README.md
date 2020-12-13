@@ -70,6 +70,7 @@ When the Helm chart is published to a chart repository, we will pin the version 
 
 ##  Connecting to your Server
 
+When you run `prefect backend server`, it configures the CLI to expect Server interactions rather than Prefect Cloud. By default, the CLI looks for the Server API at `localhost`. To connect the CLI to your newly deployed server, you'll either need to point the CLI to an external IP or forward the service to `localhost`
 ### Configure `prefect` to point to your service
 
 To designate your local `prefect` to point to the Kubernetes server, 
