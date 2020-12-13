@@ -1,7 +1,7 @@
 # Licensed under the Prefect Community License, available at
 # https://www.prefect.io/legal/prefect-community-license
 
-
+from asynctest import CoroutineMock
 import datetime
 import json
 import uuid
@@ -470,3 +470,85 @@ class TestRunModels:
         assert info["message"] == state.message
         assert info["result"] == state.result
         assert info["serialized_state"] == state.serialize()
+
+
+class TestRootFields:
+    class TestModel(orm.HasuraModel):
+        __hasura_type__ = "abc"
+        __root_fields__ = {}
+
+    class TestCustomModel(orm.HasuraModel):
+        __hasura_type__ = "abc"
+        __root_fields__ = {
+            "select": "custom_select_xyz",
+            "select_aggregate": "custom_select_aggregate_xyz",
+            "insert": "custom_insert_xyz",
+            "update": "custom_update_xyz",
+            "delete": "custom_delete_xyz",
+        }
+
+    # --------------------
+    # inferred root fields
+    # --------------------
+
+    async def test_get_select_root_field_graphql(self, monkeypatch):
+        mock = CoroutineMock()
+        monkeypatch.setattr("prefect_server.database.hasura.HasuraClient.execute", mock)
+        graphql = await self.TestModel().where().get()
+        assert mock.awaited_once_with(query={"query": {"select: abc(where: {})": "id"}})
+
+    async def test_get_select_aggregate_root_field_graphql(self, monkeypatch):
+        mock = CoroutineMock()
+        monkeypatch.setattr("prefect_server.database.hasura.HasuraClient.execute", mock)
+        graphql = await self.TestModel().where().get()
+        assert mock.awaited_once_with(
+            query={"count": {"abc_aggregate(where: {})": "id"}}
+        )
+
+    async def test_get_insert_root_field_graphql(self):
+        graphql = await self.TestModel().insert_many([], run_mutation=False)
+        assert next(iter(graphql["query"])).startswith("insert: insert_abc(")
+
+    async def test_get_update_root_field_graphql(self):
+        graphql = await self.TestModel().where().update(run_mutation=False)
+        assert next(iter(graphql["query"])).startswith("update: update_abc(")
+
+    async def test_get_delete_root_field_graphql(self):
+        graphql = await self.TestModel().where().delete(run_mutation=False)
+        assert next(iter(graphql["query"])).startswith("delete: delete_abc(")
+
+    # --------------------
+    # custom root fields
+    # --------------------
+
+    async def test_get_custom_select_root_field_graphql(self, monkeypatch):
+        mock = CoroutineMock()
+        monkeypatch.setattr("prefect_server.database.hasura.HasuraClient.execute", mock)
+        graphql = await self.TestCustomModel().where().get()
+        assert mock.awaited_once_with(
+            query={"query": {"custom_select_xyz(where: {})": "id"}}
+        )
+
+    async def test_get_custom_select_aggregate_root_field_graphql(self, monkeypatch):
+        mock = CoroutineMock()
+        monkeypatch.setattr("prefect_server.database.hasura.HasuraClient.execute", mock)
+        graphql = await self.TestCustomModel().where().get()
+        assert mock.awaited_once_with(
+            query={"count": {"custom_select_aggregate_xyz(where: {})": "id"}}
+        )
+
+    async def test_get_custom_insert_root_field_graphql(self):
+        graphql = await self.TestCustomModel().insert_many([], run_mutation=False)
+        assert next(iter(graphql["query"])).startswith("insert: custom_insert_xyz(")
+
+    async def test_get_custom_update_root_field_graphql(self):
+        graphql = await self.TestCustomModel().where().update(run_mutation=False)
+        assert next(iter(graphql["query"])).startswith("update: custom_update_xyz(")
+        # recover correct fields for non-root types
+        assert graphql["variables"][0].type == "abc_bool_exp!"
+
+    async def test_get_custom_delete_root_field_graphql(self):
+        graphql = await self.TestCustomModel().where().delete(run_mutation=False)
+        assert next(iter(graphql["query"])).startswith("delete: custom_delete_xyz(")
+        # recover correct fields for non-root types
+        assert graphql["variables"][0].type == "abc_bool_exp!"
