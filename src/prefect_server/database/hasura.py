@@ -167,29 +167,6 @@ class HasuraClient(GraphQLClient):
 
         return result
 
-    async def get(
-        self, graphql_type: str, id: str, selection_set: GQLObjectTypes
-    ) -> Box:
-        """
-        Query a specific object type by ID
-
-        Args:
-            - graphql_type(str): the GraphQL type to query
-            - id (str): the object ID
-            - selection_set (str): a GraphQL results query, not including surrounding braces
-        """
-        query_type = f"{graphql_type}_by_pk"
-        query = {"query": {with_args(query_type, {"id": id}): selection_set}}
-        result = await self.execute(query)
-        return result.data[query_type]
-
-    async def exists(self, graphql_type: str, id: str) -> bool:
-        """
-        Tests if a type with the provided ID exists in the database
-        """
-        result = await self.get(graphql_type=graphql_type, id=id, selection_set="id")
-        return result is not None
-
     async def insert(
         self,
         graphql_type: str,

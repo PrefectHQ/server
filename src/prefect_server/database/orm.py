@@ -332,11 +332,7 @@ class HasuraModel(ORMModel):
         Returns:
             - bool: True if the object exists; False otherwise
         """
-        if isinstance(id, uuid.UUID):
-            id = str(id)
-        return await prefect.plugins.hasura.client.exists(
-            graphql_type=cls.__hasura_type__, id=id
-        )
+        return bool(cls.where(id=id).first())
 
     @classmethod
     def where(cls, where: GQLObjectTypes = None, id: str = sentinel) -> "ModelQuery":
