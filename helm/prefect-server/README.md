@@ -68,12 +68,37 @@ For production usage, we recommend setting the `prefectVersion` value to a speci
 
 When the Helm chart is published to a chart repository, we will pin the version for you.
 
+##  Connecting to your Server
+
+When you run `prefect backend server`, it configures the CLI to expect Server interactions rather than Prefect Cloud. By default, the CLI looks for the Server API at `localhost`. To connect the CLI to your newly deployed server, you'll either need to point the CLI to an external IP or forward the service to `localhost`
+### Configure `prefect` to point to your service
+
+To designate your local `prefect` to point to the Kubernetes server, 
+you can change the host in the user configuration file `~/.prefect/config.toml`.
+
+```
+[server]
+  host = "http://<EXTERNAL-IP>"
+  [server.ui]
+    apollo_url="http://<EXTERNAL-IP>:4200/graphql"
+```
+Run `kubectl get services --namespace <namespace>` to obtain the Apollo API external ip address.
+To review the configuration file run `prefect config`.
+ 
+### Forward your service to localhost 
+
+Alternatively, you can port-forward the apollo service to your localhost 
+`kubectl port-forward svc/<APOLO-SERVICE> 4200:4200 -n <namespace>`. 
+
+
 ## Troubleshooting
 
 ### The UI loads but the dashboard is blank
 
 If you go to the 'Home' page it will likely direct you to create a tenant. Without a tenant, the dashboard cannot display.
 Run `prefect backend server && prefect server create-tenant --name default --slug default` to create a default tenant.
+
+Check out [Connecting to your Server](#connecting-to-your-server) to connect your local `prefect` to your server before creating the tenant.
 
 ### The UI loads but cannot connect to the API
 
