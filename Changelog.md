@@ -1,5 +1,24 @@
 # Changelog
 
+## December 14, 2020 <Badge text="beta" type="success" />
+
+Released on December 14, 2020.
+
+### Enhancements
+
+- Add documentation on how to connect the CLI to a remote deployed server - [#159](https://github.com/PrefectHQ/server/pull/159)
+- Refactor the Zombie Killer to rely entirely on flow run heartbeats - [#158](https://github.com/PrefectHQ/server/pull/158)
+- Add support for custom Hasura root fields - [#161](https://github.com/PrefectHQ/server/pull/161)
+
+### Fixes
+
+- Add jobs/status to role for agent - [#154](https://github.com/PrefectHQ/server/pull/154)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+- [Pedro Martins](https://github.com/pedrocwb)
+
 ## December 4, 2020 <Badge text="beta" type="success" />
 
 Released on December 4, 2020.

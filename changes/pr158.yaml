@@ -1,2 +1,0 @@
-enhancement:
-  - "Refactor the Zombie Killer to rely entirely on flow run heartbeats - [#158](https://github.com/PrefectHQ/server/pull/158)"
