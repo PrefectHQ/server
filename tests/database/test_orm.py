@@ -248,10 +248,10 @@ class TestORM:
         assert next(iter(graphql["query"])).startswith("x: delete_project(")
 
     async def test_exists(self, project_id):
-        assert await models.Project.exists(project_id)
+        assert await models.Project.where(id=project_id).first()
 
     async def test_exists_false(self):
-        assert not await models.Project.exists(uuid.uuid4())
+        assert not await models.Project.where(id=uuid.uuid4()).first()
 
     async def test_where_is_modelquery(self):
         assert isinstance(models.Project.where(), orm.ModelQuery)
@@ -282,21 +282,21 @@ class TestORM:
         f3 = models.Project(name="f3")
         ids = await models.Project.insert_many([f1, f2, f3])
         assert len(ids) == 3
-        assert all([await models.Project.exists(i) for i in ids])
+        assert all([await models.Project.where(id=i).first() for i in ids])
 
     async def test_insert_dict(self, project_id):
         f1 = dict(name="f1")
         f2 = dict(name="f2")
         f3 = dict(name="f3")
         ids = await models.Project.insert_many([f1, f2, f3])
-        assert all([await models.Project.exists(i) for i in ids])
+        assert all([await models.Project.where(id=i).first() for i in ids])
 
     async def test_insert_dict_with_apply_schema(self, project_id):
         f1 = dict(name="f1")
         f2 = dict(name="f2")
         f3 = dict(name="f3")
         ids = await models.Project.insert_many([f1, f2, f3])
-        assert all([await models.Project.exists(i) for i in ids])
+        assert all([await models.Project.where(id=i).first() for i in ids])
 
     async def test_get_more_than_100_objects(self, project_id):
         await models.Project.where().delete()

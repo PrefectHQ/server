@@ -33,7 +33,6 @@ class TestCreateFlow:
                 input=dict(serialized_flow=serialized_flow, project_id=project_id)
             ),
         )
-        assert await models.Flow.exists(result.data.create_flow.id)
         flow = await models.Flow.where(id=result.data.create_flow.id).first(
             {"project_id"}
         )
@@ -46,9 +45,6 @@ class TestCreateFlow:
             variables=dict(
                 input=dict(serialized_flow=serialized_flow, project_id=project_id)
             ),
-        )
-        assert await models.Flow.exists(
-            result.data.create_flow_from_compressed_string.id
         )
         flow = await models.Flow.where(
             id=result.data.create_flow_from_compressed_string.id
@@ -344,7 +340,7 @@ class TestDeleteFlow:
             query=self.mutation,
             variables=dict(input=dict(flow_id=flow_id)),
         )
-        assert not await models.Flow.exists(flow_id)
+        assert not await models.Flow.where(id=flow_id).first()
 
 
 class TestArchiveFlow:

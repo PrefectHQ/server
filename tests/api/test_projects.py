@@ -9,7 +9,7 @@ class TestCreateProject:
     async def test_create_project(self, tenant_id):
         project_id = await api.projects.create_project(tenant_id=tenant_id, name="test")
 
-        assert await models.Project.exists(project_id)
+        assert await models.Project.where(id=project_id).first()
         project = await models.Project.where(id=project_id).first({"name"})
         assert project.name == "test"
 
@@ -18,7 +18,7 @@ class TestCreateProject:
             tenant_id=tenant_id, name="test", description="test-description"
         )
 
-        assert await models.Project.exists(project_id)
+        assert await models.Project.where(id=project_id).first()
         project = await models.Project.where(id=project_id).first(
             {"name", "description"}
         )
@@ -30,29 +30,25 @@ class TestCreateProject:
         with pytest.raises(ValueError):
             await api.projects.create_project(tenant_id=tenant_id, name="test")
 
-    async def test_delete_project_deletes_flow(self, project_id, flow_id, tenant_id):
-        await models.Project.where(id=project_id).delete()
-        assert not await models.Project.exists(flow_id)
-
     async def test_same_project_name_in_multiple_tenants(self, tenant_id):
         tenant_id_2 = await api.tenants.create_tenant(name="name")
         p1 = await api.projects.create_project(tenant_id=tenant_id, name="test")
         p2 = await api.projects.create_project(tenant_id=tenant_id_2, name="test")
 
-        assert await models.Project.exists(p1)
-        assert await models.Project.exists(p2)
+        assert await models.Project.where(id=p1).first()
+        assert await models.Project.where(id=p2).first()
 
     async def test_delete_tenant_deletes_project(self, tenant_id, project_id):
         await models.Tenant.where(id=tenant_id).delete()
-        assert not await models.Project.exists(project_id)
+        assert not await models.Project.where(id=project_id).first()
 
     async def test_delete_project_does_not_delete_tenant(self, tenant_id, project_id):
         await models.Project.where(id=project_id).delete()
-        assert await models.Tenant.exists(tenant_id)
+        assert await models.Tenant.where(id=tenant_id).first()
 
     async def test_delete_project_deletes_flow(self, project_id, flow_id):
         await models.Project.where(id=project_id).delete()
-        assert not await models.Project.exists(flow_id)
+        assert not await models.Flow.where(id=flow_id).first()
 
 
 class TestSetProjectName:
