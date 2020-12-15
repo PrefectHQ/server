@@ -773,7 +773,7 @@ class TestGetRunsInQueue:
         """
 
         flow = await models.Flow.where(id=flow_id).first({"environment"})
-        flow.environment["labels"] = None
+        flow.environment = dict(labels=None)
         await models.Flow.where(id=flow_id).update({"environment": flow.environment})
         check_flow = await models.Flow.where(id=flow_id).first({"environment"})
         assert check_flow.environment["labels"] is None
@@ -795,7 +795,7 @@ class TestGetRunsInQueue:
         """
 
         flow = await models.Flow.where(id=flow_id).first({"environment"})
-        del flow.environment["labels"]
+        flow.environment = dict()
         await models.Flow.where(id=flow_id).update({"environment": flow.environment})
         check_flow = await models.Flow.where(id=flow_id).first({"environment"})
         assert "labels" not in check_flow.environment
