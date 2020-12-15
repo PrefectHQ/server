@@ -5,8 +5,6 @@ import pytest
 from box import Box
 
 from prefect import api, models
-from prefect.engine.result import SafeResult
-from prefect.engine.result_handlers import JSONResultHandler
 from prefect.engine.state import (
     Cancelled,
     Failed,
@@ -83,89 +81,6 @@ class TestTaskRunStates:
         )
         assert not task_run_info.start_time
         assert not task_run_info.end_time
-
-    @pytest.mark.parametrize(
-        "state",
-        [s() for s in State.children() if s not in _MetaState.children()],
-        ids=[s.__name__ for s in State.children() if s not in _MetaState.children()],
-    )
-    async def test_setting_a_task_run_state_pulls_cached_inputs_if_possible(
-        self, task_run_id, state, running_flow_run_id
-    ):
-
-        res1 = SafeResult(1, result_handler=JSONResultHandler())
-        res2 = SafeResult({"z": 2}, result_handler=JSONResultHandler())
-        complex_result = {"x": res1, "y": res2}
-        cached_state = Failed(cached_inputs=complex_result)
-        await models.TaskRun.where(id=task_run_id).update(
-            set=dict(serialized_state=cached_state.serialize())
-        )
-
-        # try to schedule the task run to scheduled
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=state)
-
-        task_run = await models.TaskRun.where(id=task_run_id).first(
-            {"serialized_state"}
-        )
-
-        # ensure the state change took place
-        assert task_run.serialized_state["type"] == type(state).__name__
-        assert task_run.serialized_state["cached_inputs"]["x"]["value"] == 1
-        assert task_run.serialized_state["cached_inputs"]["y"]["value"] == {"z": 2}
-
-    @pytest.mark.parametrize(
-        "state",
-        [
-            s(cached_inputs=None)
-            for s in State.children()
-            if s not in _MetaState.children()
-        ],
-        ids=[s.__name__ for s in State.children() if s not in _MetaState.children()],
-    )
-    async def test_task_runs_with_null_cached_inputs_do_not_overwrite_cache(
-        self, state, task_run_id, running_flow_run_id
-    ):
-
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=state)
-        # set up a Retrying state with non-null cached inputs
-        res1 = SafeResult(1, result_handler=JSONResultHandler())
-        res2 = SafeResult({"z": 2}, result_handler=JSONResultHandler())
-        complex_result = {"x": res1, "y": res2}
-        cached_state = Retrying(cached_inputs=complex_result)
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=cached_state)
-        run = await models.TaskRun.where(id=task_run_id).first({"serialized_state"})
-
-        assert run.serialized_state["cached_inputs"]["x"]["value"] == 1
-        assert run.serialized_state["cached_inputs"]["y"]["value"] == {"z": 2}
-
-    @pytest.mark.parametrize(
-        "state_cls", [s for s in State.children() if s not in _MetaState.children()]
-    )
-    async def test_task_runs_cached_inputs_give_preference_to_new_cached_inputs(
-        self, state_cls, task_run_id, running_flow_run_id
-    ):
-
-        # set up a Failed state with null cached inputs
-        res1 = SafeResult(1, result_handler=JSONResultHandler())
-        res2 = SafeResult({"a": 2}, result_handler=JSONResultHandler())
-        complex_result = {"b": res1, "c": res2}
-        cached_state = state_cls(cached_inputs=complex_result)
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=cached_state)
-        # set up a Retrying state with non-null cached inputs
-        res1 = SafeResult(1, result_handler=JSONResultHandler())
-        res2 = SafeResult({"z": 2}, result_handler=JSONResultHandler())
-        complex_result = {"x": res1, "y": res2}
-        cached_state = Retrying(cached_inputs=complex_result)
-        await api.states.set_task_run_state(task_run_id=task_run_id, state=cached_state)
-        run = Box(
-            await models.TaskRun.where(id=task_run_id).first({"serialized_state"})
-        )
-
-        # verify that we have cached inputs, and that preference has been given to the new
-        # cached inputs
-        assert run.serialized_state.cached_inputs
-        assert run.serialized_state.cached_inputs.x.value == 1
-        assert run.serialized_state.cached_inputs.y.value == {"z": 2}
 
     @pytest.mark.parametrize(
         "flow_run_state", [Pending(), Running(), Failed(), Success()]

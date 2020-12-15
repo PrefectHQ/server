@@ -4,8 +4,8 @@ import uuid
 import pytest
 
 from prefect import api, models
-from prefect.engine.result import Result, SafeResult
-from prefect.engine.result_handlers import JSONResultHandler
+from prefect.engine.result import Result
+from prefect.engine.results import PrefectResult
 from prefect.engine.state import Retrying, Running, Submitted, Success
 
 
@@ -133,26 +133,7 @@ class TestSetFlowRunStates:
         )
 
     async def test_set_flow_run_state_with_result(self, run_query, flow_run_id):
-        result = Result(10, result_handler=JSONResultHandler())
-        result.store_safe_value()
-        state = Success(result=result)
-
-        result = await run_query(
-            query=self.mutation,
-            variables=dict(
-                input=dict(
-                    states=[dict(flow_run_id=flow_run_id, state=state.serialize())]
-                )
-            ),
-        )
-        fr = await models.FlowRun.where(
-            id=result.data.set_flow_run_states.states[0].id
-        ).first({"state", "version"})
-        assert fr.version == 3
-        assert fr.state == "Success"
-
-    async def test_set_flow_run_state_with_saferesult(self, run_query, flow_run_id):
-        result = SafeResult("10", result_handler=JSONResultHandler())
+        result = PrefectResult(location="10")
         state = Success(result=result)
 
         result = await run_query(
@@ -325,26 +306,7 @@ class TestSetTaskRunStates:
         )
 
     async def test_set_task_run_state_with_result(self, run_query, task_run_id):
-        result = Result(10, result_handler=JSONResultHandler())
-        result.store_safe_value()
-        state = Success(result=result)
-
-        result = await run_query(
-            query=self.mutation,
-            variables=dict(
-                input=dict(
-                    states=[dict(task_run_id=task_run_id, state=state.serialize())]
-                )
-            ),
-        )
-        tr = await models.TaskRun.where(
-            id=result.data.set_task_run_states.states[0].id
-        ).first({"state", "version"})
-        assert tr.version == 2
-        assert tr.state == "Success"
-
-    async def test_set_task_run_state_with_safe_result(self, run_query, task_run_id):
-        result = SafeResult("10", result_handler=JSONResultHandler())
+        result = PrefectResult(location="10")
         state = Success(result=result)
 
         result = await run_query(

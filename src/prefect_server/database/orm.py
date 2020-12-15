@@ -22,7 +22,7 @@ pydantic.json.ENCODERS_BY_TYPE[pendulum.Date] = str
 pydantic.json.ENCODERS_BY_TYPE[pendulum.Time] = str
 pydantic.json.ENCODERS_BY_TYPE[pendulum.Duration] = lambda x: str(x.total_seconds())
 pydantic.json.ENCODERS_BY_TYPE[pendulum.Period] = lambda x: str(x.total_seconds())
-pydantic.json.ENCODERS_BY_TYPE[prefect.engine.result.NoResultType] = str
+pydantic.json.ENCODERS_BY_TYPE[prefect.engine.result.Result] = str
 
 
 def _as_pendulum(value: Union[str, datetime.datetime]) -> pendulum.DateTime:
