@@ -10,6 +10,10 @@ metadata:
     {{- merge .Values.agent.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.agent.replicas }}
+  {{- with .Values.agent.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}

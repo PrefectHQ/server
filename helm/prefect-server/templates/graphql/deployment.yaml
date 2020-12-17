@@ -9,6 +9,10 @@ metadata:
     {{- merge .Values.graphql.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.graphql.replicas }}
+  {{- with .Values.graphql.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}

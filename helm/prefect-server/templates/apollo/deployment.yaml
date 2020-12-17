@@ -9,6 +9,10 @@ metadata:
     {{- merge .Values.apollo.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.apollo.replicas }}
+  {{- with .Values.apollo.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
