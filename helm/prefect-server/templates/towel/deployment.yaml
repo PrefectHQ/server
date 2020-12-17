@@ -9,6 +9,10 @@ metadata:
     {{- merge .Values.towel.annotations .Values.annotations | toYaml | nindent 4 }}
 spec:
   replicas: {{ .Values.towel.replicas }}
+  {{- with .Values.towel.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "prefect-server.matchLabels" . | nindent 6 }}
