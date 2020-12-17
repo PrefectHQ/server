@@ -1,4 +1,4 @@
-ARG NODE_VERSION=${NODE_VERSION:-10.15.0}
+ARG NODE_VERSION=${NODE_VERSION:-14.15.1}
 FROM node:${NODE_VERSION}-slim
 
 # Prefect Version, default to MASTER
@@ -19,6 +19,11 @@ LABEL org.label-schema.name="apollo"
 LABEL org.label-schema.url="https://www.prefect.io/"
 LABEL org.label-schema.version=${PREFECT_VERSION}
 LABEL org.label-schema.build-date=${RELEASE_TIMESTAMP}
+
+RUN apt-get update \
+ && apt-get install curl --no-install-recommends -y \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /apollo
 COPY . .
