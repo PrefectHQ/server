@@ -28,6 +28,7 @@ async def create_flow_run(
     version_group_id: str = None,
     idempotency_key: str = None,
     labels: List[str] = None,
+    run_config: dict = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -44,6 +45,7 @@ async def create_flow_run(
         - idempotency_key (str, optional): An optional idempotency key to prevent duplicate run creation.
             Idempotency keys are only respected for 24 hours after a flow is created.
         - labels (List[str], optional): a list of labels to apply to this individual flow run
+        - run-config (dict, optional): A run-config override for this flow run.
     """
 
     if idempotency_key is not None:
@@ -69,6 +71,7 @@ async def create_flow_run(
         flow_run_name=flow_run_name,
         version_group_id=version_group_id,
         labels=labels,
+        run_config=run_config,
     )
 
     if idempotency_key is not None:
@@ -120,6 +123,7 @@ async def _create_flow_run(
     flow_run_name: str = None,
     version_group_id: str = None,
     labels: List[str] = None,
+    run_config: dict = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -134,6 +138,7 @@ async def _create_flow_run(
         - version_group_id (str, optional): An optional version group ID; if provided, will run the most
             recent unarchived version of the group
         - labels (List[str], optional): a list of labels to apply to this individual flow run
+        - run-config (dict, optional): A run-config override for this flow run.
     """
 
     if flow_id is None and version_group_id is None:
@@ -158,7 +163,7 @@ async def _create_flow_run(
             "run_config": True,
             "parameters": True,
             "flow_group_id": True,
-            "flow_group": {"default_parameters": True, "labels": True},
+            "flow_group": {"default_parameters": True, "labels": True, "run_config": True},
         },
         order_by={"version": EnumValue("desc")},
     )  # type: Any
@@ -173,13 +178,20 @@ async def _create_flow_run(
     elif flow.archived:
         raise ValueError(f"Flow {flow.id} is archived.")
 
+    # determine active run_config
+    if run_config is None:
+        if flow.flow_group.run_config is not None:
+            run_config = flow.flow_group.run_config
+        else:
+            run_config = flow.run_config
+
     # set labels
     if labels is not None:
         run_labels = labels
     elif flow.flow_group.labels is not None:
         run_labels = flow.flow_group.labels
-    elif flow.run_config is not None:
-        run_labels = flow.run_config.get("labels") or []
+    elif run_config is not None:
+        run_labels = run_config.get("labels") or []
     elif flow.environment is not None:
         run_labels = flow.environment.get("labels") or []
     else:
@@ -200,6 +212,7 @@ async def _create_flow_run(
         flow_id=flow_id or flow.id,
         labels=run_labels,
         parameters=run_parameters,
+        run_config=run_config,
         context=context or {},
         scheduled_start_time=scheduled_start_time,
         name=flow_run_name or names.generate_slug(2),
@@ -465,11 +478,6 @@ async def get_runs_in_queue(
     ).get(
         {
             "id": True,
-            "flow": {
-                "environment": True,
-                "run_config": True,
-                "flow_group": {"labels": True},
-            },
             "labels": True,
         },
         order_by=[{"state_start_time": EnumValue("asc")}],

@@ -116,6 +116,7 @@ async def resolve_create_flow_run(
             version_group_id=input.get("version_group_id"),
             idempotency_key=input.get("idempotency_key"),
             labels=input.get("labels"),
+            run_config=input.get("run_config"),
         )
     }
 
