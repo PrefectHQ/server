@@ -6,7 +6,7 @@ import pytest
 
 import prefect
 from prefect import api, models
-from prefect.engine.state import Pending, Scheduled, Success
+from prefect.engine.state import Scheduled, Success
 
 
 class TestCreateFlowRun:
@@ -66,6 +66,21 @@ class TestCreateFlowRun:
         )
         assert fr.flow_id == flow_id
         assert fr.labels == ["a", "b", "c"]
+
+    async def test_create_flow_run_with_run_config(self, run_query, flow_id):
+        run_config = {"type": "UniversalRun", "labels": []}
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_id=flow_id, run_config=run_config)),
+        )
+        fr = await models.FlowRun.where(id=result.data.create_flow_run.id).first(
+            {
+                "flow_id",
+                "run_config",
+            }
+        )
+        assert fr.flow_id == flow_id
+        assert fr.run_config == run_config
 
     async def test_create_flow_run_with_version_group_id(self, run_query, flow_id):
         dt = pendulum.now("utc").add(hours=1)
