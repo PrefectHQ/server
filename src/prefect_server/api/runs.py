@@ -163,7 +163,11 @@ async def _create_flow_run(
             "run_config": True,
             "parameters": True,
             "flow_group_id": True,
-            "flow_group": {"default_parameters": True, "labels": True, "run_config": True},
+            "flow_group": {
+                "default_parameters": True,
+                "labels": True,
+                "run_config": True,
+            },
         },
         order_by={"version": EnumValue("desc")},
     )  # type: Any

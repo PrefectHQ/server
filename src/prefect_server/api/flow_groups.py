@@ -160,7 +160,9 @@ async def set_flow_group_labels(flow_group_id: str, labels: List[str] = None) ->
 
 
 @register_api("flow_groups.set_flow_group_run_config")
-async def set_flow_group_run_config(flow_group_id: str, run_config: Dict[str, Any] = None) -> bool:
+async def set_flow_group_run_config(
+    flow_group_id: str, run_config: Dict[str, Any] = None
+) -> bool:
     """
     Sets run_config for a flow group.
 
