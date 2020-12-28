@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 
 from prefect import api, models
 from prefect.serialization.schedule import ClockSchema
@@ -155,6 +155,31 @@ async def set_flow_group_labels(flow_group_id: str, labels: List[str] = None) ->
         raise ValueError("Invalid flow group ID")
     result = await models.FlowGroup.where(id=flow_group_id).update(
         set=dict(labels=labels)
+    )
+    return bool(result.affected_rows)
+
+
+@register_api("flow_groups.set_flow_group_run_config")
+async def set_flow_group_run_config(flow_group_id: str, run_config: Dict[str, Any] = None) -> bool:
+    """
+    Sets run_config for a flow group.
+
+    Args:
+        - flow_group_id (str): the ID of the flow group to update
+        - run_config (List[str], optional): a run-config override for a flow
+            group. Providing `None` defaults any previous flow group
+            `run_config` setting.
+
+    Returns:
+        - bool: whether setting `run_config` for the flow group was successful
+
+    Raises:
+        - ValueError: if flow group ID isn't provided
+    """
+    if not flow_group_id:
+        raise ValueError("Invalid flow group ID")
+    result = await models.FlowGroup.where(id=flow_group_id).update(
+        set=dict(run_config=run_config)
     )
     return bool(result.affected_rows)
 

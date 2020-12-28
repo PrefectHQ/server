@@ -26,6 +26,16 @@ async def resolve_set_flow_group_labels(
     return {"success": result}
 
 
+@mutation.field("set_flow_group_run_config")
+async def resolve_set_flow_group_run_config(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    result = await api.flow_groups.set_flow_group_run_config(
+        flow_group_id=input["flow_group_id"], run_config=input["run_config"]
+    )
+    return {"success": result}
+
+
 @mutation.field("set_flow_group_schedule")
 async def resolve_set_flow_group_schedule(
     obj: Any, info: GraphQLResolveInfo, input: dict
