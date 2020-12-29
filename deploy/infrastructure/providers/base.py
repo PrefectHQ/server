@@ -1,9 +1,8 @@
-from abc import ABC
 from typing import Type
 from pulumi_kubernetes import Provider
 
 
-class Cluster(ABC):
+class Cluster:
     def __init__(self, k8s_version: str):
         self.k8s_version = k8s_version
         self._k8s: Provider = None
@@ -14,10 +13,14 @@ class Cluster(ABC):
 
     @property
     def k8s(self) -> Provider:
+        if not self._k8s:
+            raise ValueError("k8s has no value. Have you run `create()`?")
         return self._k8s
 
     @property
     def kubeconfig(self) -> str:
+        if not self._kubeconfig:
+            raise ValueError("kubeconfig has no value. Have you run `create()`?")
         return self._kubeconfig
 
 

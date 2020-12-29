@@ -1,16 +1,5 @@
 import pulumi
-from pulumi import ResourceOptions
 from pulumi_kubernetes import Provider
-from pulumi_kubernetes.apps.v1 import Deployment, DeploymentSpecArgs
-from pulumi_kubernetes.core.v1 import (
-    ContainerArgs,
-    PodSpecArgs,
-    PodTemplateSpecArgs,
-    Service,
-    ServicePortArgs,
-    ServiceSpecArgs,
-)
-from pulumi_kubernetes.meta.v1 import LabelSelectorArgs, ObjectMetaArgs
 from pulumi_azure.core import ResourceGroup
 from pulumi_azure.containerservice import (
     KubernetesCluster,
@@ -20,6 +9,7 @@ from pulumi_azure.containerservice import (
     KubernetesClusterServicePrincipalArgs,
 )
 from pulumi_azuread import Application, ServicePrincipal, ServicePrincipalPassword
+
 
 from .base import Cluster, cluster_types
 
@@ -32,7 +22,7 @@ class AzureCluster(Cluster):
 
     def create(self):
         # create a Resource Group and Network for all resources
-        resource_group = ResourceGroup("prefect-server-rg")
+        resource_group = ResourceGroup("prefect-server-rg-")
 
         # create Azure AD Application for AKS
         app = Application("prefect-server-app")

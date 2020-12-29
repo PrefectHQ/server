@@ -14,8 +14,13 @@ config:
 
 
   # Cloud agnostic configuration ---------------------------------------------------------------------------------------
-  prefect-server:k8s_version: 1.18.10
 
-  prefect-server:sshkey: SECRET
+  # If `false`, the default cluster in the local kubeconfig will be used
+  # If `true`, a K8s cluster will be created within the given cloud provider
+  prefect-server:create-k8s-cluster: false
+  prefect-server:k8s-version: 1.18.10
 
-  prefect-server:foo: foobar
+  # If `false`, the Helm chart will deploy a temporary postgres instance on the K8s cluster unless Helm config values
+  # for an existing Postgres instance are passed
+  # If `true`, a cloud provider managed Postgres (e.g. CloudSQL) instance will be created
+  prefect-server:create-managed-postgres: true
