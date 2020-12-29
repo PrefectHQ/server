@@ -1,0 +1,21 @@
+config:
+
+  # Cloud provider specific configuration ------------------------------------------------------------------------------
+
+  # Choose a provider to use, one of azure, gcloud, aws
+  prefect-server:provider: azure
+
+  # Azure
+  azure:environment: public
+  azure:location: WestUS
+
+  # A ServicePrincipal must be created to manage the app
+  prefect-server-azure:service-principal-password: SECRET
+
+
+  # Cloud agnostic configuration ---------------------------------------------------------------------------------------
+  prefect-server:k8s_version: 1.18.10
+
+  prefect-server:sshkey: SECRET
+
+  prefect-server:foo: foobar
