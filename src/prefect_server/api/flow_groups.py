@@ -168,7 +168,7 @@ async def set_flow_group_run_config(
 
     Args:
         - flow_group_id (str): the ID of the flow group to update
-        - run_config (List[str], optional): a run-config override for a flow
+        - run_config (dict, optional): a run-config override for a flow
             group. Providing `None` defaults any previous flow group
             `run_config` setting.
 

@@ -25,6 +25,24 @@ def upgrade():
     op.add_column(
         "flow_group", sa.Column("run_config", JSONB, nullable=True, server_default=None)
     )
+    # This query updates all currently scheduled flow runs to add the run_config field
+    # from the corresponding flow.
+    op.execute(
+        """
+        WITH runs_to_update AS (
+            SELECT
+                flow_run.id,
+                flow.run_config
+            from flow_run
+            join flow on flow_run.flow_id = flow.id
+            where flow_run.state = 'Scheduled' OR flow_run.updated > NOW() - interval '1 day'
+        )
+        update flow_run
+        set run_config = runs_to_update.run_config
+        from runs_to_update
+        where flow_run.id = runs_to_update.id;
+        """
+    )
 
 
 def downgrade():
