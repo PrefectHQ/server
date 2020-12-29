@@ -5,6 +5,7 @@ import pytest
 
 import prefect
 from prefect import api, models
+from prefect.run_configs import UniversalRun
 from prefect.engine.state import (
     Failed,
     Finished,
@@ -84,6 +85,62 @@ class TestCreateRun:
         flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
         assert flow_run.labels == []
+
+    @pytest.mark.parametrize("set_run_config", [False, True])
+    @pytest.mark.parametrize("set_group_run_config", [False, True])
+    @pytest.mark.parametrize("set_labels", [False, True])
+    @pytest.mark.parametrize("set_group_labels", [False, True])
+    async def test_create_flow_run_run_config_and_labels(
+        self,
+        tenant_id,
+        project_id,
+        set_run_config,
+        set_group_run_config,
+        set_labels,
+        set_group_labels,
+    ):
+        """Check that a flow-run's run config and labels take the following precedence:
+        - run_config: flow run, flow group, flow
+        - labels: flow run, flow run run_config, flow group, flow group run_config,
+          flow run_config
+        """
+        labels = ["from-flow"]
+        flow_id = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=prefect.Flow(
+                name="test", run_config=UniversalRun(labels=labels)
+            ).serialize(),
+        )
+        flow = await models.Flow.where(id=flow_id).first(
+            {"flow_group_id", "run_config"}
+        )
+        run_config = flow.run_config
+        run_kwargs = {}
+        if set_group_run_config:
+            labels = ["from-group-run-config"]
+            run_config = UniversalRun(labels=labels).serialize()
+            await api.flow_groups.set_flow_group_run_config(
+                flow_group_id=flow.flow_group_id, run_config=run_config
+            )
+        if set_group_labels:
+            labels = ["from-group"]
+            await api.flow_groups.set_flow_group_labels(
+                flow_group_id=flow.flow_group_id, labels=labels
+            )
+        if set_run_config:
+            labels = ["from-run-config"]
+            run_kwargs["run_config"] = run_config = UniversalRun(
+                labels=labels
+            ).serialize()
+        if set_labels:
+            run_kwargs["labels"] = labels = ["from-run"]
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=flow_id, **run_kwargs)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first(
+            {"labels", "run_config"}
+        )
+        assert flow_run.labels == labels
+        assert flow_run.run_config == run_config
 
     async def test_create_flow_run_with_version_group_id(self, project_id):
         flow_ids = []

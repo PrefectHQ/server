@@ -127,6 +127,7 @@ class FlowRun(HasuraModel):
     flow_id: UUIDString = None
     parameters: Dict[str, Any] = None
     labels: List[str] = None
+    run_config: Dict[str, Any] = None
     context: Dict[str, Any] = None
     version: int = None
     heartbeat: datetime.datetime = None
@@ -312,6 +313,7 @@ class FlowGroup(HasuraModel):
     default_parameters: dict = None
     schedule: dict = None
     labels: List[str] = None
+    run_config: Dict[str, Any] = None
 
     # relationships
     flows: List["Flow"] = None

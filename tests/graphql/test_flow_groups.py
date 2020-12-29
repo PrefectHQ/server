@@ -1,6 +1,6 @@
 import pytest
 
-from prefect import api, models
+from prefect import models
 from prefect.serialization.schedule import ScheduleSchema
 
 
@@ -48,6 +48,34 @@ class TestSetFlowGroupLabels:
         )
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"labels"})
         assert flow_group.labels is None
+
+
+class TestSetFlowGroupRunConfig:
+    mutation = """
+        mutation($input: set_flow_group_run_config_input!) {
+            set_flow_group_run_config(input: $input) {
+                success
+            }
+        }
+    """
+
+    @pytest.mark.parametrize(
+        "run_config", [None, {"type": "UniversalRun", "labels": ["a"]}]
+    )
+    async def test_set_flow_group_run_config(
+        self, run_query, flow_group_id, run_config
+    ):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(flow_group_id=flow_group_id, run_config=run_config)
+            ),
+        )
+        assert result.data.set_flow_group_run_config.success is True
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"run_config"}
+        )
+        assert flow_group.run_config == run_config
 
 
 class TestSetFlowGroupSchedule:

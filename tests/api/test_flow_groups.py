@@ -119,6 +119,39 @@ class TestSetFlowGroupLabels:
             )
 
 
+class TestSetFlowGroupRunConfig:
+    @pytest.mark.parametrize(
+        "run_config", [None, {"type": "UniversalRun", "labels": ["a"]}]
+    )
+    async def test_set_flow_group_run_config(self, flow_group_id, run_config):
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"run_config"}
+        )
+        assert flow_group.run_config is None
+
+        success = await api.flow_groups.set_flow_group_run_config(
+            flow_group_id=flow_group_id, run_config=run_config
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"run_config"}
+        )
+        assert flow_group.run_config == run_config
+
+    async def test_set_flow_group_run_config_for_invalid_flow_group(self):
+        success = await api.flow_groups.set_flow_group_run_config(
+            flow_group_id=str(uuid.uuid4()), run_config=None
+        )
+        assert success is False
+
+    async def test_set_flow_group_run_config_for_none_flow_group(self):
+        with pytest.raises(ValueError, match="Invalid flow group ID"):
+            await api.flow_groups.set_flow_group_run_config(
+                flow_group_id=None, run_config=None
+            )
+
+
 class TestSetFlowGroupSchedule:
     @pytest.mark.parametrize(
         "clock",

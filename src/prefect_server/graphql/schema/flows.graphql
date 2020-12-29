@@ -41,7 +41,10 @@ extend type Mutation {
 
   "Set labels for a flow group."
   set_flow_group_labels(input: set_flow_group_labels_input!): success_payload
-	  
+
+  "Set run_config for a flow group."
+  set_flow_group_run_config(input: set_flow_group_run_config_input!): success_payload
+
   "Set a schedule for a flow group."
   set_flow_group_schedule(
     input: set_flow_group_schedule_input!
@@ -151,7 +154,14 @@ input set_flow_group_labels_input {
   labels: [String!]
 }
 
-	input set_flow_group_schedule_input {
+input set_flow_group_run_config_input {
+  "The ID of the flow group to update"
+  flow_group_id: UUID!
+  "The serialized run config to associate with the flow group"
+  run_config: JSON
+}
+
+input set_flow_group_schedule_input {
   "The ID of the flow group to update"
   flow_group_id: UUID!
   "A list of cron clocks for the schedule"
