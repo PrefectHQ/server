@@ -182,25 +182,29 @@ async def _create_flow_run(
     elif flow.archived:
         raise ValueError(f"Flow {flow.id} is archived.")
 
+    # determine active labels
+    if labels is not None:
+        run_labels = labels
+    elif run_config is not None:
+        run_labels = run_config.get("labels") or []
+    elif flow.flow_group.labels is not None:
+        run_labels = flow.flow_group.labels
+    elif flow.flow_group.run_config is not None:
+        run_labels = flow.flow_group.run_config.get("labels") or []
+    elif flow.run_config is not None:
+        run_labels = flow.run_config.get("labels") or []
+    elif flow.environment is not None:
+        run_labels = flow.environment.get("labels") or []
+    else:
+        run_labels = []
+    run_labels.sort()
+
     # determine active run_config
     if run_config is None:
         if flow.flow_group.run_config is not None:
             run_config = flow.flow_group.run_config
         else:
             run_config = flow.run_config
-
-    # set labels
-    if labels is not None:
-        run_labels = labels
-    elif flow.flow_group.labels is not None:
-        run_labels = flow.flow_group.labels
-    elif run_config is not None:
-        run_labels = run_config.get("labels") or []
-    elif flow.environment is not None:
-        run_labels = flow.environment.get("labels") or []
-    else:
-        run_labels = []
-    run_labels.sort()
 
     # check parameters
     run_parameters = flow.flow_group.default_parameters

@@ -101,7 +101,7 @@ class TestCreateRun:
     ):
         """Check that a flow-run's run config and labels take the following precedence:
         - run_config: flow run, flow group, flow
-        - labels: flow run, flow group, flow run run_config, flow group run_config,
+        - labels: flow run, flow run run_config, flow group, flow group run_config,
           flow run_config
         """
         labels = ["from-flow"]
@@ -122,16 +122,16 @@ class TestCreateRun:
             await api.flow_groups.set_flow_group_run_config(
                 flow_group_id=flow.flow_group_id, run_config=run_config
             )
-        if set_run_config:
-            labels = ["from-run-config"]
-            run_kwargs["run_config"] = run_config = UniversalRun(
-                labels=labels
-            ).serialize()
         if set_group_labels:
             labels = ["from-group"]
             await api.flow_groups.set_flow_group_labels(
                 flow_group_id=flow.flow_group_id, labels=labels
             )
+        if set_run_config:
+            labels = ["from-run-config"]
+            run_kwargs["run_config"] = run_config = UniversalRun(
+                labels=labels
+            ).serialize()
         if set_labels:
             run_kwargs["labels"] = labels = ["from-run"]
         # create a run

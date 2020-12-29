@@ -21,7 +21,7 @@ async def resolve_set_flow_group_labels(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
     result = await api.flow_groups.set_flow_group_labels(
-        flow_group_id=input["flow_group_id"], labels=input["labels"]
+        flow_group_id=input["flow_group_id"], labels=input.get("labels")
     )
     return {"success": result}
 
@@ -31,7 +31,7 @@ async def resolve_set_flow_group_run_config(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
     result = await api.flow_groups.set_flow_group_run_config(
-        flow_group_id=input["flow_group_id"], run_config=input["run_config"]
+        flow_group_id=input["flow_group_id"], run_config=input.get("run_config")
     )
     return {"success": result}
 
