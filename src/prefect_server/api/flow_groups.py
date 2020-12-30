@@ -1,3 +1,4 @@
+import pendulum
 from typing import List, Dict, Any
 
 from prefect import api, models
@@ -94,6 +95,7 @@ async def set_flow_group_schedule(
     else:
         start_date = None
     for clock in clocks:
+        clock["start_date"] = start_date
         try:
             ClockSchema().load(clock)
         except:
@@ -101,7 +103,7 @@ async def set_flow_group_schedule(
     if not flow_group_id:
         raise ValueError("Invalid flow group ID")
     result = await models.FlowGroup.where(id=flow_group_id).update(
-        set=dict(schedule=dict(type="Schedule", clocks=clocks, start_date=start_date))
+        set=dict(schedule=dict(type="Schedule", clocks=clocks))
     )
 
     deleted_runs = await models.FlowRun.where(

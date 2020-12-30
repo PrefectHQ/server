@@ -3,6 +3,7 @@ import uuid
 import pytest
 
 from prefect import api, models
+from prefect.serialization.schedule import ScheduleSchema
 
 
 class TestSetFlowGroupDefaultParameter:
@@ -172,6 +173,49 @@ class TestSetFlowGroupSchedule:
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule["clocks"][0] == clock
 
+        schema = ScheduleSchema()
+        schedule = schema.load(flow_group.schedule)
+        assert schedule.clocks[0].start_date is None
+
+    @pytest.mark.parametrize(
+        "clock",
+        [
+            {"type": "CronClock", "cron": "42 0 0 * * *"},
+            {"type": "IntervalClock", "interval": 420000000},
+        ],
+    )
+    async def test_set_flow_group_schedule_raises_for_invalid_timezones(
+        self, flow_group_id, clock
+    ):
+        with pytest.raises(ValueError, match="timezone"):
+            await api.flow_groups.set_flow_group_schedule(
+                flow_group_id=flow_group_id, clocks=[clock], timezone="Kalamazoo"
+            )
+
+    @pytest.mark.parametrize(
+        "clock",
+        [
+            {"type": "CronClock", "cron": "42 0 0 * * *"},
+            {"type": "IntervalClock", "interval": 420000000},
+        ],
+    )
+    async def test_set_flow_group_schedule_respects_passed_timezones(
+        self, flow_group_id, clock
+    ):
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
+        assert flow_group.schedule is None
+
+        success = await api.flow_groups.set_flow_group_schedule(
+            flow_group_id=flow_group_id, clocks=[clock], timezone="US/Pacific"
+        )
+        assert success is True
+
+        schema = ScheduleSchema()
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
+        schedule = schema.load(flow_group.schedule)
+
+        assert schedule.clocks[0].start_date.timezone_name == "US/Pacific"
+
     async def test_setting_schedule_deletes_runs(self, flow_id, flow_group_id):
         """
         This test takes a flow with a schedule and ensures that updating the Flow Group
@@ -227,8 +271,8 @@ class TestSetFlowGroupSchedule:
 
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule["clocks"] == [
-            {"type": "CronClock", "cron": "42 0 0 * * *"},
-            {"type": "CronClock", "cron": "43 0 0 * * *"},
+            {"type": "CronClock", "cron": "42 0 0 * * *", "start_date": None},
+            {"type": "CronClock", "cron": "43 0 0 * * *", "start_date": None},
         ]
 
     @pytest.mark.parametrize(
