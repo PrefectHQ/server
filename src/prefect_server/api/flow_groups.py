@@ -1,3 +1,4 @@
+import pendulum
 from typing import List, Dict, Any
 
 from prefect import api, models
@@ -67,13 +68,16 @@ async def set_flow_group_default_parameters(
 
 
 @register_api("flow_groups.set_flow_group_schedule")
-async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> bool:
+async def set_flow_group_schedule(
+    flow_group_id: str, clocks: List[dict], timezone: str = None
+) -> bool:
     """
     Sets a schedule for a flow group
 
     Args:
         - flow_group_id (str): the ID of the flow group to update
         - clocks (List[dict]): a list of dictionaries defining clocks for the schedule
+        - timezone (str, optional): an optional timezone to set for the schedule
 
     Returns:
         - bool: whether setting the schedule was successful
@@ -81,7 +85,17 @@ async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> boo
     Raises:
         - ValueError: if flow group ID isn't provided
     """
+    if timezone:
+        if timezone not in pendulum.timezones:
+            raise ValueError(f"Invalid timezone provided for schedule: {timezone}")
+        start_date = {
+            "dt": pendulum.now(timezone).naive().to_iso8601_string(),
+            "tz": timezone,
+        }
+    else:
+        start_date = None
     for clock in clocks:
+        clock["start_date"] = start_date
         try:
             ClockSchema().load(clock)
         except:

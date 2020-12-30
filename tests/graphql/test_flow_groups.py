@@ -1,3 +1,4 @@
+import pendulum
 import pytest
 
 from prefect import models
@@ -114,8 +115,9 @@ class TestSetFlowGroupSchedule:
                     "type": "CronClock",
                     "cron": "42 0 0 * * *",
                     "parameter_defaults": {"meep": "morp"},
+                    "start_date": None,
                 },
-                {"type": "CronClock", "cron": "43 0 0 * * *"},
+                {"type": "CronClock", "cron": "43 0 0 * * *", "start_date": None},
             ],
         }
 
@@ -143,8 +145,9 @@ class TestSetFlowGroupSchedule:
                     "type": "IntervalClock",
                     "interval": 4200000000,
                     "parameter_defaults": {"meep": "morp"},
+                    "start_date": None,
                 },
-                {"type": "IntervalClock", "interval": 4300000000},
+                {"type": "IntervalClock", "interval": 4300000000, "start_date": None},
             ],
         }
 
@@ -166,10 +169,49 @@ class TestSetFlowGroupSchedule:
         assert flow_group.schedule == {
             "type": "Schedule",
             "clocks": [
-                {"type": "CronClock", "cron": "42 0 0 * * *"},
-                {"type": "IntervalClock", "interval": 4200000000},
+                {"type": "CronClock", "cron": "42 0 0 * * *", "start_date": None},
+                {"type": "IntervalClock", "interval": 4200000000, "start_date": None},
             ],
         }
+
+    async def test_add_cron_and_interval_clocks_to_flow_group_schedule_with_timezone(
+        self, run_query, flow_group_id
+    ):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    flow_group_id=flow_group_id,
+                    cron_clocks=[{"cron": "42 0 0 * * *"}],
+                    interval_clocks=[{"interval": 4200}],
+                    timezone="US/Pacific",
+                )
+            ),
+        )
+        assert result.data.set_flow_group_schedule.success is True
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
+
+        schedule = ScheduleSchema().load(flow_group.schedule)
+        assert len(schedule.clocks) == 2
+        assert all([c.start_date <= pendulum.now("utc") for c in schedule.clocks])
+        assert all(
+            [c.start_date.timezone_name == "US/Pacific" for c in schedule.clocks]
+        )
+
+    async def test_add_clocks_to_flow_group_schedule_with_timezone_raises_informative_error(
+        self, run_query, flow_group_id
+    ):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    flow_group_id=flow_group_id,
+                    cron_clocks=[{"cron": "42 0 0 * * *"}],
+                    timezone="US/Ocean",
+                )
+            ),
+        )
+        assert "Invalid timezone" in result.errors[0].message
 
     async def test_interval_clock_units(self, run_query, flow_group_id):
         await run_query(

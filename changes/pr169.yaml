@@ -1,0 +1,2 @@
+enhancement:
+  - "Allow for timezone specification on flow group schedules - [#169](https://github.com/PrefectHQ/server/pull/169)"

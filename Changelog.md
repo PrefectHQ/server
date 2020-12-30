@@ -1,5 +1,13 @@
 # Changelog
 
+## December 16, 2020 <Badge text="beta" type="success" />
+
+Released on December 16, 2020.
+
+### Enhancements
+
+- Add the `events` RBAC permission to agents created by the helm chart - [#157](https://github.com/PrefectHQ/cloud/pull/157)
+
 ## December 14, 2020 <Badge text="beta" type="success" />
 
 Released on December 14, 2020.
