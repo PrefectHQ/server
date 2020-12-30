@@ -89,7 +89,7 @@ async def set_flow_group_schedule(
         if timezone not in pendulum.timezones:
             raise ValueError(f"Invalid timezone provided for schedule: {timezone}")
         start_date = {
-            "dt": pendulum.now("utc").naive().to_iso8601_string(),
+            "dt": pendulum.now(timezone).naive().to_iso8601_string(),
             "tz": timezone,
         }
     else:

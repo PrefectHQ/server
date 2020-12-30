@@ -1,4 +1,5 @@
 import uuid
+import pendulum
 
 import pytest
 
@@ -214,6 +215,7 @@ class TestSetFlowGroupSchedule:
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         schedule = schema.load(flow_group.schedule)
 
+        assert schedule.clocks[0].start_date <= pendulum.now("utc")
         assert schedule.clocks[0].start_date.timezone_name == "US/Pacific"
 
     async def test_setting_schedule_deletes_runs(self, flow_id, flow_group_id):
