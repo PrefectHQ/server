@@ -67,13 +67,16 @@ async def set_flow_group_default_parameters(
 
 
 @register_api("flow_groups.set_flow_group_schedule")
-async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> bool:
+async def set_flow_group_schedule(
+    flow_group_id: str, clocks: List[dict], timezone: str = None
+) -> bool:
     """
     Sets a schedule for a flow group
 
     Args:
         - flow_group_id (str): the ID of the flow group to update
         - clocks (List[dict]): a list of dictionaries defining clocks for the schedule
+        - timezone (str, optional): an optional timezone to set for the schedule
 
     Returns:
         - bool: whether setting the schedule was successful
@@ -81,6 +84,15 @@ async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> boo
     Raises:
         - ValueError: if flow group ID isn't provided
     """
+    if timezone:
+        if timezone not in pendulum.timezones:
+            raise ValueError(f"Invalid timezone provided for schedule: {timezone}")
+        start_date = {
+            "dt": pendulum.now("utc").naive().to_iso8601_string(),
+            "tz": timezone,
+        }
+    else:
+        start_date = None
     for clock in clocks:
         try:
             ClockSchema().load(clock)
@@ -89,7 +101,7 @@ async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> boo
     if not flow_group_id:
         raise ValueError("Invalid flow group ID")
     result = await models.FlowGroup.where(id=flow_group_id).update(
-        set=dict(schedule=dict(type="Schedule", clocks=clocks))
+        set=dict(schedule=dict(type="Schedule", clocks=clocks, start_date=start_date))
     )
 
     deleted_runs = await models.FlowRun.where(

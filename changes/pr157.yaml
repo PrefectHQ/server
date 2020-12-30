@@ -1,2 +1,0 @@
-enhancement:
-  - "Add the `events` RBAC permission to agents created by the helm chart - [#157](https://github.com/PrefectHQ/cloud/pull/157)"

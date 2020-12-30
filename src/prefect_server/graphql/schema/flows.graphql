@@ -168,6 +168,8 @@ input set_flow_group_schedule_input {
   cron_clocks: [cron_clock_input!]
   "A list of interval clocks for the schedule"
   interval_clocks: [interval_clock_input!]
+  "An optional timezone to use for the schedule
+  timezone: String
 }
 
 input cron_clock_input {

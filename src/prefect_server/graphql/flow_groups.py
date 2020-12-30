@@ -1,3 +1,4 @@
+import pendulum
 from typing import Any
 
 from graphql import GraphQLResolveInfo
@@ -58,8 +59,11 @@ async def resolve_set_flow_group_schedule(
         interval_clocks.append(clock)
 
     clocks = cron_clocks + interval_clocks
+
     result = await api.flow_groups.set_flow_group_schedule(
-        flow_group_id=input["flow_group_id"], clocks=clocks
+        flow_group_id=input["flow_group_id"],
+        clocks=clocks,
+        timezone=input.get("timezone"),
     )
     return {"success": result}
 
