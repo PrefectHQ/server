@@ -115,8 +115,9 @@ class TestSetFlowGroupSchedule:
                     "type": "CronClock",
                     "cron": "42 0 0 * * *",
                     "parameter_defaults": {"meep": "morp"},
+                    "start_date": None,
                 },
-                {"type": "CronClock", "cron": "43 0 0 * * *"},
+                {"type": "CronClock", "cron": "43 0 0 * * *", "start_date": None},
             ],
         }
 
@@ -144,8 +145,9 @@ class TestSetFlowGroupSchedule:
                     "type": "IntervalClock",
                     "interval": 4200000000,
                     "parameter_defaults": {"meep": "morp"},
+                    "start_date": None,
                 },
-                {"type": "IntervalClock", "interval": 4300000000},
+                {"type": "IntervalClock", "interval": 4300000000, "start_date": None},
             ],
         }
 
@@ -167,8 +169,8 @@ class TestSetFlowGroupSchedule:
         assert flow_group.schedule == {
             "type": "Schedule",
             "clocks": [
-                {"type": "CronClock", "cron": "42 0 0 * * *"},
-                {"type": "IntervalClock", "interval": 4200000000},
+                {"type": "CronClock", "cron": "42 0 0 * * *", "start_date": None},
+                {"type": "IntervalClock", "interval": 4200000000, "start_date": None},
             ],
         }
 
