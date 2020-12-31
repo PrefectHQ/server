@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 import prefect
 from prefect import models
-from prefect.engine.state import Running, Submitted
+from prefect.engine.state import Running, Submitted, State
 from prefect.utilities.plugins import register_api
 
 OCCUPYING_STATES = [
@@ -82,7 +82,7 @@ async def delete_flow_concurrency_limit(limit_id: str) -> bool:
 
 @register_api("flow_concurrency_limits.try_take_flow_concurrency_slots")
 async def try_take_flow_concurrency_slots(
-    tenant_id: str, limit_names: List[str], flow_run_id: Optional[str] = None
+    tenant_id: str, limit_names: List[str], current_state: Optional[State] = None
 ) -> bool:
     """
     Determines whether a `flow_run_id` either already occupies
@@ -101,9 +101,9 @@ async def try_take_flow_concurrency_slots(
         - limit_names (List[str]): Concurrency limits that may
             or may not exist. Nonexistant limits are treated
             as unlimited.
-        - flow_run_id (Optional[str]): ID of the flow run trying to take the slot.
-            If provided, checks to see whether the run has already been
-                allocated a slot. If not provided, skips that check.
+        - current_state (Optional[State]): Current state of the
+            flow run attempting to be allocated a slot.
+            If not provided, skips that check.
 
     Returns:
         - bool: Whether the run already occupies or can occupy a concurrency
@@ -114,17 +114,10 @@ async def try_take_flow_concurrency_slots(
         # Unlabeled runs always have available slots
         return True
 
-    if flow_run_id is not None:
-        # The flow_run_id already is occupying a slot
-        num_records = await models.FlowRun.where(
-            {
-                "id": {"_eq": flow_run_id},
-                "tenant_id": {"_eq": tenant_id},
-                "state": {"_in": OCCUPYING_STATES},
-            }
-        ).count()
-
-        is_occupying_run_slot = num_records == 1
+    if current_state is not None:
+        is_occupying_run_slot = (
+            current_state.is_running() or current_state.is_submitted()
+        )
     else:
         is_occupying_run_slot = False
 

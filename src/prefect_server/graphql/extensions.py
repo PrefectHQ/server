@@ -1,6 +1,7 @@
 import inspect
 import textwrap
 import traceback
+from asyncio import Semaphore
 from typing import Any
 
 from ariadne.types import Extension
@@ -34,6 +35,22 @@ def log_error(exc: Exception) -> None:
         )
     else:
         logger.error({"traceback": traceback.format_exc(), "context": ctx})
+
+
+class PrefectConcurrencyLimiter(Extension):
+    async def resolve(
+        self, next_, parent: Any, info: GraphQLResolveInfo, *args: Any, **kwargs: Any
+    ) -> Any:
+
+        ctx = context.get_context()
+        # If there isn't a concurrency lock in place, set one
+        ctx.setdefault("flow_concurrency_lock", Semaphore())
+        with context.set_context(**ctx):
+            result = next_(parent, info, *args, **kwargs)
+            if inspect.iscoroutine(result):
+                result = await result
+
+        return result
 
 
 class PrefectHeader(Extension):

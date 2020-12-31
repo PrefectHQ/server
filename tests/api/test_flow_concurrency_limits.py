@@ -6,7 +6,7 @@ import pendulum
 import pytest
 
 import prefect
-from prefect.engine.state import Running, Submitted
+from prefect.engine.state import Running, Scheduled, Submitted
 from prefect import api, models
 
 state_schema = prefect.serialization.state.StateSchema()
@@ -54,13 +54,15 @@ class TestTryTakeFlowConcurrencySlots:
         the check to confirm whether the run is already occupying
         a concurrency slot is executed.
         """
-        await api.states.set_flow_run_state(labeled_flow_run_id, Submitted())
+        current_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id, Submitted(state=Scheduled())
+        )
 
         is_occupying_slot_already = (
             await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                 tenant_id=flow_concurrency_limit.tenant_id,
                 limit_names=[flow_concurrency_limit.name],
-                flow_run_id=labeled_flow_run_id,
+                current_state=state_schema.load(current_state.serialized_state),
             )
         )
 
@@ -113,30 +115,35 @@ class TestTryTakeFlowConcurrencySlots:
             ]
         )
 
+        runs = await models.FlowRun.where({"id": {"_in": runs}}).get(
+            {"serialized_state"}
+        )
+
         can_occupy_slot = await asyncio.gather(
             *[
                 api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=flow_concurrency_limit.tenant_id,
                     limit_names=[flow_concurrency_limit.name],
-                    flow_run_id=run_id,
+                    current_state=state_schema.load(run.serialized_state),
                 )
-                for run_id in runs
+                for run in runs
             ]
         )
 
         assert all(can_occupy_slot) is False
 
-    @pytest.mark.parametrize("pass_id", [False, True])
+    @pytest.mark.parametrize("pass_current_state", [False, True])
     async def test_returns_true_when_unlimited_label(
-        self, tenant_id: str, flow_run_id: str, pass_id: bool
+        self, tenant_id: str, flow_run_id: str, pass_current_state: bool
     ):
 
-        if pass_id:
+        if pass_current_state:
+            run = await models.FlowRun.where(id=flow_run_id).first({"serialized_state"})
             can_occupy_slot = (
                 await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=tenant_id,
                     limit_names=["foo", "bar"],
-                    flow_run_id=flow_run_id,
+                    current_state=state_schema.load(run.serialized_state),
                 )
             )
         else:
@@ -148,22 +155,27 @@ class TestTryTakeFlowConcurrencySlots:
 
         assert can_occupy_slot is True
 
-    @pytest.mark.parametrize("pass_id", [False, True])
+    @pytest.mark.parametrize("pass_current_state", [False, True])
     @pytest.mark.parametrize("labels", [[], None])
     async def test_empty_labels_returns_true(
-        self, tenant_id: str, flow_run_id: str, labels: Optional[List], pass_id: bool
+        self,
+        tenant_id: str,
+        flow_run_id: str,
+        labels: Optional[List],
+        pass_current_state: bool,
     ):
         """
         Tests to ensure that any flow runs without `labels` (empty or None)
         always returns True since those runs aren't labeled.
         """
 
-        if pass_id:
+        if pass_current_state:
+            run = await models.FlowRun.where(id=flow_run_id).first({"serialized_state"})
             can_occupy_slot = (
                 await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=tenant_id,
                     limit_names=labels,
-                    flow_run_id=flow_run_id,
+                    current_state=state_schema.load(run.serialized_state),
                 )
             )
         else:
@@ -193,10 +205,13 @@ class TestTryTakeFlowConcurrencySlots:
             tenant_id=flow_concurrency_limit.tenant_id,
             limit_names=[flow_concurrency_limit.name],
         )
+        second_run = await models.FlowRun.where(id=second_run_id).first(
+            {"serialized_state"}
+        )
         assert not await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
             tenant_id=flow_concurrency_limit.tenant_id,
             limit_names=[flow_concurrency_limit.name],
-            flow_run_id=second_run_id,
+            current_state=state_schema.load(second_run.serialized_state),
         )
 
         second_tenant_id = await api.tenants.create_tenant(name="other test tenant")
@@ -213,14 +228,18 @@ class TestTryTakeFlowConcurrencySlots:
             *[api.runs.create_flow_run(flow_id=flow_id) for _ in range(5)]
         )
 
+        runs = await models.FlowRun.where({"id": {"_in": runs}}).get(
+            {"serialized_state"}
+        )
+
         can_occupy_slot = await asyncio.gather(
             *[
                 api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=second_tenant_id,
                     limit_names=[flow_concurrency_limit.name],
-                    flow_run_id=run_id,
+                    current_state=state_schema.load(second_run.serialized_state),
                 )
-                for run_id in runs
+                for run in runs
             ]
         )
 
@@ -232,24 +251,29 @@ class TestTryTakeFlowConcurrencySlots:
         labeled_flow_run_id: str,
         flow_concurrency_limit: models.FlowConcurrencyLimit,
     ):
-
+        labeled_run = await models.FlowRun.where(id=labeled_flow_run_id).first(
+            {"serialized_state"}
+        )
         can_transition_to_submitted = (
             await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                 tenant_id=tenant_id,
                 limit_names=[flow_concurrency_limit.name],
-                flow_run_id=labeled_flow_run_id,
+                current_state=state_schema.load(labeled_run.serialized_state),
             )
         )
 
         assert can_transition_to_submitted is True
 
-        await api.states.set_flow_run_state(labeled_flow_run_id, Submitted())
+        labeled_run_state = await api.states.set_flow_run_state(
+            labeled_flow_run_id,
+            Submitted(state=state_schema.load(labeled_run.serialized_state)),
+        )
 
         can_transition_to_running = (
             await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                 tenant_id=tenant_id,
                 limit_names=[flow_concurrency_limit.name],
-                flow_run_id=labeled_flow_run_id,
+                current_state=state_schema.load(labeled_run_state.serialized_state),
             )
         )
 
@@ -279,7 +303,16 @@ class TestTryTakeFlowConcurrencySlots:
         )
 
         # First setting should work
-        await api.states.set_flow_run_state(first_run, Submitted())
+        first_flow_run = await models.FlowRun.where(id=first_run).first(
+            {
+                "serialized_state": True,
+            }
+        )
+
+        await api.states.set_flow_run_state(
+            first_run,
+            Submitted(state=state_schema.load(first_flow_run.serialized_state)),
+        )
 
         # This is effectively recreating `set_flow_run_state` without
         # all the logic protecting against exactly what we're doing
@@ -318,18 +351,24 @@ class TestTryTakeFlowConcurrencySlots:
         ## End duplicated code
 
         # This should fail, regardless of which we check
+        run_states = await models.FlowRun.where(
+            {"id": {"_in": [first_run, second_run]}}
+        ).get({"id", "serialized_state"})
+
+        # Sanity check
+        assert len(run_states) == 2
 
         transition_conditions = await asyncio.gather(
             *[
                 api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=tenant_id,
                     limit_names=[flow_concurrency_limit.name],
-                    flow_run_id=first_run,
+                    current_state=state_schema.load(run_states[0].serialized_state),
                 ),
                 api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=tenant_id,
                     limit_names=[flow_concurrency_limit.name],
-                    flow_run_id=second_run,
+                    current_state=state_schema.load(run_states[1].serialized_state),
                 ),
                 api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=tenant_id,

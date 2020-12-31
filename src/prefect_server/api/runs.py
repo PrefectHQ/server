@@ -6,6 +6,7 @@ import pendulum
 import prefect
 from prefect import api, models
 from prefect.engine.state import Pending, Queued, Scheduled
+from prefect.serialization.state import StateSchema
 from prefect.utilities.graphql import EnumValue
 from prefect.utilities.plugins import register_api
 from prefect_server import config
@@ -16,6 +17,8 @@ SCHEDULED_STATES = [
     for s in prefect.engine.state.__dict__.values()
     if isinstance(s, type) and issubclass(s, (Scheduled, Queued))
 ]
+
+state_schema = StateSchema()
 
 
 @register_api("runs.create_flow_run")
@@ -452,6 +455,7 @@ async def get_runs_in_queue(
     ).get(
         {
             "id": True,
+            "serialized_state": True,
             "flow": {
                 "environment": True,
                 "run_config": True,
@@ -489,7 +493,7 @@ async def get_runs_in_queue(
             if not await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                 tenant_id=tenant_id,
                 limit_names=flow_run.labels,
-                flow_run_id=flow_run.id,
+                current_state=state_schema.load(flow_run.serialized_state),
             ):
 
                 # Unable to allocate concurrency, skipping to avoid

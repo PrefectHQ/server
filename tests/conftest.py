@@ -6,6 +6,7 @@ import pytest
 from asynctest import CoroutineMock
 
 from .fixtures.database_fixtures import *
+from prefect_server.utilities import context
 
 
 def pytest_collection_modifyitems(session, config, items):
@@ -27,6 +28,13 @@ def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
+
+@pytest.fixture(autouse=True)
+def flow_concurrency_lock():
+
+    with context.set_context(flow_concurrency_lock=asyncio.Semaphore()):
+        yield
 
 
 @pytest.fixture

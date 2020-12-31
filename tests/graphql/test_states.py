@@ -310,8 +310,23 @@ class TestSetFlowRunStates:
                 api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
             ]
         )
+        fr = await models.FlowRun.where(id=first_run).first({"serialized_state"})
+        existing_state = state_schema.load(fr.serialized_state)
         # Occupy first concurrency slot
-        await api.states.set_flow_run_state(first_run, Submitted())
+        successful_transition_result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    states=[
+                        dict(
+                            flow_run_id=first_run,
+                            state=Submitted(state=existing_state).serialize(),
+                        )
+                    ]
+                )
+            ),
+        )
+        assert successful_transition_result.data.set_flow_run_states.states[0].id
 
         # This is effectively recreating `set_flow_run_state` without
         # all the logic protecting against exactly what we're doing

@@ -38,7 +38,7 @@ app.mount(
     GraphQL(
         schema,
         debug=prefect_server.config.services.graphql.debug,
-        extensions=[extensions.PrefectHeader],
+        extensions=[extensions.PrefectHeader, extensions.PrefectConcurrencyLimiter],
     ),
 )
 

@@ -518,18 +518,23 @@ class TestQueueFlowRun:
         flow_run_id, _ = await asyncio.gather(
             *[
                 api.runs.create_flow_run(flow_id, labels=[flow_concurrency_limit.name]),
-                api.states.set_flow_run_state(labeled_flow_run_id, Submitted()),
+                api.states.set_flow_run_state(
+                    labeled_flow_run_id, Submitted(state=Scheduled())
+                ),
             ]
         )
 
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"state"})
         state_before = flow_run.state
 
-        await api.states.set_flow_run_state(flow_run_id, Submitted())
+        await api.states.set_flow_run_state(
+            flow_run_id,
+            Submitted(state=Scheduled()),
+        )
 
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"state"})
-        assert flow_run.state == state_before
-        assert flow_run.state not in ["Submitted", "Queued"]
+        assert flow_run.state not in {"Running", "Submitted", "Scheduled"}
+        assert flow_run.state == "Queued"
 
     async def test_can_transition_to_submitted_when_slots_available(
         self,
@@ -736,7 +741,8 @@ class TestQueueFlowRun:
         """
 
         state = await api.states.set_flow_run_state(
-            flow_run_id, Queued(state=Submitted(), start_time=pendulum.now("UTC"))
+            flow_run_id,
+            Queued(state=Submitted(state=Scheduled()), start_time=pendulum.now("UTC")),
         )
         assert state.state == "Queued"
 

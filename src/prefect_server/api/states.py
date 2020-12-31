@@ -4,6 +4,7 @@
 import asyncio
 import random
 import uuid
+from asyncio import Semaphore
 
 import pendulum
 
@@ -12,7 +13,7 @@ from prefect import api, models
 from prefect.engine.state import Cancelled, Cancelling, Queued, State, Scheduled
 from prefect.utilities.plugins import register_api
 from prefect_server import config
-from prefect_server.utilities import events
+from prefect_server.utilities import context, events
 from prefect_server.utilities.logging import get_logger
 
 logger = get_logger("api")
@@ -22,7 +23,12 @@ state_schema = prefect.serialization.state.StateSchema()
 
 @register_api("states.set_flow_run_state")
 async def set_flow_run_state(
-    flow_run_id: str, state: State, version: int = None, agent_id: str = None
+    flow_run_id: str,
+    state: State,
+    version: int = None,
+    agent_id: str = None,
+    flow_concurrency_lock: Semaphore = None,
+    has_been_concurrency_checked: bool = False,
 ) -> models.FlowRunState:
     """
     Updates a flow run state.
@@ -32,6 +38,10 @@ async def set_flow_run_state(
         - state (State): the new state
         - version (int): a version to enforce version-locking
         - agent_id (str): the ID of an agent instance setting the state
+        - flow_concurrency_lock (Semaphore): Asyncio based locking mechanism to ensure only
+            one concurrency check and concurrency locked update occurs at a time
+        - has_been_concurrency_checked (bool): Flag indicating the transition has
+            been approved and is being called recursively
 
     Returns:
         - models.FlowRunState
@@ -117,75 +127,96 @@ async def set_flow_run_state(
     # Queueing runs if using concurency limits
     # --------------------------------------------------------
 
-    # If the run is not labeled, we avoid this code branch
+    # If the run is not labeled or we've already checked during,
+    # a previous recursive call, we avoid this code branch
     # as it's manually injecting a delay (and it isn't concurrency limited)
-    if (state.is_running() or state.is_submitted()) and flow_run.labels:
+    if (
+        (state.is_running() or state.is_submitted())
+        and flow_run.labels
+        and not has_been_concurrency_checked
+    ):
         # Flow Concurrency Limits
         # If the run is already occupying a slot (Submitted -> Running)
         # or is attempting to occupy a slot (X -> Submitted)
+        existing_state = state_schema.load(flow_run.serialized_state)
 
         # Due to the Agent process submitting multiple runs from Scheduled
-        # to Submitted at once, we need to introduce a jitter to do
-        # a decent job at "best effort" flow concurrency locking. The
-        # larger number of queued runs that are sent to the agent,
-        # the larger a jitter we should introduce to make the race condition
-        # less frequent.
-        await asyncio.sleep(random.random() * config.queued_runs_returned_limit / 10)
-        can_transition = (
-            await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
-                tenant_id=flow_run.tenant_id,
-                limit_names=flow_run.labels,
-                flow_run_id=flow_run_id,
-            )
+        # to Submitted at once, we need to acquire a lock to both check &
+        # set the new state if there are concurrency limits in place to
+        # avoid race conditions between the time a check has occurred and
+        # when an update has occurred.
+        server_context = context.get_context()
+        flow_concurrency_lock = server_context.get(
+            "flow_concurrency_lock", flow_concurrency_lock
         )
 
-        if not can_transition:
-            existing_state = state_schema.load(flow_run.serialized_state)
-            if state.is_submitted() and existing_state.is_scheduled():
-                buffer_seconds = random.randint(15, 45)
+        async with flow_concurrency_lock:
 
-                state = Queued(
-                    state=existing_state,
-                    message="Queued by flow run concurrency limit",
-                    start_time=pendulum.now("UTC").add(seconds=buffer_seconds),
-                )
-                logger.info(
-                    f"Flow concurrency slot unavailable. Setting next start time {buffer_seconds} in the future."
-                )
-
-            elif existing_state.is_queued():
-
-                # If the run is currently in a Queued state and is
-                # being coerced into a Queued state,
-                # we don't insert a new state to avoid endlessly
-                # adding 10 minutes to when the flow runners would try to
-                # see if the run is available to execute
-
-                await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
-
-                flow_run_state = models.FlowRunState(
-                    flow_run_id=flow_run_id,
+            can_transition = (
+                await api.flow_concurrency_limits.try_take_flow_concurrency_slots(
                     tenant_id=flow_run.tenant_id,
-                    version=flow_run.version,
-                    state=flow_run.state,
-                    serialized_state=flow_run.serialized_state,
-                    start_time=flow_run.state_start_time,
-                    message=flow_run.state_message,
-                    result=flow_run.state_result,
-                    timestamp=flow_run.state_timestamp,
+                    limit_names=flow_run.labels,
+                    current_state=existing_state,
+                )
+            )
+            if can_transition:
+
+                # If the flow run can transition, we continue holding the lock and
+                # call this pipeline recursively to bypass the checks
+                return await api.states.set_flow_run_state(
+                    flow_run_id=flow_run_id,
+                    state=state,
+                    version=version,
+                    agent_id=agent_id,
+                    has_been_concurrency_checked=True,
                 )
 
-                return flow_run_state
-            else:
-                # Occurs when the flow run gets a concurrency slot by
-                # transitioning to Submitted when it shouldn't have. The
-                # 10 minute delay is only until the next agent picks it up again,
-                # not when it's able to execute.
-                state = Queued(
-                    state=existing_state,
-                    message="Queued by flow run concurrency limit",
-                    start_time=pendulum.now("UTC").add(minutes=10),
-                )
+        if existing_state.is_scheduled() and state.is_submitted():
+            buffer_seconds = random.randint(15, 45)
+
+            state = Queued(
+                state=existing_state,
+                message="Queued by flow run concurrency limit",
+                start_time=pendulum.now("UTC").add(seconds=buffer_seconds),
+            )
+            logger.info(
+                f"Flow concurrency slot unavailable. Setting next start time {buffer_seconds} in the future."
+            )
+
+        elif existing_state.is_queued():
+
+            # If the run is currently in a Queued state and is
+            # being coerced into a Queued state,
+            # we don't insert a new state to avoid endlessly
+            # adding 10 minutes to when the flow runners would try to
+            # see if the run is available to execute
+
+            await api.runs.update_flow_run_heartbeat(flow_run_id=flow_run_id)
+
+            flow_run_state = models.FlowRunState(
+                flow_run_id=flow_run_id,
+                tenant_id=flow_run.tenant_id,
+                version=flow_run.version,
+                state=flow_run.state,
+                serialized_state=flow_run.serialized_state,
+                start_time=flow_run.state_start_time,
+                message=flow_run.state_message,
+                result=flow_run.state_result,
+                timestamp=flow_run.state_timestamp,
+            )
+
+            return flow_run_state
+        else:
+            # Occurs when the flow run gets a concurrency slot by
+            # transitioning to Submitted when it shouldn't have. The
+            # 10 minute delay is only until the next agent picks it up again,
+            # not when it's able to execute.
+            state = Queued(
+                state=existing_state,
+                message="Queued by flow run concurrency limit",
+                start_time=pendulum.now("UTC").add(minutes=10),
+            )
+            state.state = existing_state
 
     # --------------------------------------------------------
     # insert the new state in the database

@@ -23,6 +23,7 @@ async def resolve_set_flow_run_states(
 
     server_context = context.get_context()
     agent_id = server_context.get("headers", {}).get("x-prefect-agent-id")
+    flow_concurrency_lock = server_context.get("flow_concurrency_lock")
 
     async def check_size_and_set_state(state_input: dict) -> str:
         state_size = sys.getsizeof(json.dumps(state_input["state"]))
@@ -37,6 +38,7 @@ async def resolve_set_flow_run_states(
             version=state_input.get("version"),
             state=state,
             agent_id=agent_id,
+            flow_concurrency_lock=flow_concurrency_lock,
         )
 
         if state_schema.load(fr_state.serialized_state).is_queued():
