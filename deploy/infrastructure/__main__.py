@@ -10,7 +10,7 @@ from pulumi import ResourceOptions
 import pulumi_kubernetes as kubernetes
 from providers.base import cluster_types, database_types, get_password
 from pulumi_kubernetes.helm.v3 import Chart, LocalChartOpts
-from pulumi_random import RandomPassword
+
 
 # Utilities ----------------------------------------------------------------------------
 
@@ -38,8 +38,11 @@ provider = config.require("provider")
 # k8s is optional
 chart_resources = ResourceOptions()
 
-# Define helm chart overrides
+# Define helm chart overrides and fill with values from the config so users can override
+# Helm values from Pulumi
 chart_value_overrides = nested_defaultdict()
+for key, val in config.get_object("services-values-override").values():
+    chart_value_overrides[key] = val
 
 
 # K8s cluster --------------------------------------------------------------------------
@@ -91,22 +94,31 @@ if config.require_bool("database-create"):
     )
 
     # Point the helm chart to this database
-    settings = chart_value_overrides["postgresql"]
-    settings["useSubChart"] = False
-    settings["postgresqlDatabase"] = database.connection_dbname
-    settings["postgresqlUsername"] = database.connection_username
-    settings["existingSecret"] = pwd_secret.id.apply(drop_namespace)
-    settings["externalHostname"] = database.connection_hostname
+    db_settings = chart_value_overrides["postgresql"]
+    db_settings["useSubChart"] = False
+    db_settings["postgresqlDatabase"] = database.connection_dbname
+    db_settings["postgresqlUsername"] = database.connection_username
+    db_settings["existingSecret"] = pwd_secret.id.apply(drop_namespace)
+    db_settings["externalHostname"] = database.connection_hostname
 
 
 # Services via helm chart --------------------------------------------------------------
 
+if config.require_bool("services-create"):
+    helm_chart = Chart(
+        "prefect-server-helm",
+        config=LocalChartOpts(
+            path="../helm/prefect-server",
+            values=chart_value_overrides,
+        ),
+        opts=chart_resources,
+    )
 
-helm_chart = Chart(
-    "prefect-server-helm",
-    config=LocalChartOpts(
-        path="../helm/prefect-server",
-        values=chart_value_overrides,
-    ),
-    opts=chart_resources,
-)
+    # TODO: Consider exporting results from the Helm chart as in
+    #       https://github.com/pulumi/examples/blob/master/kubernetes-ts-helm-wordpress/index.ts
+    #       since it appears the NOTES won't show
+
+else:
+    # Export the overrides - we cannot write this yaml to a file directly because it
+    # contains Pulumi Output objects and secrets
+    pulumi.export("chart-value-overrides", chart_value_overrides)

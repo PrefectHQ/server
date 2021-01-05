@@ -73,3 +73,11 @@ If setting passwords, we recommend using `pulumi config set --secret <key> <valu
 ### Deploying
 
 Run `pulumi up` to deploy the infrastructure and services, you will be prompted for confirmation before anything is created.
+
+#### Outputs
+
+Deployments create Pulumi outputs that can give information about the created stack. View them with `pulumi stack output <name>`
+
+Available outputs include:
+- **chart-override-values**: Values overriding helm chart defaults
+- **kubeconfig**: The K8s cluster connection config. *Requires the `--show-secrets` flag for display*

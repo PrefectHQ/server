@@ -40,3 +40,11 @@ config:
   #prefect-server:database-password: CREATE_PULUMI_SECRET
   prefect-server:database-storage-mb: 10240
   prefect-server:database-name: prefect
+
+  # If `false`, the Helm chart will not be deployed and you will need to run `helm install` yourself, Helm value
+  # overrides with the configuration for connection to the database (if created) will be exported
+  # If `true`, the Prefect Server services will be installed on the created (or current) K8s cluster using the Helm
+  # chart
+  prefect-server:services-create: true
+  prefect-server:services-values-override: {}
+
