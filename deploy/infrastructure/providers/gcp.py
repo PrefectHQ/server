@@ -161,7 +161,9 @@ class GCPDatabase(Database):
             database_version="POSTGRES_11",
             # For the private vpc connection to work we need the private ips to have
             # been created successfully
-            opts=pulumi.ResourceOptions(depends_on=[gcp_base.private_ips]),
+            opts=pulumi.ResourceOptions(
+                depends_on=[gcp_base.vpc_connection, gcp_base.private_ips]
+            ),
         )
 
         self.database = gcp.sql.Database(self.database_name, instance=self.instance)
