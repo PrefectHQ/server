@@ -1,14 +1,35 @@
 """
 Entrypoint for Prefect Server deployment with Pulumi
 """
+import base64
+from collections import defaultdict
 
 import pulumi
 from pulumi import ResourceOptions
-from providers.base import cluster_types
+
+import pulumi_kubernetes as kubernetes
+from providers.base import cluster_types, database_types, get_password
 from pulumi_kubernetes.helm.v3 import Chart, LocalChartOpts
+from pulumi_random import RandomPassword
+
+# Utilities ----------------------------------------------------------------------------
 
 
-# from pulumi_azure import core, storage
+def base64_encode(target: str) -> str:
+    as_bytes = base64.b64encode(target.encode("utf-8"))
+    return str(as_bytes, "utf-8")
+
+
+def drop_namespace(target: str) -> str:
+    parts = target.split("/")
+    return parts[-1]
+
+
+def nested_defaultdict():
+    return defaultdict(nested_defaultdict)
+
+
+# Configuration setup ------------------------------------------------------------------
 
 config = pulumi.Config()
 provider = config.require("provider")
@@ -17,36 +38,75 @@ provider = config.require("provider")
 # k8s is optional
 chart_resources = ResourceOptions()
 
-if config.require_bool("create-k8s-cluster"):
+# Define helm chart overrides
+chart_value_overrides = nested_defaultdict()
+
+
+# K8s cluster --------------------------------------------------------------------------
+
+
+if config.require_bool("k8s-create"):
     # TODO: VPC/Availability settings
 
     # Get the K8s cluster builder for the provider
     cluster = cluster_types.get_instance(
-        provider, k8s_version=config.require("k8s-version")
+        provider,
+        k8s_version=config.require("k8s-version"),
+        node_count=config.require_int("k8s-node-count"),
     )
 
     # Setup the cluster
     cluster.create()
 
     # Set the provider to this cluster
-    chart_resources.provider = cluster.k8s
+    chart_resources.provider = cluster.provider
 
     # Export the config for inspection
     pulumi.export("kubeconfig", cluster.kubeconfig)
 
 
-if config.require_bool("create-managed-postgres"):
-    # TODO: Setup basic deployment in Azure then other providers
-    # CloudSQL and such, we'll need to pass the config to the Helm chart
-    pass
+# Postgres database --------------------------------------------------------------------
+
+if config.require_bool("database-create"):
+
+    # NOTE: Currently not working for Azure due to networking issues
+
+    # Get the PostgreSQL database builder for the provider
+    database = database_types.get_instance(
+        provider,
+        storage_mb=config.require_int("database-storage-mb"),
+        username=config.require("database-username"),
+        password=get_password("database-password"),
+        database_name=config.require("database-name"),
+    )
+
+    # Setup the database
+    database.create()
+
+    # Add a secret to the cluster with the password
+    pwd_secret = kubernetes.core.v1.Secret(
+        "prefect-server-postgresql",
+        data={"postgresql-password": database.password.apply(base64_encode)},
+        opts=chart_resources,
+    )
+
+    # Point the helm chart to this database
+    settings = chart_value_overrides["postgresql"]
+    settings["useSubChart"] = False
+    settings["postgresqlDatabase"] = database.connection_dbname
+    settings["postgresqlUsername"] = database.connection_username
+    settings["existingSecret"] = pwd_secret.id.apply(drop_namespace)
+    settings["externalHostname"] = database.connection_hostname
 
 
-# Deploy our helm chart to the K8s cluster
-# TODO: Add passing of Helm config overrides from the Pulumi config
+# Services via helm chart --------------------------------------------------------------
+
+
 helm_chart = Chart(
     "prefect-server-helm",
-    LocalChartOpts(
+    config=LocalChartOpts(
         path="../helm/prefect-server",
+        values=chart_value_overrides,
     ),
-    chart_resources,
+    opts=chart_resources,
 )
