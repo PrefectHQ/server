@@ -27,7 +27,9 @@ It manages the networking and basic setup for you with sane defaults.
 ### Requirements
 
 - Install [Pulumi CLI](https://www.pulumi.com/docs/get-started/)
-- Login to the Pulumi API with `pulumi login`
+- Set up a [Pulumi backend](https://www.pulumi.com/docs/intro/concepts/state/) with `pulumi login`. 
+  
+**Note** you do not have to use the Pulumi web service and can use `pulumi login --local` or a storage option of your choice to store the state. See their docs for all options.
 
 Next, you'll have to install the requirements for your cloud provider.
 
