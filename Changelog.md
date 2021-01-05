@@ -1,5 +1,27 @@
 # Changelog
 
+## January 5, 2021 <Badge text="beta" type="success" />
+
+Released on January 5, 2021.
+
+### Features
+
+- Support per-flow-run and per-flow-group `run_config` overrides - [#166](https://github.com/PrefectHQ/server/pull/166)
+
+### Enhancements
+
+- Upgrade Apollo NodeJS to `14.15.1` - [#153](https://github.com/PrefectHQ/server/pull/153)
+- Helm: configure strategy for deployment - [#165](https://github.com/PrefectHQ/server/pull/165)
+- Allow for timezone specification on flow group schedules - [#169](https://github.com/PrefectHQ/server/pull/169)
+
+### Database Migrations
+
+- Add `flow_group.run_config` and `flow_run.run_config` - [#166](https://github.com/PrefectHQ/server/pull/166)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+
 ## December 16, 2020 <Badge text="beta" type="success" />
 
 Released on December 16, 2020.
