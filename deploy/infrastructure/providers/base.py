@@ -73,7 +73,7 @@ class Cluster:
 
 class Database:
     """
-    Base class for managed PostgreSQL management
+    Base class for managed PostgreSQL management.
     """
 
     def __init__(
@@ -83,20 +83,21 @@ class Database:
         self.password = password
         self.storage_mb = storage_mb
         self.database_name = database_name
+        self.database_resource = None  # Stored for dependency creation
 
-    def create(self):
+    def create(self) -> None:
         raise NotImplemented
 
     @property
-    def connection_username(self):
+    def connection_username(self) -> pulumi.Output[str]:
         raise NotImplemented()
 
     @property
-    def connection_hostname(self):
+    def connection_hostname(self) -> pulumi.Output[str]:
         raise NotImplemented()
 
     @property
-    def connection_dbname(self):
+    def connection_dbname(self) -> pulumi.Output[str]:
         raise NotImplemented()
 
 

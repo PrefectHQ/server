@@ -109,6 +109,9 @@ class AzureDatabase(Database):
             ssl_minimal_tls_version_enforced="TLS1_2",
         )
 
+        # TODO: Create the database in the Server
+        self.database_resource = self.server
+
     @property
     def connection_username(self):
         return pulumi.Output.concat(

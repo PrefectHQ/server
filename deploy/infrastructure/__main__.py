@@ -101,10 +101,15 @@ if config.require_bool("database-create"):
     db_settings["existingSecret"] = pwd_secret.id.apply(drop_namespace)
     db_settings["externalHostname"] = database.connection_hostname
 
+    # Create a dependency so the helm chart is deleted *before* the database, otherwise
+    # the database will be undeletable since it is in-use
+    chart_resources.depends_on = [database.database_resource]
+
 
 # Services via helm chart --------------------------------------------------------------
 
 if config.require_bool("services-create"):
+
     helm_chart = Chart(
         "prefect-server-helm",
         config=LocalChartOpts(

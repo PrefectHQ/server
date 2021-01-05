@@ -131,8 +131,8 @@ class GCPCluster(Cluster):
 @database_types.register("gcp")
 class GCPDatabase(Database):
     """
-    Creates a CloudSQL Postgres database with a private IP within the base VPC for
-    connection.
+    Creates a CloudSQL Postgres database instance with a private IP within the base
+    VPC for connection.
     """
 
     instance: gcp.sql.DatabaseInstance
@@ -166,10 +166,16 @@ class GCPDatabase(Database):
             ),
         )
 
-        self.database = gcp.sql.Database(self.database_name, instance=self.instance)
-
         self.user = gcp.sql.User(
             self.username, instance=self.instance.name, password=self.password
+        )
+
+        self.database_resource = gcp.sql.Database(
+            self.database_name,
+            instance=self.instance,
+            # Create a dependency for deletion/creation order because GCloud is
+            # finicky about database deletions
+            opts=pulumi.ResourceOptions(depends_on=[self.user]),
         )
 
     @property
@@ -182,4 +188,4 @@ class GCPDatabase(Database):
 
     @property
     def connection_dbname(self):
-        return self.database.name
+        return self.database_resource.name
