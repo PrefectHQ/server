@@ -118,7 +118,6 @@ if config.require_bool("services-create"):
     #       https://github.com/pulumi/examples/blob/master/kubernetes-ts-helm-wordpress/index.ts
     #       since it appears the NOTES won't show
 
-else:
-    # Export the overrides - we cannot write this yaml to a file directly because it
-    # contains Pulumi Output objects and secrets
-    pulumi.export("chart-value-overrides", chart_value_overrides)
+# Export the overrides - we cannot write this yaml to a file directly because it
+# contains Pulumi Output objects and secrets.
+pulumi.export("chart-value-overrides", chart_value_overrides)
