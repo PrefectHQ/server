@@ -1,7 +1,6 @@
 import pulumi
 import pulumi_azure as azure
 import pulumi_azuread as azuread
-import pulumi_kubernetes as kubernetes
 from pulumi_azure.containerservice import (
     KubernetesCluster,
     KubernetesClusterDefaultNodePoolArgs,

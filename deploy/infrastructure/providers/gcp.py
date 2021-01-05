@@ -1,7 +1,6 @@
 import pulumi
 import pulumi_gcp as gcp
 import textwrap
-import pulumi_kubernetes as kubernetes
 
 from .base import Cluster, cluster_types, Database, database_types, get_password
 
