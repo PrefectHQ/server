@@ -1,20 +1,75 @@
 # Deployment of Prefect Server
 
-## Locally
+## When to use
 
-Recommend `prefect server start`
+If you'd like to run Prefect Server on a single machine,  use `prefect server start` instead.
 
-## Existing Kubernetes cluster
+If you'd like to run Prefect Server for development, see the
+[top-level README](...) instead.
 
-See instructions on using the Helm chart
+If using an existing K8s cluster, you can install the Helm chart directly or use Pulumi as described below but disable the cluster and database creation.
 
-## From scratch
+If you are trying to run Prefect Server on a new K8s cluster on your cloud provider, this is the right place!
 
-Requirements:
+
+## What does this do
+
+This tooling will create:
+
+- A kubernetes cluster
+- A cloud-provider specific managed Postgres instance
+- Prefect Server services (via the Helm chart)
+
+It manages the networking and basic setup for you with sane defaults.
+
+## How to use
+
+### Requirements
 
 - Install [Pulumi CLI](https://www.pulumi.com/docs/get-started/)
+- Login to the Pulumi API with `pulumi login`
 
-###  Microsoft Azure
+Next, you'll have to install the requirements for your cloud provider.
+
+####  Microsoft Azure
 
 - Install the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/)
-- 
+- Authenticate with `az login`
+
+#### Google Cloud
+
+- Install the [GCP CLI](...)
+- Authenticate with `gcloud auth application-default login`
+
+**Permissions:** To create a private connection in the VPC the ServiceNetworking API must be enabled, and your user must have the NetworkAdmin IAM role
+
+### Configuring
+
+We recommend making a *copy* of the default config file so you have a reference, e.g. 
+
+```
+cp Pulumi.default.config Pulumi.deploy.config
+```
+
+A Pulumi 'stack' must be initialized to track your deployment, this should have the same name as the config copy you've created
+
+```
+pulumi stack init deploy
+```
+
+Now you can modify the config file directly to set values or use `pulumi config set <key> <value>`. At a minimum, the `provider` value should be changed to the cloud provider you've chosen.
+
+#### Secrets and passwords
+
+If setting passwords, we recommend using `pulumi config set --secret <key> <value>` to ensure they are encrypted at rest. By default, all passwords are auto-generated (and are consequently commented out in the default config).
+
+#### Config namespaces
+
+- Prefect Server settings generic to all cloud providers (e.g. database name) are in the `prefect-server` namespace.
+- Prefect Server settings specific to a single cloud provider (e.g. instance type) are in the `prefect-server-<provider_name>` namespaces.
+- Pulumi cloud provider settings (e.g. region) are under the name of the provider, e.g. `gcp`. 
+
+
+### Deploying
+
+Run `pulumi up` to deploy the infrastructure and services, you will be prompted for confirmation before anything is created.
