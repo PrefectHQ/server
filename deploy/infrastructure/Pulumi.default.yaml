@@ -3,24 +3,40 @@ config:
   # Cloud provider specific configuration ------------------------------------------------------------------------------
 
   # Choose a provider to use, one of azure, gcloud, aws
-  prefect-server:provider: azure
+  prefect-server:provider: gcp
 
-  # Azure
+  # Azure ----------------------------------------------------------
+
   azure:environment: public
   azure:location: WestUS
+  prefect-server-azure:k8s-node-type: Standard_B2ms
 
-  # A ServicePrincipal must be created to manage the app
-  prefect-server-azure:service-principal-password: SECRET
+  # A ServicePrincipal must be created to manage the app, by default the password is generated
+  # prefect-server-azure:service-principal-password: CREATE_PULUMI_SECRET
+
+  # GCP -------------------------------------------------------------
+
+  gcp:project: default
+  gcp:zone: us-west1-a
+  #prefect-server-gcp:k8s-admin-password: CREATE_PULUMI_SECRET
+  prefect-server-gcp:k8s-node-type: n1-standard-1
 
 
   # Cloud agnostic configuration ---------------------------------------------------------------------------------------
 
   # If `false`, the default cluster in the local kubeconfig will be used
   # If `true`, a K8s cluster will be created within the given cloud provider
-  prefect-server:create-k8s-cluster: false
-  prefect-server:k8s-version: 1.18.10
+  prefect-server:k8s-create: true
+  prefect-server:k8s-version: 1.18
+  prefect-server:k8s-node-count: 2
+  prefect-server:k8s-admin-username: admin
+
 
   # If `false`, the Helm chart will deploy a temporary postgres instance on the K8s cluster unless Helm config values
   # for an existing Postgres instance are passed
   # If `true`, a cloud provider managed Postgres (e.g. CloudSQL) instance will be created
-  prefect-server:create-managed-postgres: true
+  prefect-server:database-create: true
+  prefect-server:database-username: prefect
+  #prefect-server:database-password: CREATE_PULUMI_SECRET
+  prefect-server:database-storage-mb: 10240
+  prefect-server:database-name: prefect
