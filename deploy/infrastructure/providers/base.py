@@ -83,7 +83,6 @@ class Database:
         self.password = password
         self.storage_mb = storage_mb
         self.database_name = database_name
-        self.database_resource = None  # Stored for dependency creation
 
     def create(self) -> None:
         raise NotImplemented
@@ -98,6 +97,10 @@ class Database:
 
     @property
     def connection_dbname(self) -> pulumi.Output[str]:
+        raise NotImplemented()
+
+    @property
+    def database_resource(self) -> Any:
         raise NotImplemented()
 
 

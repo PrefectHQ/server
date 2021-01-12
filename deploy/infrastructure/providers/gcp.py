@@ -170,7 +170,7 @@ class GCPDatabase(Database):
             self.username, instance=self.instance.name, password=self.password
         )
 
-        self.database_resource = gcp.sql.Database(
+        self.database = gcp.sql.Database(
             self.database_name,
             instance=self.instance,
             # Create a dependency for deletion/creation order because GCloud is
@@ -188,4 +188,8 @@ class GCPDatabase(Database):
 
     @property
     def connection_dbname(self):
-        return self.database_resource.name
+        return self.database.name
+
+    @property
+    def database_resource(self):
+        return self.database
