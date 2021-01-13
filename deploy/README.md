@@ -72,6 +72,13 @@ If setting passwords, we recommend using `pulumi config set --secret <key> <valu
 - Pulumi cloud provider settings (e.g. region) are under the name of the provider, e.g. `gcp`. 
 
 
+#### Choosing components
+
+By default, all of the components will be deployed. 
+Each component can be disabled allowing you to configure your own instead.
+
+*This is still experimental and there may be conflicts with your existing infrastructure.*
+
 ### Deploying
 
 Run `pulumi up` to deploy the infrastructure and services, you will be prompted for confirmation before anything is created.

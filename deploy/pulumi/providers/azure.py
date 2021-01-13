@@ -5,10 +5,9 @@ from pulumi_azure.containerservice import (
     KubernetesCluster,
     KubernetesClusterDefaultNodePoolArgs,
     KubernetesClusterServicePrincipalArgs,
-    KubernetesClusterRoleBasedAccessControlArgs,
     KubernetesClusterNetworkProfileArgs,
 )
-
+from typing import Union
 from .base import Cluster, cluster_types, Database, database_types, get_password
 
 
@@ -24,7 +23,9 @@ class AzureBase:
     app: azuread.Application
     service_principal: azuread.ServicePrincipal
     service_principal_pwd: azuread.ServicePrincipalPassword
-    network: azure.network.VirtualNetwork
+    network: Union[
+        azure.network.VirtualNetwork, azure.network.AwaitableGetVirtualNetworkResult
+    ]
     private_subnet: azure.network.Subnet
 
     def __init__(self):
@@ -52,18 +53,22 @@ class AzureBase:
             value=get_password("service-principal-password", self.config),
         )
 
-        self.network = azure.network.VirtualNetwork(
-            "prefect-vnet-",
-            resource_group_name=self.resource_group.name,
-            location=self.resource_group.location,
-            address_spaces=["10.0.0.0/16"],
-            subnets=[
-                azure.network.VirtualNetworkSubnetArgs(
-                    name="default",
-                    address_prefix="10.0.1.0/24",
-                )
-            ],
-        )
+        existing_network = pulumi.Config.get("existing-network-name")
+        if existing_network:
+            self.network = azure.network.get_virtual_network(existing_network)
+        else:
+            self.network = azure.network.VirtualNetwork(
+                "prefect-vnet-",
+                resource_group_name=self.resource_group.name,
+                location=self.resource_group.location,
+                address_spaces=["10.0.0.0/16"],
+                subnets=[
+                    azure.network.VirtualNetworkSubnetArgs(
+                        name="default",
+                        address_prefix="10.0.1.0/24",
+                    )
+                ],
+            )
 
         self.private_subnet = azure.network.Subnet(
             "prefect-vnet-subnet-private-",

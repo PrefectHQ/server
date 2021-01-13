@@ -1,6 +1,7 @@
 import pulumi
 import pulumi_gcp as gcp
 import textwrap
+from typing import Union
 
 from .base import Cluster, cluster_types, Database, database_types, get_password
 
@@ -13,7 +14,7 @@ class GCPBase:
     _created: bool = False
 
     # Created resources
-    vpc: gcp.compute.Network
+    vpc: Union[gcp.compute.Network, gcp.compute.AwaitableGetNetworkResult]
     private_ips: gcp.compute.GlobalAddress
     vpc_connection = gcp.servicenetworking.Connection
 
@@ -26,7 +27,13 @@ class GCPBase:
             self._created = True
 
     def create(self):
-        self.vpc = gcp.compute.Network("prefect-vpc")
+
+        existing_network = pulumi.Config.get("existing-network-name")
+        if existing_network:
+            self.vpc = gcp.compute.get_network(existing_network)
+        else:
+            self.vpc = gcp.compute.Network("prefect-vpc")
+
         self.private_ips = gcp.compute.GlobalAddress(
             "prefect-vpc-ips",
             purpose="VPC_PEERING",

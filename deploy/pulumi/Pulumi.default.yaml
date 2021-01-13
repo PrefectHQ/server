@@ -27,6 +27,9 @@ config:
 
   # Cloud agnostic configuration ---------------------------------------------------------------------------------------
 
+  # If given, an existing VPC/VNET will be used instead of creating a new one
+  prefect-server:existing-network-name: ""
+
   # If `false`, the default cluster in the local kubeconfig will be used
   # If `true`, a K8s cluster will be created within the given cloud provider
   prefect-server:k8s-create: true
