@@ -164,7 +164,7 @@ class AzureDatabase(Database):
         )
 
         self.database = azure.postgresql.Database(
-            "prefect-db-",
+            self.database_name,
             resource_group_name=azure_base.resource_group.name,
             server_name=self.server.name,
             charset="UTF8",
