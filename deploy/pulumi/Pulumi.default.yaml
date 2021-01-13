@@ -9,7 +9,7 @@ config:
 
   azure:environment: public
   azure:location: WestUS
-  prefect-server-azure:k8s-node-type: Standard_B1ms
+  prefect-server-azure:k8s-node-type: Standard_B2ms
   prefect-server-azure:k8s-version: 1.18.10
   # The SKU for the database type to use. Cannot be `Basic` type because it does not support virtual network rules
   prefect-server-azure:database-type: GP_Gen5_2
