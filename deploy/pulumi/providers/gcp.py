@@ -26,9 +26,9 @@ class GCPBase:
             self._created = True
 
     def create(self):
-        self.vpc = gcp.compute.Network("prefect-server-vpc")
+        self.vpc = gcp.compute.Network("prefect-vpc")
         self.private_ips = gcp.compute.GlobalAddress(
-            "prefect-server-vpc-ips",
+            "prefect-vpc-ips",
             purpose="VPC_PEERING",
             address_type="INTERNAL",
             prefix_length=16,
@@ -36,7 +36,7 @@ class GCPBase:
         )
 
         self.vpc_connection = gcp.servicenetworking.Connection(
-            "prefect-server-vpc-conn",
+            "prefect-vpc-conn",
             network=self.vpc.id,
             service="servicenetworking.googleapis.com",
             reserved_peering_ranges=[self.private_ips.name],
@@ -152,7 +152,7 @@ class GCPDatabase(Database):
         gcp_base.create_if_not_created()
 
         self.instance = gcp.sql.DatabaseInstance(
-            "prefect-db",
+            "prefect-sql",
             region=gcp.config.region,
             settings=gcp.sql.DatabaseInstanceSettingsArgs(
                 tier="db-f1-micro",
