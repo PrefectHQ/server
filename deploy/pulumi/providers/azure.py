@@ -66,7 +66,7 @@ class AzureBase:
         )
 
         self.private_subnet = azure.network.Subnet(
-            "prefect-vnet-subnet-private",
+            "prefect-vnet-subnet-private-",
             resource_group_name=self.resource_group.name,
             virtual_network_name=self.network.name,
             address_prefixes=["10.0.2.0/24"],
@@ -112,6 +112,19 @@ class AzureCluster(Cluster):
         )
 
         self._kubeconfig = aks.kube_config_raw
+
+        command_vars = pulumi.Output.all(aks.resource_group_name, aks.name)
+
+        pulumi.export(
+            "azure-kubeconfig-cmd",
+            command_vars.apply(
+                lambda var: (
+                    "az aks get-credentials --resource-group {0} --name {1}".format(
+                        *var
+                    )
+                )
+            ),
+        )
 
 
 @database_types.register("azure")
