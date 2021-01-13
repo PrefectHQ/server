@@ -53,7 +53,7 @@ class AzureBase:
             value=get_password("service-principal-password", self.config),
         )
 
-        existing_network = pulumi.Config.get("existing-network-name")
+        existing_network = pulumi.Config("prefect-server").get("existing-network-name")
         if existing_network:
             self.network = azure.network.get_virtual_network(existing_network)
         else:

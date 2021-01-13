@@ -28,7 +28,7 @@ class GCPBase:
 
     def create(self):
 
-        existing_network = pulumi.Config.get("existing-network-name")
+        existing_network = pulumi.Config("prefect-server").get("existing-network-name")
         if existing_network:
             self.vpc = gcp.compute.get_network(existing_network)
         else:
