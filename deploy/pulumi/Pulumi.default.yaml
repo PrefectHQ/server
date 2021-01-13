@@ -9,9 +9,8 @@ config:
 
   azure:environment: public
   azure:location: WestUS
-  prefect-server-azure:k8s-node-type: Standard_B2ms
-
-  # A ServicePrincipal must be created to manage the app, by default the password is generated
+  prefect-server-azure:k8s-node-type: Standard_B1ms
+  prefect-server-azure:k8s-version: 1.18.10
   # prefect-server-azure:service-principal-password: CREATE_PULUMI_SECRET
 
   # GCP -------------------------------------------------------------
@@ -20,6 +19,8 @@ config:
   gcp:zone: us-west1-a
   #prefect-server-gcp:k8s-admin-password: CREATE_PULUMI_SECRET
   prefect-server-gcp:k8s-node-type: n1-standard-1
+  prefect-server-gcp:k8s-master-version: ""
+  prefect-server-gcp:k8s-node-version: ""
 
 
   # Cloud agnostic configuration ---------------------------------------------------------------------------------------
@@ -27,7 +28,6 @@ config:
   # If `false`, the default cluster in the local kubeconfig will be used
   # If `true`, a K8s cluster will be created within the given cloud provider
   prefect-server:k8s-create: true
-  prefect-server:k8s-version: 1.18
   prefect-server:k8s-node-count: 2
   prefect-server:k8s-admin-username: admin
 

@@ -50,6 +50,7 @@ gcp_base = GCPBase()
 @cluster_types.register("gcp")
 class GCPCluster(Cluster):
     def __init__(self, *args, **kwargs):
+        self._gke_versions = gcp.container.get_engine_versions()
         super().__init__(*args, **kwargs)
 
     def create(self):
@@ -59,9 +60,14 @@ class GCPCluster(Cluster):
         k8s = gcp.container.Cluster(
             "prefect-cluster",
             initial_node_count=self.node_count,
-            # TODO: Determine how to use the version properly
-            # node_version=self.k8s_version,
-            # min_master_version=self.k8s_version,
+            node_version=(
+                gcp_base.config.get("k8s-master-version")
+                or self._gke_versions.latest_node_version
+            ),
+            min_master_version=(
+                gcp_base.config.get("k8s-node-version")
+                or self._gke_versions.latest_master_version
+            ),
             master_auth=gcp.container.ClusterMasterAuthArgs(
                 username="admin",
                 password=get_password("k8s-admin-password", gcp_base.config),

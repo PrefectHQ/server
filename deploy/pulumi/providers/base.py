@@ -51,8 +51,7 @@ class Cluster:
     Base class for Kubernetes cluster management
     """
 
-    def __init__(self, k8s_version: str, node_count: int) -> None:
-        self.k8s_version = k8s_version
+    def __init__(self, node_count: int) -> None:
         self.node_count = node_count
         self._provider: Optional[Provider] = None
         self._kubeconfig: Optional[str] = None
@@ -74,6 +73,8 @@ class Cluster:
 class Database:
     """
     Base class for managed PostgreSQL management.
+
+    Properties must be overridden to point to the proper objects
     """
 
     def __init__(

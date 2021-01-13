@@ -98,7 +98,7 @@ class AzureCluster(Cluster):
         aks = KubernetesCluster(
             "prefect-cluster-",  # cannot be longer or it will exceed the char limit
             resource_group_name=azure_base.resource_group.name,
-            kubernetes_version=self.k8s_version,
+            kubernetes_version=azure_base.config.require("k8s_version"),
             dns_prefix="dns",
             service_principal=KubernetesClusterServicePrincipalArgs(
                 client_id=azure_base.app.application_id,

@@ -47,14 +47,12 @@ for key, val in config.get_object("services-values-override").values():
 
 # K8s cluster --------------------------------------------------------------------------
 
-
 if config.require_bool("k8s-create"):
     # TODO: VPC/Availability settings
 
     # Get the K8s cluster builder for the provider
     cluster = cluster_types.get_instance(
         provider,
-        k8s_version=config.require("k8s-version"),
         node_count=config.require_int("k8s-node-count"),
     )
 
