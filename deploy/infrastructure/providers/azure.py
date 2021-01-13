@@ -146,7 +146,7 @@ class AzureDatabase(Database):
             administrator_login=self.username,
             administrator_login_password=self.password,
             sku_name="GP_Gen5_4",
-            version="9.6",
+            version="11",
             storage_mb=self.storage_mb,
             backup_retention_days=7,
             geo_redundant_backup_enabled=True,
