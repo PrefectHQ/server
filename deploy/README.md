@@ -50,7 +50,7 @@ Next, you'll have to install the requirements for your cloud provider.
 We recommend making a *copy* of the default config file so you have a reference, e.g. 
 
 ```
-cp Pulumi.default.config Pulumi.deploy.config
+cp Pulumi.default.yaml Pulumi.deploy.yaml
 ```
 
 A Pulumi 'stack' must be initialized to track your deployment, this should have the same name as the config copy you've created
