@@ -11,6 +11,8 @@ config:
   azure:location: WestUS
   prefect-server-azure:k8s-node-type: Standard_B1ms
   prefect-server-azure:k8s-version: 1.18.10
+  # The SKU for the database type to use. Cannot be `Basic` type because it does not support virtual network rules
+  prefect-server-azure:database-type: GP_Gen5_2
   # prefect-server-azure:service-principal-password: CREATE_PULUMI_SECRET
 
   # GCP -------------------------------------------------------------
@@ -38,11 +40,13 @@ config:
   prefect-server:database-create: true
   prefect-server:database-username: prefect
   #prefect-server:database-password: CREATE_PULUMI_SECRET
+  # The size of the disk for the database. GCP has a minimum of 10 GB, Azure has a minimum of 5 GB
   prefect-server:database-storage-mb: 10240
   prefect-server:database-name: prefect
 
   # If `false`, the Helm chart will not be deployed and you will need to run `helm install` yourself, Helm value
-  # overrides with the configuration for connection to the database (if created) will be exported
+  # overrides with the configuration for connection to the database (if created) will be exported. This is convenient
+  # if you would like to use Helm to manage the services instead of Pulumi.
   # If `true`, the Prefect Server services will be installed on the created (or current) K8s cluster using the Helm
   # chart
   prefect-server:services-create: true

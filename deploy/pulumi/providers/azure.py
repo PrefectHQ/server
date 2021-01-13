@@ -53,7 +53,7 @@ class AzureBase:
         )
 
         self.network = azure.network.VirtualNetwork(
-            "prefect-server-network",
+            "prefect-vnet-",
             resource_group_name=self.resource_group.name,
             location=self.resource_group.location,
             address_spaces=["10.0.0.0/16"],
@@ -66,20 +66,13 @@ class AzureBase:
         )
 
         self.private_subnet = azure.network.Subnet(
-            "prefect-server-private-subnet",
+            "prefect-vnet-subnet-private",
             resource_group_name=self.resource_group.name,
             virtual_network_name=self.network.name,
             address_prefixes=["10.0.2.0/24"],
             enforce_private_link_endpoint_network_policies=True,
             service_endpoints=["Microsoft.Sql"],
         )
-
-        # self.subnet_role_assignment = azure.authorization.Assignment(
-        #     "prefect-server-private-subnet-permissions",
-        #     principal_id=self.service_principal.id,
-        #     role_definition_name="Network Contributor",
-        #     scope=self.private_subnet.id,
-        # )
 
 
 # Singleton -- does not create any resources on init
@@ -98,30 +91,24 @@ class AzureCluster(Cluster):
         aks = KubernetesCluster(
             "prefect-cluster-",  # cannot be longer or it will exceed the char limit
             resource_group_name=azure_base.resource_group.name,
-            kubernetes_version=azure_base.config.require("k8s_version"),
+            kubernetes_version=azure_base.config.require("k8s-version"),
             dns_prefix="dns",
             service_principal=KubernetesClusterServicePrincipalArgs(
                 client_id=azure_base.app.application_id,
                 client_secret=azure_base.service_principal_pwd.value,
             ),
             default_node_pool=KubernetesClusterDefaultNodePoolArgs(
-                name="type1",
+                name="basic",
                 node_count=self.node_count,
                 vm_size=azure_base.config.get("k8s-node-type"),
                 vnet_subnet_id=azure_base.private_subnet.id,
             ),
-            # Not working -- changing the private subnet to cover a different range
             network_profile=KubernetesClusterNetworkProfileArgs(
                 network_plugin="azure",
                 service_cidr="10.10.0.0/16",
                 dns_service_ip="10.10.0.10",
                 docker_bridge_cidr="172.17.0.1/16",
-            )
-            # Disabled for now -- don't have permissions
-            # role_based_access_control=KubernetesClusterRoleBasedAccessControlArgs(
-            #     enabled=True
-            # ),
-            # opts=pulumi.ResourceOptions(depends_on=[azure_base.subnet_role_assignment]),
+            ),
         )
 
         self._kubeconfig = aks.kube_config_raw
@@ -140,35 +127,23 @@ class AzureDatabase(Database):
         azure_base.create_if_not_created()
 
         self.server = azure.postgresql.Server(
-            "prefect-db-",
+            "prefect-sql-",
             location=azure_base.resource_group.location,
             resource_group_name=azure_base.resource_group.name,
             administrator_login=self.username,
             administrator_login_password=self.password,
-            sku_name="GP_Gen5_4",
+            sku_name=azure_base.config.require("database-type"),
             version="11",
             storage_mb=self.storage_mb,
             backup_retention_days=7,
-            geo_redundant_backup_enabled=True,
-            auto_grow_enabled=True,
+            geo_redundant_backup_enabled=False,
+            auto_grow_enabled=False,
             public_network_access_enabled=True,
             ssl_enforcement_enabled=False,
         )
 
-        # self.endpoint = azure.privatelink.Endpoint(
-        #     "prefect-db-",
-        #     location=azure_base.resource_group.location,
-        #     resource_group_name=azure_base.resource_group.name,
-        #     subnet_id=azure_base.private_subnet.id,
-        #     private_service_connection=azure.privatelink.EndpointPrivateServiceConnectionArgs(
-        #         name="prefect-db-private-connection",
-        #         private_connection_resource_id=self.server.id,
-        #         is_manual_connection=False,
-        #     ),
-        # )
-
-        azure.postgresql.VirtualNetworkRule(
-            "prefect-db-vnet",
+        vnet_rule = azure.postgresql.VirtualNetworkRule(
+            "prefect-sql-vnet-",
             resource_group_name=azure_base.resource_group.name,
             server_name=self.server.name,
             subnet_id=azure_base.private_subnet.id,
@@ -176,11 +151,14 @@ class AzureDatabase(Database):
         )
 
         self.database = azure.postgresql.Database(
-            "prefect-server-db",
+            "prefect-db-",
             resource_group_name=azure_base.resource_group.name,
             server_name=self.server.name,
             charset="UTF8",
             collation="English_United States.1252",
+            # Do not let the database resource be ready until the connection will be
+            # allowed
+            opts=pulumi.ResourceOptions(depends_on=[vnet_rule]),
         )
 
     @property
