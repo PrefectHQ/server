@@ -1,0 +1,4 @@
+name: prefect-server
+runtime:
+  name: python
+description: Prefect Server deployment with Pulumi
