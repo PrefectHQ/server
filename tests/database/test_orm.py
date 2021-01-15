@@ -481,27 +481,27 @@ class TestAggregates:
 
     async def test_sum(self):
         result = await models.Flow.where().sum(["version"])
-        assert result['version'] == 6
+        assert result["version"] == 6
 
     async def test_sum_where(self):
         result = await models.Flow.where({"name": {"_eq": "a"}}).sum(["version"])
-        assert result['version'] == 4
+        assert result["version"] == 4
 
     async def test_max(self):
         result = await models.Flow.where().max(["version"])
-        assert result['version'] == 3
+        assert result["version"] == 3
 
     async def test_max_where(self):
         result = await models.Flow.where({"name": {"_eq": "b"}}).max(["version"])
-        assert result['version'] == 2
+        assert result["version"] == 2
 
     async def test_min(self):
         result = await models.Flow.where().min(["version"])
-        assert result['version'] == 1
+        assert result["version"] == 1
 
     async def test_min_where(self):
         result = await models.Flow.where({"name": {"_eq": "b"}}).min(["version"])
-        assert result['version'] == 2
+        assert result["version"] == 2
 
 
 class TestRunModels:

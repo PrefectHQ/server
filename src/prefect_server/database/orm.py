@@ -568,7 +568,7 @@ class ModelQuery:
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["count"]["aggregate"]["count"]
 
-    async def sum(self, columns:List[str]) -> dict:
+    async def sum(self, columns: List[str]) -> dict:
         """
         Returns the sum of the requested columns
 
@@ -590,7 +590,7 @@ class ModelQuery:
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["sum_query"]["aggregate"]["sum"]
 
-    async def max(self, columns:List[str]) -> dict:
+    async def max(self, columns: List[str]) -> dict:
         """
         Returns the maximum value of the requested columns
 
@@ -612,7 +612,7 @@ class ModelQuery:
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["max_query"]["aggregate"]["max"]
 
-    async def min(self, columns:List[str]) -> dict:
+    async def min(self, columns: List[str]) -> dict:
         """
         Returns the minimum value of the requested columns
 
