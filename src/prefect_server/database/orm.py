@@ -568,7 +568,29 @@ class ModelQuery:
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["count"]["aggregate"]["count"]
 
-    async def max(self, columns) -> dict:
+    async def sum(self, columns: List[str]) -> dict:
+        """
+        Returns the sum of the requested columns
+
+        Args:
+
+        Returns:
+            - dict: the requested columns and corresponding minmums
+        """
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
+        query = {
+            "query": {
+                with_args(f"sum_query: {agg_type}", {"where": self.where}): {
+                    "aggregate": {"sum": set(columns)}
+                }
+            }
+        }
+        result = await prefect.plugins.hasura.client.execute(query, as_box=False)
+        return result["data"]["sum_query"]["aggregate"]["sum"]
+
+    async def max(self, columns: List[str]) -> dict:
         """
         Returns the maximum value of the requested columns
 
@@ -590,7 +612,7 @@ class ModelQuery:
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["max_query"]["aggregate"]["max"]
 
-    async def min(self, columns) -> dict:
+    async def min(self, columns: List[str]) -> dict:
         """
         Returns the minimum value of the requested columns
 
