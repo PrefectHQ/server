@@ -479,6 +479,14 @@ class TestAggregates:
         result = await models.Flow.where().count(distinct_on=[EnumValue("name")])
         assert result == 2
 
+    async def test_sum(self):
+        result = await models.Flow.where().sum(["version"])
+        assert result['version'] == 6
+
+    async def test_sum_where(self):
+        result = await models.Flow.where({"name": {"_eq": "a"}}).sum(["version"])
+        assert result['version'] == 4
+
     async def test_max(self):
         result = await models.Flow.where().max(["version"])
         assert result['version'] == 3
