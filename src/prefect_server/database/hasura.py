@@ -4,11 +4,11 @@ from typing import Any, Dict, Iterable, List, Union
 from box import Box
 
 from prefect.utilities.graphql import EnumValue, with_args
+from prefect.utilities.plugins import register_plugin
 from prefect_server import config
 from prefect_server.utilities import exceptions
 from prefect_server.utilities.graphql import GraphQLClient
 from prefect_server.utilities.logging import get_logger
-from prefect.utilities.plugins import register_plugin
 
 GQLObjectTypes = Union[None, str, Dict, Iterable]
 logger = get_logger("Hasura")
@@ -24,7 +24,7 @@ class Variable:
         return f"${self.name}"
 
     def __repr__(self) -> str:
-        return f"<GraphQL Variable: {self.name}>"
+        return f'<GraphQL Variable "{self.name}": {self.type}>'
 
     def __hash__(self) -> int:
         return id(self)
@@ -167,29 +167,6 @@ class HasuraClient(GraphQLClient):
 
         return result
 
-    async def get(
-        self, graphql_type: str, id: str, selection_set: GQLObjectTypes
-    ) -> Box:
-        """
-        Query a specific object type by ID
-
-        Args:
-            - graphql_type(str): the GraphQL type to query
-            - id (str): the object ID
-            - selection_set (str): a GraphQL results query, not including surrounding braces
-        """
-        query_type = f"{graphql_type}_by_pk"
-        query = {"query": {with_args(query_type, {"id": id}): selection_set}}
-        result = await self.execute(query)
-        return result.data[query_type]
-
-    async def exists(self, graphql_type: str, id: str) -> bool:
-        """
-        Tests if a type with the provided ID exists in the database
-        """
-        result = await self.get(graphql_type=graphql_type, id=id, selection_set="id")
-        return result is not None
-
     async def insert(
         self,
         graphql_type: str,
@@ -198,6 +175,7 @@ class HasuraClient(GraphQLClient):
         alias: str = None,
         selection_set: GQLObjectTypes = "affected_rows",
         run_mutation: bool = True,
+        insert_mutation_name: str = None,
     ) -> Box:
         """
         Runs an `insert` mutation against the provided Hasura type, evaluating the provided
@@ -206,6 +184,9 @@ class HasuraClient(GraphQLClient):
         The `selection_set` is inserted directly into the graphql query, and should not
         be surrounded by curly braces. Valid top-level keys are `affected_rows` and `returning`.
         """
+
+        if insert_mutation_name is None:
+            insert_mutation_name = f"insert_{graphql_type}"
 
         if not isinstance(objects, (list, set, tuple)):
             raise TypeError(
@@ -244,7 +225,7 @@ class HasuraClient(GraphQLClient):
         # -------------------------------------------------------------
         # build mutation
 
-        mutation_name = f"{alias}: insert_{graphql_type}"
+        mutation_name = f"{alias}: {insert_mutation_name}"
         selection_set = selection_set or "affected_rows"
 
         graphql = dict(
@@ -266,6 +247,7 @@ class HasuraClient(GraphQLClient):
         alias: str = None,
         selection_set: GQLObjectTypes = "affected_rows",
         run_mutation: bool = True,
+        delete_mutation_name: str = None,
     ) -> Box:
         """
         Runs an `delete` mutation against the provided Hasura type and `where` clause,
@@ -279,6 +261,9 @@ class HasuraClient(GraphQLClient):
                 "`where` must be provided as a dict if `id` is None; "
                 f"received {type(where).__name__}"
             )
+
+        if delete_mutation_name is None:
+            delete_mutation_name = f"delete_{graphql_type}"
 
         where = where or {}
         if id is not None:
@@ -294,14 +279,16 @@ class HasuraClient(GraphQLClient):
         # --- variable: where
 
         arguments["where"] = Variable(
-            name=f"{alias}_where", type=f"{graphql_type}_bool_exp!", value=where
+            name=f"{alias}_where",
+            type=f"{graphql_type}_bool_exp!",
+            value=where,
         )
         variables.append(arguments["where"])
 
         # -------------------------------------------------------------
         # build mutation
 
-        mutation_name = f"{alias}: delete_{graphql_type}"
+        mutation_name = f"{alias}: {delete_mutation_name}"
         selection_set = selection_set or "affected_rows"
         graphql = dict(
             query={with_args(mutation_name, arguments): selection_set},
@@ -321,9 +308,14 @@ class HasuraClient(GraphQLClient):
         id: str = None,
         set: GQLObjectTypes = None,
         increment: GQLObjectTypes = None,
-        alias: str = None,
+        append: dict = None,
+        prepend: dict = None,
+        delete_key: dict = None,
+        delete_elem: dict = None,
         selection_set: GQLObjectTypes = "affected_rows",
+        alias: str = None,
         run_mutation: bool = True,
+        update_mutation_name: str = None,
     ) -> Box:
         """
         Runs an `update` mutation against the provided Hasura type and `where` clause, applying
@@ -332,14 +324,39 @@ class HasuraClient(GraphQLClient):
 
         The `selection_set` is inserted directly into the graphql query, and should not
         be surrounded by curly braces. Valid top-level keys are `affected_rows` and `returning`.
+
+        Args:
+            - graphql_type (str): the Hasura type
+            - where (GQLObjectTypes): a Hasura where clause
+            - id (str): an object ID; will autogenerate a where clause if provided
+            - set (GQLObjectTypes): a Hasura `_set` clause
+            - increment (GQLObjectTypes): a Hasura `_increment` clause for int columns
+            - append (dict) a Hasura `_append` clause for JSONB columns
+            - prepend (dict) a Hasura `_prepend` clause for JSONB columns
+            - delete_key (dict) a Hasura `_delete_key` clause for JSONB columns
+            - delete_elem (dict) a Hasura `_delete_elem` clause for JSONB columns
+            - selection_set (GQLObjectTypes): a hasura selection_set. If None,
+                a list of ids will be returned.
+            - alias (str): a GraphQL alias, useful when running this mutation in a batch.
+            - run_mutation (bool): if True (default), the mutation is run immediately. If False,
+                an object is returned that can be passed to `HasuraClient.execute_mutations_in_transaction`.
+            - update_mutation_name (str): if provided, the name of the mutation. Otherwise inferred
+                from the graphql_type. This is useful if custom root mutations were created.
+
         """
         if id is None and not isinstance(where, dict):
             raise TypeError(
                 "`where` must be provided as a dict if `id` is None; "
                 f"received {type(where).__name__}"
             )
-        elif all(op is None for op in [set, increment]):
+        elif all(
+            op is None
+            for op in [set, increment, append, prepend, delete_key, delete_elem]
+        ):
             raise ValueError("At least one update operation must be provided")
+
+        if update_mutation_name is None:
+            update_mutation_name = f"update_{graphql_type}"
 
         where = where or {}
 
@@ -357,7 +374,9 @@ class HasuraClient(GraphQLClient):
         # --- variable: where
 
         arguments["where"] = Variable(
-            name=f"{alias}_where", type=f"{graphql_type}_bool_exp!", value=where
+            name=f"{alias}_where",
+            type=f"{graphql_type}_bool_exp!",
+            value=where,
         )
         variables.append(arguments["where"])
 
@@ -365,7 +384,9 @@ class HasuraClient(GraphQLClient):
 
         if set:
             arguments["_set"] = Variable(
-                name=f"{alias}_set", type=f"{graphql_type}_set_input", value=set
+                name=f"{alias}_set",
+                type=f"{graphql_type}_set_input",
+                value=set,
             )
             variables.append(arguments["_set"])
 
@@ -373,14 +394,56 @@ class HasuraClient(GraphQLClient):
 
         if increment:
             arguments["_inc"] = Variable(
-                name=f"{alias}_inc", type=f"{graphql_type}_inc_input", value=increment
+                name=f"{alias}_inc",
+                type=f"{graphql_type}_inc_input",
+                value=increment,
             )
             variables.append(arguments["_inc"])
+
+        # --- variable: _append
+
+        if append:
+            arguments["_append"] = Variable(
+                name=f"{alias}_append",
+                type=f"{graphql_type}_append_input",
+                value=append,
+            )
+            variables.append(arguments["_append"])
+
+        # --- variable: _prepend
+
+        if prepend:
+            arguments["_prepend"] = Variable(
+                name=f"{alias}_prepend",
+                type=f"{graphql_type}_prepend_input",
+                value=prepend,
+            )
+            variables.append(arguments["_prepend"])
+
+        # --- variable: _delete_key
+
+        if delete_key:
+            arguments["_delete_key"] = Variable(
+                name=f"{alias}_delete_key",
+                type=f"{graphql_type}_delete_key_input",
+                value=delete_key,
+            )
+            variables.append(arguments["_delete_key"])
+
+        # --- variable: _append
+
+        if delete_elem:
+            arguments["_delete_elem"] = Variable(
+                name=f"{alias}_delete_elem",
+                type=f"{graphql_type}_delete_elem_input",
+                value=delete_elem,
+            )
+            variables.append(arguments["_delete_elem"])
 
         # -------------------------------------------------------------
         # build mutation
 
-        mutation_name = f"{alias}: update_{graphql_type}"
+        mutation_name = f"{alias}: {update_mutation_name}"
         selection_set = selection_set or "affected_rows"
         graphql = dict(
             query={with_args(mutation_name, arguments): selection_set},

@@ -1,5 +1,234 @@
 # Changelog
 
+## January 5, 2021 <Badge text="beta" type="success" />
+
+Released on January 5, 2021.
+
+### Features
+
+- Support per-flow-run and per-flow-group `run_config` overrides - [#166](https://github.com/PrefectHQ/server/pull/166)
+
+### Enhancements
+
+- Upgrade Apollo NodeJS to `14.15.1` - [#153](https://github.com/PrefectHQ/server/pull/153)
+- Helm: configure strategy for deployment - [#165](https://github.com/PrefectHQ/server/pull/165)
+- Allow for timezone specification on flow group schedules - [#169](https://github.com/PrefectHQ/server/pull/169)
+
+### Database Migrations
+
+- Add `flow_group.run_config` and `flow_run.run_config` - [#166](https://github.com/PrefectHQ/server/pull/166)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+
+## December 16, 2020 <Badge text="beta" type="success" />
+
+Released on December 16, 2020.
+
+### Enhancements
+
+- Add the `events` RBAC permission to agents created by the helm chart - [#157](https://github.com/PrefectHQ/cloud/pull/157)
+
+## December 14, 2020 <Badge text="beta" type="success" />
+
+Released on December 14, 2020.
+
+### Enhancements
+
+- Add documentation on how to connect the CLI to a remote deployed server - [#159](https://github.com/PrefectHQ/server/pull/159)
+- Refactor the Zombie Killer to rely entirely on flow run heartbeats - [#158](https://github.com/PrefectHQ/server/pull/158)
+- Add support for custom Hasura root fields - [#161](https://github.com/PrefectHQ/server/pull/161)
+
+### Fixes
+
+- Add jobs/status to role for agent - [#154](https://github.com/PrefectHQ/server/pull/154)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+- [Pedro Martins](https://github.com/pedrocwb)
+
+## December 4, 2020 <Badge text="beta" type="success" />
+
+Released on December 4, 2020.
+
+### Enhancements
+
+- Add flag for shutting down loop services - [#144](https://github.com/PrefectHQ/server/pull/144)
+- Support configurable primary keys in ORM - [#145](https://github.com/PrefectHQ/server/pull/145)
+- Add support for expanded Hasura update operations - [#146](https://github.com/PrefectHQ/server/pull/146)
+- Helm chart: Always pull prefecthq docker images by default - [#151](https://github.com/PrefectHQ/server/pull/151)
+
+### Fixes
+
+- Listen on all agent interfaces for healthchecks - [#148](https://github.com/PrefectHQ/server/pull/148)
+
+### Database Migrations
+
+- Add task run name index for text search - [#149](https://github.com/PrefectHQ/server/pull/149)
+
+### Contributors
+
+- [Vladimir Zoubritsky](https://github.com/vogre)
+
+## November 29, 2020 <Badge text="beta" type="success" />
+
+Released on November 29, 2020.
+
+### Enhancements
+
+- Add KubernetesAgent to the Helm chart - [#136](https://github.com/PrefectHQ/server/pull/136)
+- Add two new GraphQL routes for Core functionality - [#143](https://github.com/PrefectHQ/server/pull/143)
+
+### Fixes
+
+- Fix handling for managed postgres usernames with `@` signs - [#139](https://github.com/PrefectHQ/server/pull/139)
+
+## November 13, 2020 <Badge text="beta" type="success" />
+
+Released on November 13, 2020.
+
+### Enhancements
+
+- Add the Prefect Core version to the api query - [#126](https://github.com/PrefectHQ/server/pull/126)
+- Remove global 24 hour expiration on flow run idempotency keys - [#134](https://github.com/PrefectHQ/server/pull/134)
+
+### Fixes
+
+- prefect-server dev infrastructure would sometimes fail to start with 'connection closed' - [#130](https://github.com/PrefectHQ/server/pull/130)
+- Fix helm chart when using existing postgres instance - [#132](https://github.com/PrefectHQ/server/pull/132)
+- Fix scheduling duplicate runs due to expired idempotency keys - [#134](https://github.com/PrefectHQ/server/pull/134)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+
+## November 11, 2020 <Badge text="beta" type="success" />
+
+Released on November 11, 2020.
+
+### Features
+
+- Add experimental Helm chart for deploying in K8s - [#123](https://github.com/PrefectHQ/server/pull/123)
+
+### Contributors
+
+- [Jonas Bernhard](https://github.com/yolibernal)
+- [Joël Luijmes](https://github.com/joelluijmes)
+- [Shaun Cutts](https://github.com/shaunc)
+
+## November 10, 2020 <Badge text="beta" type="success" />
+
+Released on November 10, 2020.
+
+### Features
+
+- Add API for persisting and retrieving task run artifacts - [#121](https://github.com/PrefectHQ/server/pull/121)
+
+## October 29, 2020 <Badge text="beta" type="success" />
+
+Released on October 29, 2020.
+
+### Features
+
+- Add idempotency keys to `flows.create_flow` - [#116](https://github.com/PrefectHQ/server/pull/116)
+
+### Fixes
+
+- Expose database upgrade errors during infrastructure start  - [#117](https://github.com/PrefectHQ/server/pull/117)
+
+## October 27, 2020 <Badge text="beta" type="success" />
+
+Released on October 27, 2020.
+
+### Fixes
+
+- Check for existence of agent before updating flow run agent - [#114](https://github.com/PrefectHQ/server/issues/114)
+
+## October 22, 2020 <Badge text="beta" type="success" />
+
+Released on October 22, 2020.
+
+### Enhancements
+
+- Update flow settings graphql logic to use supported API routes - [#113](https://github.com/PrefectHQ/server/pull/113)
+
+## October 14, 2020 <Badge text="beta" type="success" />
+
+Released on October 14, 2020.
+
+### Fixes
+
+- Allow for scheduling different parameters and different run labels at the exact same time - [#111](https://github.com/PrefectHQ/server/pull/111)
+
+## October 13, 2020 <Badge text="beta" type="success" />
+
+Released on October 13, 2020.
+
+### Features
+
+- Allow for scheduling changing labels on a per-flow run basis - [#109](https://github.com/PrefectHQ/server/pull/109)
+
+### Fixes
+
+- Fixes issue with Agent Config schema - [#107](https://github.com/PrefectHQ/server/pull/107)
+
+## September 24, 2020 <Badge text="beta" type="success" />
+
+Released on September 24, 2020.
+
+### Enhancements
+
+- Registering agents will now retrieve IDs from matching entries in order to prevent duplication - [#95](https://github.com/PrefectHQ/server/pull/95)
+- Add routes for setting run names - [#77](https://github.com/PrefectHQ/server/pull/77)
+
+### Fixes
+
+- Fix `name` field in `delete_agent` GraphQL resolver - [#95](https://github.com/PrefectHQ/server/pull/95)
+- Replace all uses of `database.models` with `prefect.models` - [#94](https://github.com/PrefectHQ/server/pull/94)
+
+### Database Migrations
+
+- Add task run name - [#77](https://github.com/PrefectHQ/server/pull/77)
+- Add index on `flow_run.agent_id` - [#93](https://github.com/PrefectHQ/server/pull/93)
+
+## September 15, 2020 <Badge text="beta" type="success" />
+
+Released on September 15, 2020.
+
+### Enhancements
+
+- Hasura metadata archives use the most recent alembic revision ID - [#78](https://github.com/PrefectHQ/server/pull/78)
+
+### Fixes
+
+- Fix and consolidate behavior for active schedules - [#86](https://github.com/PrefectHQ/server/issues/86)
+
+## September 11, 2020 <Badge text="beta" type="success" />
+
+Released on September 11, 2020.
+
+### Features
+
+- Add database structure and routes for persisting Agents - [#58](https://github.com/PrefectHQ/server/pull/58)
+
+### Enhancements
+
+- Add route for querying mapped children - [#73](https://github.com/PrefectHQ/server/pull/73)
+
+### Fixes
+
+- Fix __init__.py for deprecated API module - [#71](https://github.com/PrefectHQ/server/pull/71)
+
+### Breaking Changes
+
+- Remove `run_count` and `duration` columns - [#72](https://github.com/PrefectHQ/server/pull/72)
+
+### Database Migrations
+
+- Increase performance of state update triggers - [#72](https://github.com/PrefectHQ/server/pull/72)
+
 ## September 1, 2020 <Badge text="beta" type="success" />
 
 Released on September 1, 2020.

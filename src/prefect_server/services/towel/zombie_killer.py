@@ -1,14 +1,15 @@
-import datetime
 import asyncio
-from typing import List, Dict, Any
+import datetime
+from typing import Any, Dict
+
 import pendulum
 
 import prefect
-
+from prefect import models
 from prefect.engine.state import Failed, Retrying
 from prefect.utilities.graphql import EnumValue, with_args
+from prefect_server.database import orm
 from prefect_server.services.loop_service import LoopService
-from prefect_server.database import orm, models
 
 
 class ZombieKiller(LoopService):
@@ -99,8 +100,8 @@ class ZombieKiller(LoopService):
         return {
             # the task run is RUNNING
             "state": {"_eq": "Running"},
-            # ... but the heartbeat is stale
-            "heartbeat": {"_lte": str(heartbeat_cutoff)},
+            # ... but the flow run heartbeat is stale
+            "flow_run": {"heartbeat": {"_lte": str(heartbeat_cutoff)}},
             # ... and the flow has heartbeats enabled
             "task": {
                 "flow": {

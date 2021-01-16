@@ -1,3 +1,4 @@
+import pendulum
 from typing import Any
 
 from graphql import GraphQLResolveInfo
@@ -21,7 +22,17 @@ async def resolve_set_flow_group_labels(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
     result = await api.flow_groups.set_flow_group_labels(
-        flow_group_id=input["flow_group_id"], labels=input["labels"]
+        flow_group_id=input["flow_group_id"], labels=input.get("labels")
+    )
+    return {"success": result}
+
+
+@mutation.field("set_flow_group_run_config")
+async def resolve_set_flow_group_run_config(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    result = await api.flow_groups.set_flow_group_run_config(
+        flow_group_id=input["flow_group_id"], run_config=input.get("run_config")
     )
     return {"success": result}
 
@@ -48,8 +59,11 @@ async def resolve_set_flow_group_schedule(
         interval_clocks.append(clock)
 
     clocks = cron_clocks + interval_clocks
+
     result = await api.flow_groups.set_flow_group_schedule(
-        flow_group_id=input["flow_group_id"], clocks=clocks
+        flow_group_id=input["flow_group_id"],
+        clocks=clocks,
+        timezone=input.get("timezone"),
     )
     return {"success": result}
 

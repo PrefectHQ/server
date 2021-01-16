@@ -1,14 +1,13 @@
 import datetime
 import json
 import uuid
-from typing import List, Union, cast
+from typing import List, Union, cast, Any
 
 import pendulum
 import psycopg2
 import pydantic
 
 import prefect
-import prefect_server
 from prefect.utilities.graphql import with_args
 from prefect_server.database.hasura import GQLObjectTypes
 
@@ -23,7 +22,7 @@ pydantic.json.ENCODERS_BY_TYPE[pendulum.Date] = str
 pydantic.json.ENCODERS_BY_TYPE[pendulum.Time] = str
 pydantic.json.ENCODERS_BY_TYPE[pendulum.Duration] = lambda x: str(x.total_seconds())
 pydantic.json.ENCODERS_BY_TYPE[pendulum.Period] = lambda x: str(x.total_seconds())
-pydantic.json.ENCODERS_BY_TYPE[prefect.engine.result.NoResultType] = str
+pydantic.json.ENCODERS_BY_TYPE[prefect.engine.result.Result] = str
 
 
 def _as_pendulum(value: Union[str, datetime.datetime]) -> pendulum.DateTime:
@@ -56,6 +55,13 @@ class ORMModel(pydantic.BaseModel):
     which is helpful when working with subsets of available data.
     """
 
+    # the model primary key
+    __primary_key__ = "id"
+
+    @property
+    def primary_key(self) -> Any:
+        return getattr(self, self.__primary_key__)
+
     def __repr_args__(self) -> List:
         """
         Modified pydantic repr to only include set fields
@@ -77,6 +83,13 @@ class HasuraModel(ORMModel):
     """
 
     __hasura_type__ = None
+    # if custom hasura root fields are set, supply any of these keys:
+    #   - select
+    #   - select_aggregate
+    #   - update
+    #   - insert
+    #   - delete
+    __root_fields__ = {}
 
     @pydantic.root_validator(pre=True)
     def _convert_types(cls, model_values: dict) -> dict:
@@ -195,7 +208,7 @@ class HasuraModel(ORMModel):
         """
         if selection_set is None:
             return_id = True
-            selection_set = {"returning": "id"}
+            selection_set = {"returning": self.__primary_key__}
         else:
             return_id = False
 
@@ -206,6 +219,7 @@ class HasuraModel(ORMModel):
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            insert_mutation_name=self.__root_fields__.get("insert"),
         )
 
         if run_mutation:
@@ -213,7 +227,7 @@ class HasuraModel(ORMModel):
             if "returning" in result:
                 result["returning"] = result["returning"][0]
             if return_id:
-                return result["returning"]["id"]
+                return result["returning"][self.__primary_key__]
         return result
 
     async def delete(
@@ -236,9 +250,6 @@ class HasuraModel(ORMModel):
             - dict: the fields in the `selection_set`
         """
 
-        if not hasattr(self, "id"):
-            raise ValueError("This instance has no ID; can not delete.")
-
         if selection_set is None:
             check_result = True
             selection_set = "affected_rows"
@@ -247,10 +258,13 @@ class HasuraModel(ORMModel):
 
         result = await prefect.plugins.hasura.client.delete(
             graphql_type=self.__hasura_type__,
-            id=str(self.id) if isinstance(self.id, uuid.UUID) else self.id,
+            id=str(self.primary_key)
+            if isinstance(self.primary_key, uuid.UUID)
+            else self.primary_key,
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            delete_mutation_name=self.__root_fields__.get("delete"),
         )
 
         if run_mutation and check_result:
@@ -284,7 +298,7 @@ class HasuraModel(ORMModel):
 
         if selection_set is None:
             return_id = True
-            selection_set = {"returning": "id"}
+            selection_set = {"returning": cls.__primary_key__}
         else:
             return_id = False
 
@@ -301,27 +315,11 @@ class HasuraModel(ORMModel):
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            insert_mutation_name=cls.__root_fields__.get("insert"),
         )
         if run_mutation and return_id:
-            return [r["id"] for r in result["returning"]]
+            return [r[cls.__primary_key__] for r in result["returning"]]
         return result
-
-    @classmethod
-    async def exists(cls, id: str) -> bool:
-        """
-        Returns True if an object with the specified ID exists in the database; False otherwise.
-
-        Args:
-            - id (str): an object with this ID will be tested
-
-        Returns:
-            - bool: True if the object exists; False otherwise
-        """
-        if isinstance(id, uuid.UUID):
-            id = str(id)
-        return await prefect.plugins.hasura.client.exists(
-            graphql_type=cls.__hasura_type__, id=id
-        )
 
     @classmethod
     def where(cls, where: GQLObjectTypes = None, id: str = sentinel) -> "ModelQuery":
@@ -348,7 +346,7 @@ class HasuraModel(ORMModel):
             raise ValueError("The provided id was `None`, which is an invalid value.")
         # otherwise check if an ID was provided
         elif id is not sentinel:
-            where.update({"id": {"_eq": id}})
+            where.update({cls.__primary_key__: {"_eq": id}})
         return ModelQuery(model=cls, where=where)
 
 
@@ -373,6 +371,10 @@ class ModelQuery:
         self,
         set: GQLObjectTypes = None,
         increment: GQLObjectTypes = None,
+        append: dict = None,
+        prepend: dict = None,
+        delete_key: dict = None,
+        delete_elem: dict = None,
         selection_set: GQLObjectTypes = None,
         alias: str = None,
         run_mutation: bool = True,
@@ -382,7 +384,11 @@ class ModelQuery:
 
         Args:
             - set (GQLObjectTypes): a Hasura `_set` clause
-            - increment (GQLObjectTypes): a Hasura `_increment` clause
+            - increment (GQLObjectTypes): a Hasura `_increment` clause for int columns
+            - append (dict) a Hasura `_append` clause for JSONB columns
+            - prepend (dict) a Hasura `_prepend` clause for JSONB columns
+            - delete_key (dict) a Hasura `_delete_key` clause for JSONB columns
+            - delete_elem (dict) a Hasura `_delete_elem` clause for JSONB columns
             - selection_set (GQLObjectTypes): a hasura selection_set. If None,
                 a list of ids will be returned.
             - alias (str): a GraphQL alias, useful when running this mutation in a batch.
@@ -402,9 +408,14 @@ class ModelQuery:
             where=self.where,
             set=set,
             increment=increment,
+            append=append,
+            prepend=prepend,
+            delete_key=delete_key,
+            delete_elem=delete_elem,
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            update_mutation_name=self.model.__root_fields__.get("update"),
         )
         return result
 
@@ -434,6 +445,7 @@ class ModelQuery:
             selection_set=selection_set,
             alias=alias,
             run_mutation=run_mutation,
+            delete_mutation_name=self.model.__root_fields__.get("delete"),
         )
 
         return result
@@ -465,7 +477,7 @@ class ModelQuery:
         arguments = {}
 
         if selection_set is None:
-            selection_set = "id"
+            selection_set = self.model.__primary_key__
 
         if self.where is not None:
             arguments["where"] = self.where
@@ -478,17 +490,17 @@ class ModelQuery:
         if limit is not None:
             arguments["limit"] = limit
 
-        obj = self.model.__hasura_type__
+        obj = self.model.__root_fields__.get("select", self.model.__hasura_type__)
         if arguments:
             obj = with_args(obj, arguments)
 
         result = await prefect.plugins.hasura.client.execute(
-            query={"query": {obj: selection_set}},
+            query={"query": {f"select: {obj}": selection_set}},
             # if we are applying the schema, don't retrieve a box object
             # if we are NOT applying the schema, DO retrieve a box object
             as_box=not apply_schema,
         )
-        data = result["data"][self.model.__hasura_type__]
+        data = result["data"]["select"]
         if apply_schema:
             return [self.model(**d) for d in data]
         else:
@@ -513,7 +525,7 @@ class ModelQuery:
             - dict: the fields in the `selection_set`
         """
         if selection_set is None:
-            selection_set = "id"
+            selection_set = self.model.__primary_key__
         result = await self.get(
             selection_set=selection_set,
             limit=1,
@@ -545,18 +557,40 @@ class ModelQuery:
         if distinct_on is not None:
             arguments["distinct_on"] = distinct_on
 
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
         query = {
             "query": {
-                with_args(
-                    f"count_query: {self.model.__hasura_type__}_aggregate",
-                    arguments,
-                ): {"aggregate": "count"}
+                with_args(f"count: {agg_type}", arguments): {"aggregate": "count"}
             }
         }
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
-        return result["data"]["count_query"]["aggregate"]["count"]
+        return result["data"]["count"]["aggregate"]["count"]
 
-    async def max(self, columns) -> dict:
+    async def sum(self, columns: List[str]) -> dict:
+        """
+        Returns the sum of the requested columns
+
+        Args:
+
+        Returns:
+            - dict: the requested columns and corresponding minmums
+        """
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
+        query = {
+            "query": {
+                with_args(f"sum_query: {agg_type}", {"where": self.where}): {
+                    "aggregate": {"sum": set(columns)}
+                }
+            }
+        }
+        result = await prefect.plugins.hasura.client.execute(query, as_box=False)
+        return result["data"]["sum_query"]["aggregate"]["sum"]
+
+    async def max(self, columns: List[str]) -> dict:
         """
         Returns the maximum value of the requested columns
 
@@ -565,18 +599,20 @@ class ModelQuery:
         Returns:
             - dict: the requested columns and corresponding minmums
         """
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
         query = {
             "query": {
-                with_args(
-                    f"max_query: {self.model.__hasura_type__}_aggregate",
-                    {"where": self.where},
-                ): {"aggregate": {"max": set(columns)}}
+                with_args(f"max_query: {agg_type}", {"where": self.where}): {
+                    "aggregate": {"max": set(columns)}
+                }
             }
         }
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)
         return result["data"]["max_query"]["aggregate"]["max"]
 
-    async def min(self, columns) -> dict:
+    async def min(self, columns: List[str]) -> dict:
         """
         Returns the minimum value of the requested columns
 
@@ -585,12 +621,14 @@ class ModelQuery:
         Returns:
             - dict: the requested columns and corresponding minmums
         """
+        agg_type = self.model.__root_fields__.get(
+            "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
+        )
         query = {
             "query": {
-                with_args(
-                    f"min_query: {self.model.__hasura_type__}_aggregate",
-                    {"where": self.where},
-                ): {"aggregate": {"min": set(columns)}}
+                with_args(f"min_query: {agg_type}", {"where": self.where}): {
+                    "aggregate": {"min": set(columns)}
+                }
             }
         }
         result = await prefect.plugins.hasura.client.execute(query, as_box=False)

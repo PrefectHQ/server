@@ -2,7 +2,7 @@
 Tests that updating rows in various table update the `updated` column
 """
 
-from prefect_server.database import models as m
+from prefect import models as m
 
 
 async def test_flow_updated(flow_id):

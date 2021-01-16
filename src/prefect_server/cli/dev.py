@@ -1,6 +1,5 @@
 import asyncio
 import atexit
-import glob
 import os
 import shutil
 import signal
@@ -14,8 +13,8 @@ from click.testing import CliRunner
 
 import prefect
 import prefect_server
+from prefect import models
 from prefect_server import config
-from prefect_server.database import models
 
 
 @click.group()
@@ -109,11 +108,21 @@ def infrastructure(tag, skip_pull, skip_upgrade):
                     click.secho("Database upgraded.", fg="green")
                     break
                 # trap error during the SELECT 1
-                except sqlalchemy.exc.OperationalError:
-                    click.secho(
-                        "Database not ready yet. Waiting 1 second to retry upgrade."
-                    )
-                    time.sleep(1)
+                except sqlalchemy.exc.OperationalError as exc:
+                    msg = str(exc)
+                    if "Connection refused" in msg or "closed the connection" in msg:
+                        click.echo(
+                            "Database not ready yet. Waiting 1 second to retry upgrade."
+                        )
+                        time.sleep(1)
+                    else:
+                        click.secho(
+                            "Database upgrade encountered fatal error:\n",
+                            fg="red",
+                            bold=True,
+                        )
+                        click.secho(str(exc) + "\n", fg="red")
+                        raise
 
         click.echo(ascii_welcome())
 
@@ -235,53 +244,53 @@ def clear_data():
 @dev.command()
 @click.option("-m", "--migration-message", required=True)
 def generate_migration(migration_message):
+    """
+    Generates two files:
+        - an alembic migration file that can be filled out to create a database migration
+        - a hasura metadata archive that represents the hasura metadata at the START
+            of the migration
+
+    If the alembic migration ID is 'abcxyz' then the hasura migration will be named
+    'metadata-abcxyz.py'. Note that this is a copy of the metadata PRIOR to running
+    the migration, and will be used when DOWNGRADING through this alembic migration,
+    or UPGRADING through the previous alembic migration.
+    """
     # ensure this is called from the root server directory
     if Path(prefect_server.__file__).parents[2] != Path(os.getcwd()):
         raise click.ClickException(
-            "generate-migration must be run from the server root directory."
+            "generate-migration must be run from the root directory."
         )
-    # find the most recent revision
-    alembic_migrations_path = "../../../services/postgres/alembic/versions"
-    versions = glob.glob(
-        os.path.join(os.path.dirname(__file__), alembic_migrations_path, "*.py")
-    )
-    if versions:
-        versions.sort()
-        most_recent_migration = versions[-1]
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                alembic_migrations_path,
-                most_recent_migration,
-            )
-        ) as migration:
-            for line in migration.readlines():
-                if line.startswith("Revision ID:"):
-                    revision = line.split(": ")[1].strip()
-        click.echo(f"Most recent Alembic revision is {revision}")
-        # copy metadata to a backup for corresponding revision
-        hasura_migrations_path = "../../../services/hasura/migrations"
-        backup_metadata_file = f"metadata-{revision}.yaml"
-        backup_metadata_destination = os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__),
-                hasura_migrations_path,
-                "versions",
-                backup_metadata_file,
-            )
-        )
-        shutil.copy(
-            os.path.join(
-                os.path.dirname(__file__), hasura_migrations_path, "metadata.yaml"
-            ),
-            backup_metadata_destination,
-        )
-        click.echo(f"Copied metadata to {backup_metadata_destination}")
 
     # create a new revision
     click.echo(
         subprocess.check_output(["alembic", "revision", "-m", migration_message])
     )
+
+    # get the new revision id
+    heads_output = subprocess.check_output(["alembic", "heads"])
+    revision = heads_output.decode().split(" ", 1)[0]
+
+    # copy metadata to a backup for corresponding revision
+    hasura_migrations_path = "../../../services/hasura/migrations"
+    backup_metadata_file = f"metadata-{revision}.yaml"
+    backup_metadata_destination = os.path.abspath(
+        os.path.join(
+            prefect_server.__file__,
+            hasura_migrations_path,
+            "versions",
+            backup_metadata_file,
+        )
+    )
+    shutil.copy(
+        os.path.abspath(
+            os.path.join(
+                prefect_server.__file__, hasura_migrations_path, "metadata.yaml"
+            )
+        ),
+        backup_metadata_destination,
+    )
+    click.echo(f"Copied Hasura metadata to {backup_metadata_destination}")
+
     click.secho("Prefect Server migration generated!", fg="green")
 
 

@@ -1,5 +1,0 @@
-enhancement:
-  - "Reduce size of `prefecthq/server` Docker image - [#3215](https://github.com/PrefectHQ/server/pull/60)"
-
-contributor:
-  - "[Juan Calderon-Perez](https://github.com/gabrielcalderon)"

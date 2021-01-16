@@ -1,9 +1,8 @@
-from typing import List
+import pendulum
+from typing import List, Dict, Any
 
+from prefect import api, models
 from prefect.serialization.schedule import ClockSchema
-
-from prefect import api
-from prefect_server.database import models
 from prefect.utilities.plugins import register_api
 
 
@@ -69,13 +68,16 @@ async def set_flow_group_default_parameters(
 
 
 @register_api("flow_groups.set_flow_group_schedule")
-async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> bool:
+async def set_flow_group_schedule(
+    flow_group_id: str, clocks: List[dict], timezone: str = None
+) -> bool:
     """
     Sets a schedule for a flow group
 
     Args:
         - flow_group_id (str): the ID of the flow group to update
         - clocks (List[dict]): a list of dictionaries defining clocks for the schedule
+        - timezone (str, optional): an optional timezone to set for the schedule
 
     Returns:
         - bool: whether setting the schedule was successful
@@ -83,7 +85,17 @@ async def set_flow_group_schedule(flow_group_id: str, clocks: List[dict]) -> boo
     Raises:
         - ValueError: if flow group ID isn't provided
     """
+    if timezone:
+        if timezone not in pendulum.timezones:
+            raise ValueError(f"Invalid timezone provided for schedule: {timezone}")
+        start_date = {
+            "dt": pendulum.now(timezone).naive().to_iso8601_string(),
+            "tz": timezone,
+        }
+    else:
+        start_date = None
     for clock in clocks:
+        clock["start_date"] = start_date
         try:
             ClockSchema().load(clock)
         except:
@@ -157,6 +169,33 @@ async def set_flow_group_labels(flow_group_id: str, labels: List[str] = None) ->
         raise ValueError("Invalid flow group ID")
     result = await models.FlowGroup.where(id=flow_group_id).update(
         set=dict(labels=labels)
+    )
+    return bool(result.affected_rows)
+
+
+@register_api("flow_groups.set_flow_group_run_config")
+async def set_flow_group_run_config(
+    flow_group_id: str, run_config: Dict[str, Any] = None
+) -> bool:
+    """
+    Sets run_config for a flow group.
+
+    Args:
+        - flow_group_id (str): the ID of the flow group to update
+        - run_config (dict, optional): a run-config override for a flow
+            group. Providing `None` defaults any previous flow group
+            `run_config` setting.
+
+    Returns:
+        - bool: whether setting `run_config` for the flow group was successful
+
+    Raises:
+        - ValueError: if flow group ID isn't provided
+    """
+    if not flow_group_id:
+        raise ValueError("Invalid flow group ID")
+    result = await models.FlowGroup.where(id=flow_group_id).update(
+        set=dict(run_config=run_config)
     )
     return bool(result.affected_rows)
 
@@ -244,45 +283,5 @@ async def disable_lazarus_for_flow(flow_group_id: str) -> bool:
     """
     await api.flow_groups.update_setting(
         flow_group_id=flow_group_id, key="lazarus_enabled", value=False
-    )
-    return True
-
-
-@register_api("flow_groups.enable_version_locking")
-async def enable_version_locking_for_flow(flow_group_id: str) -> bool:
-    """
-    Enables version locking for a flow
-
-    Args:
-        - flow_group_id (str): the flow id
-
-    Returns:
-        - bool: if the update succeeded
-
-    Raises:
-        - ValueError: if flow ID is not provided or invalid
-    """
-    await api.flow_groups.update_setting(
-        flow_group_id=flow_group_id, key="version_locking_enabled", value=True
-    )
-    return True
-
-
-@register_api("flow_groups.disable_version_locking")
-async def disable_version_locking_for_flow(flow_group_id: str) -> bool:
-    """
-    Disables version locking for a flow
-
-    Args:
-        - flow_group_id (str): the flow id
-
-    Returns:
-        - bool: if the update succeeded
-
-    Raises:
-        - ValueError: if flow ID is not provided or invalid
-    """
-    await api.flow_groups.update_setting(
-        flow_group_id=flow_group_id, key="version_locking_enabled", value=False
     )
     return True

@@ -2,9 +2,8 @@ from typing import Any
 
 from graphql import GraphQLResolveInfo
 
+from prefect import api, models
 from prefect.utilities.graphql import EnumValue, decompress
-from prefect import api
-from prefect_server.database import models
 from prefect_server.utilities.graphql import mutation
 
 
@@ -27,6 +26,7 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
     version_group_id = input.get("version_group_id", None)
     set_schedule_active = input.get("set_schedule_active", True)
     description = input.get("description", None)
+    idempotency_key = input.get("idempotency_key", None)
 
     if project_id is None:
         raise ValueError("Invalid project ID")
@@ -60,6 +60,7 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
         version_group_id=version_group_id,
         set_schedule_active=set_schedule_active,
         description=description,
+        idempotency_key=idempotency_key,
     )
 
     # archive all other versions
@@ -105,7 +106,12 @@ async def resolve_update_flow_project(
 async def resolve_disable_heartbeat_for_flow(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
-    success = await api.flows.disable_heartbeat_for_flow(flow_id=input["flow_id"])
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
+    success = await api.flow_groups.disable_heartbeat(flow_group_id=flow.flow_group_id)
     return {"success": success}
 
 
@@ -113,7 +119,12 @@ async def resolve_disable_heartbeat_for_flow(
 async def resolve_enable_heartbeat_for_flow(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
-    success = await api.flows.enable_heartbeat_for_flow(flow_id=input["flow_id"])
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
+    success = await api.flow_groups.enable_heartbeat(flow_group_id=flow.flow_group_id)
     return {"success": success}
 
 
@@ -121,8 +132,15 @@ async def resolve_enable_heartbeat_for_flow(
 async def resolve_enable_flow_lazarus_process(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
     return {
-        "success": await api.flows.enable_lazarus_for_flow(flow_id=input["flow_id"])
+        "success": await api.flow_groups.enable_lazarus(
+            flow_group_id=flow.flow_group_id
+        )
     }
 
 
@@ -130,29 +148,14 @@ async def resolve_enable_flow_lazarus_process(
 async def resolve_disable_flow_lazarus_process(
     obj: Any, info: GraphQLResolveInfo, input: dict
 ) -> dict:
+    if not input["flow_id"]:
+        raise ValueError("Invalid flow ID.")
+    flow = await models.Flow.where(id=input["flow_id"]).first({"flow_group_id"})
+    if not flow:
+        raise ValueError("Invalid flow ID.")
     return {
-        "success": await api.flows.disable_lazarus_for_flow(flow_id=input["flow_id"])
-    }
-
-
-@mutation.field("enable_flow_version_lock")
-async def resolve_enable_flow_version_lock(
-    obj: Any, info: GraphQLResolveInfo, input: dict
-) -> dict:
-    return {
-        "success": await api.flows.enable_version_locking_for_flow(
-            flow_id=input["flow_id"]
-        )
-    }
-
-
-@mutation.field("disable_flow_version_lock")
-async def resolve_disable_flow_version_lock(
-    obj: Any, info: GraphQLResolveInfo, input: dict
-) -> dict:
-    return {
-        "success": await api.flows.disable_version_locking_for_flow(
-            flow_id=input["flow_id"]
+        "success": await api.flow_groups.disable_lazarus(
+            flow_group_id=flow.flow_group_id
         )
     }
 

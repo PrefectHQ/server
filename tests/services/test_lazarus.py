@@ -2,9 +2,8 @@ import pendulum
 import pytest
 
 import prefect
-from prefect import api
+from prefect import api, models
 from prefect_server import config
-from prefect_server.database import models
 from prefect_server.services.towel.lazarus import Lazarus
 
 
@@ -216,7 +215,7 @@ async def test_lazarus_doesnt_restart_flow_run_with_active_tasks(
 
     assert await Lazarus().run_once() == 0
     flow_run = await models.FlowRun.where(id=flow_run_id).first({"version"})
-    assert flow_run.version == 2
+    assert flow_run.version == 3
 
 
 async def test_lazarus_doesnt_restart_flow_run_with_recent_heartbeat(flow_run_id):

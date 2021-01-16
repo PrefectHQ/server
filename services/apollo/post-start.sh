@@ -2,7 +2,8 @@
 set -eu
 
 while true; do
-    curl -s $GRAPHQL_SERVICE_HOST:$GRAPHQL_SERVICE_PORT/health | grep "ok" \
+    echo "Checking GraphQL service at $PREFECT_API_HEALTH_URL ..."
+    curl -s $PREFECT_API_HEALTH_URL | grep "ok" \
         && echo "GraphQL service healthy!" && break
     sleep 1
 done

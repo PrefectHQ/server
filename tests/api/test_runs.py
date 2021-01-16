@@ -4,6 +4,8 @@ import pendulum
 import pytest
 
 import prefect
+from prefect import api, models
+from prefect.run_configs import UniversalRun
 from prefect.engine.state import (
     Failed,
     Finished,
@@ -14,9 +16,7 @@ from prefect.engine.state import (
     Success,
 )
 from prefect.utilities.graphql import EnumValue, with_args
-from prefect import api
 from prefect_server import config
-from prefect_server.database import models
 from prefect_server.utilities.exceptions import NotFound
 
 
@@ -30,7 +30,117 @@ async def simple_flow_id(project_id):
 class TestCreateRun:
     async def test_create_flow_run(self, simple_flow_id):
         flow_run_id = await api.runs.create_flow_run(flow_id=simple_flow_id)
-        assert await models.FlowRun.exists(flow_run_id)
+        assert await models.FlowRun.where(id=flow_run_id).first()
+
+    async def test_create_flow_run_accepts_labels(self, simple_flow_id):
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id=simple_flow_id, labels=["one", "two"]
+        )
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == ["one", "two"]
+
+    async def test_create_flow_run_respects_flow_group_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        # update the flow group's labels
+        labels = ["meep", "morp"]
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"flow_group_id"}
+        )
+        await api.flow_groups.set_flow_group_labels(
+            flow_group_id=labeled_flow.flow_group_id, labels=labels
+        )
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == ["meep", "morp"]
+
+    async def test_create_flow_run_respects_flow_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"environment"}
+        )
+        # create a flow run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == sorted(labeled_flow.environment["labels"])
+
+    async def test_create_flow_run_respects_empty_flow_group_labels(
+        self,
+        tenant_id,
+        labeled_flow_id,
+    ):
+        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
+            {"flow_group_id"}
+        )
+        await api.flow_groups.set_flow_group_labels(
+            flow_group_id=labeled_flow.flow_group_id, labels=[]
+        )
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert flow_run.labels == []
+
+    @pytest.mark.parametrize("set_run_config", [False, True])
+    @pytest.mark.parametrize("set_group_run_config", [False, True])
+    @pytest.mark.parametrize("set_labels", [False, True])
+    @pytest.mark.parametrize("set_group_labels", [False, True])
+    async def test_create_flow_run_run_config_and_labels(
+        self,
+        tenant_id,
+        project_id,
+        set_run_config,
+        set_group_run_config,
+        set_labels,
+        set_group_labels,
+    ):
+        """Check that a flow-run's run config and labels take the following precedence:
+        - run_config: flow run, flow group, flow
+        - labels: flow run, flow run run_config, flow group, flow group run_config,
+          flow run_config
+        """
+        labels = ["from-flow"]
+        flow_id = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=prefect.Flow(
+                name="test", run_config=UniversalRun(labels=labels)
+            ).serialize(),
+        )
+        flow = await models.Flow.where(id=flow_id).first(
+            {"flow_group_id", "run_config"}
+        )
+        run_config = flow.run_config
+        run_kwargs = {}
+        if set_group_run_config:
+            labels = ["from-group-run-config"]
+            run_config = UniversalRun(labels=labels).serialize()
+            await api.flow_groups.set_flow_group_run_config(
+                flow_group_id=flow.flow_group_id, run_config=run_config
+            )
+        if set_group_labels:
+            labels = ["from-group"]
+            await api.flow_groups.set_flow_group_labels(
+                flow_group_id=flow.flow_group_id, labels=labels
+            )
+        if set_run_config:
+            labels = ["from-run-config"]
+            run_kwargs["run_config"] = run_config = UniversalRun(
+                labels=labels
+            ).serialize()
+        if set_labels:
+            run_kwargs["labels"] = labels = ["from-run"]
+        # create a run
+        flow_run_id = await api.runs.create_flow_run(flow_id=flow_id, **run_kwargs)
+        flow_run = await models.FlowRun.where(id=flow_run_id).first(
+            {"labels", "run_config"}
+        )
+        assert flow_run.labels == labels
+        assert flow_run.run_config == run_config
 
     async def test_create_flow_run_with_version_group_id(self, project_id):
         flow_ids = []
@@ -356,12 +466,91 @@ class TestCreateIdempotentRun:
         assert flow_run_id_1 != flow_run_id_3
 
 
+class TestGetOrCreateTaskRunInfo:
+    async def test_get_or_create_task_run_info_hits_db(
+        self, tenant_id, flow_run_id, task_id
+    ):
+        task_run = models.TaskRun(
+            id=str(uuid.uuid4()),
+            tenant_id=tenant_id,
+            flow_run_id=flow_run_id,
+            task_id=task_id,
+            map_index=12,
+            version=17,
+            state="Success",
+            serialized_state=dict(message="hi"),
+        )
+        await task_run.insert()
+
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=task_run.map_index
+        )
+
+        assert task_run_info["id"] == task_run.id
+        assert task_run_info["version"] == task_run.version
+        assert task_run_info["state"] == task_run.state
+        assert task_run_info["serialized_state"] == task_run.serialized_state
+
+    async def test_get_or_create_task_run_info_inserts_into_db(
+        self, flow_run_id, task_id
+    ):
+        assert not await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=12
+        )
+
+        task_run = await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id"})
+
+        assert task_run_info["id"] == task_run.id
+
+        task_run_state = await models.TaskRunState.where(
+            {
+                "task_run_id": {"_eq": task_run.id},
+            }
+        ).first({"task_run_id", "state"})
+
+        assert task_run_info["id"] == task_run_state.task_run_id
+        assert task_run_info["state"] == task_run_state.state
+
+    async def test_properly_inserts_run_and_state(
+        self, tenant_id, flow_run_id, task_id
+    ):
+        task_run_info = await api.runs.get_or_create_task_run_info(
+            flow_run_id=flow_run_id, task_id=task_id, map_index=12
+        )
+
+        task_run = await models.TaskRun.where(
+            {
+                "flow_run_id": {"_eq": flow_run_id},
+                "task_id": {"_eq": task_id},
+                "map_index": {"_eq": 12},
+            }
+        ).first({"id": True, "states": {"state", "task_run_id"}})
+        assert task_run.id == task_run_info["id"]
+        assert len(task_run.states) == 1
+        assert task_run.states[0].state == "Pending"
+        assert task_run.states[0].task_run_id == task_run_info["id"]
+
+
 class TestGetTaskRunInfo:
     async def test_task_run(self, flow_run_id, task_id):
         tr_id = await api.runs.get_or_create_task_run(
             flow_run_id=flow_run_id, task_id=task_id, map_index=None
         )
-        assert await models.TaskRun.exists(tr_id)
+        assert await models.TaskRun.where(id=tr_id).first()
 
     async def test_task_run_populates_cache_key(self, flow_run_id, task_id):
         cache_key = "test"
@@ -424,7 +613,7 @@ class TestGetTaskRunInfo:
         tr_id = await api.runs.get_or_create_task_run(
             flow_run_id=flow_run_id, task_id=task_id, map_index=10
         )
-        assert await models.TaskRun.exists(tr_id)
+        assert await models.TaskRun.where(id=tr_id).first()
 
     async def test_task_run_fails_with_fake_flow_run_id(self, task_id):
         with pytest.raises(ValueError, match="Invalid ID"):
@@ -531,156 +720,6 @@ class TestGetTaskRunInfo:
         assert new_task_run_state_count == task_run_state_count
 
 
-class TestGetOrCreateMappedChildren:
-    async def test_get_or_create_mapped_children_creates_children(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first({"id"})
-        task_runs = await models.TaskRun.where({"task_id": {"_eq": task.id}}).get()
-
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=10
-        )
-        # confirm 11 children were returned as a result (indices 0, through 10)
-        assert len(mapped_children) == 11
-        # confirm those 11 children are in the DB
-        assert len(task_runs) + 11 == len(
-            await models.TaskRun.where({"task_id": {"_eq": task.id}}).get()
-        )
-        # confirm that those 11 children have api.states and the map indices are ordered
-        map_indices = []
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first(
-                {
-                    "map_index": True,
-                    with_args(
-                        "states",
-                        {"order_by": {"version": EnumValue("desc")}, "limit": 1},
-                    ): {"id"},
-                }
-            )
-            map_indices.append(task_run.map_index)
-            assert task_run.states[0] is not None
-        assert map_indices == sorted(map_indices)
-
-    async def test_get_or_create_mapped_children_retrieves_children(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first(
-            {"id", "cache_key"}
-        )
-
-        # create some mapped children
-        task_run_ids = []
-        for i in range(11):
-            task_run_ids.append(
-                await models.TaskRun(
-                    flow_run_id=flow_run_id,
-                    task_id=task.id,
-                    map_index=i,
-                    cache_key=task.cache_key,
-                ).insert()
-            )
-        # retrieve those mapped children
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=10
-        )
-        # confirm we retrieved 11 mapped children (0 through 10)
-        assert len(mapped_children) == 11
-        # confirm those 11 children are the task api.runs we created earlier and that they're in order
-        map_indices = []
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first({"map_index"})
-            map_indices.append(task_run.map_index)
-            assert child in task_run_ids
-        assert map_indices == sorted(map_indices)
-
-    async def test_get_or_create_mapped_children_does_not_retrieve_parent(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first(
-            {"id", "cache_key"}
-        )
-        # create a parent and its mapped children
-        for i in range(3):
-            await models.TaskRun(
-                flow_run_id=flow_run_id,
-                task_id=task.id,
-                map_index=i,
-                cache_key=task.cache_key,
-            ).insert()
-
-        # retrieve those mapped children
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=2
-        )
-        # confirm we retrieved 3 mapped children (0, 1, and 2)
-        assert len(mapped_children) == 3
-        # but not the parent
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first({"map_index"})
-            assert task_run.map_index > -1
-
-    async def test_get_or_create_mapped_children_handles_partial_children(
-        self, flow_id, flow_run_id
-    ):
-        # get a task from the flow
-        task = await models.Task.where({"flow_id": {"_eq": flow_id}}).first(
-            {"id", "cache_key"}
-        )
-
-        # create a few mapped children
-        await models.TaskRun(
-            flow_run_id=flow_run_id,
-            task_id=task.id,
-            map_index=3,
-            cache_key=task.cache_key,
-        ).insert()
-        stateful_child = await models.TaskRun(
-            flow_run_id=flow_run_id,
-            task_id=task.id,
-            map_index=6,
-            cache_key=task.cache_key,
-            states=[
-                models.TaskRunState(
-                    **models.TaskRunState.fields_from_state(
-                        Pending(message="Task run created")
-                    ),
-                )
-            ],
-        ).insert()
-
-        # retrieve mapped children
-        mapped_children = await api.runs.get_or_create_mapped_task_run_children(
-            flow_run_id=flow_run_id, task_id=task.id, max_map_index=10
-        )
-        assert len(mapped_children) == 11
-        map_indices = []
-        # confirm each of the mapped children has a state and is ordered properly
-        for child in mapped_children:
-            task_run = await models.TaskRun.where(id=child).first(
-                {
-                    "map_index": True,
-                    with_args(
-                        "states",
-                        {"order_by": {"version": EnumValue("desc")}, "limit": 1},
-                    ): {"id"},
-                }
-            )
-            map_indices.append(task_run.map_index)
-            assert task_run.states[0] is not None
-        assert map_indices == sorted(map_indices)
-
-        # confirm the one child created with a state only has the one state
-        child_states = await models.TaskRunState.where(
-            {"task_run_id": {"_eq": stateful_child}}
-        ).get()
-        assert len(child_states) == 1
-
-
 class TestUpdateFlowRunHeartbeat:
     async def test_update_heartbeat(self, flow_run_id):
         dt = pendulum.now()
@@ -764,6 +803,23 @@ class TestGetRunsInQueue:
         assert labeled_flow_run_id in flow_runs
         assert flow_run_id not in flow_runs
 
+    async def test_get_flow_run_in_queue_uses_run_labels(
+        self,
+        tenant_id,
+        flow_id,
+        labeled_flow_run_id,
+    ):
+
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id=flow_id, labels=["dev", "staging"]
+        )
+
+        flow_runs = await api.runs.get_runs_in_queue(
+            tenant_id=tenant_id, labels=["dev", "staging"]
+        )
+        assert flow_run_id in flow_runs
+        assert labeled_flow_run_id not in flow_runs
+
     async def test_get_flow_run_in_queue_works_if_environment_labels_are_none(
         self, tenant_id, flow_run_id, flow_id
     ):
@@ -774,7 +830,7 @@ class TestGetRunsInQueue:
         """
 
         flow = await models.Flow.where(id=flow_id).first({"environment"})
-        flow.environment["labels"] = None
+        flow.environment = dict(labels=None)
         await models.Flow.where(id=flow_id).update({"environment": flow.environment})
         check_flow = await models.Flow.where(id=flow_id).first({"environment"})
         assert check_flow.environment["labels"] is None
@@ -796,7 +852,7 @@ class TestGetRunsInQueue:
         """
 
         flow = await models.Flow.where(id=flow_id).first({"environment"})
-        del flow.environment["labels"]
+        flow.environment = dict()
         await models.Flow.where(id=flow_id).update({"environment": flow.environment})
         check_flow = await models.Flow.where(id=flow_id).first({"environment"})
         assert "labels" not in check_flow.environment
@@ -1036,39 +1092,77 @@ class TestGetRunsInQueue:
         assert flow_run_id not in flow_runs
 
 
-class TestGetRunsInQueueFlowGroupLabels:
-    async def test_get_flow_runs_in_queue_respects_flow_group_labels(
-        self, tenant_id, labeled_flow_id, labeled_flow_run_id
-    ):
-        # update the flow group's labels
-        labels = ["meep", "morp"]
-        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
-            {"flow_group_id"}
-        )
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=labels
-        )
-        # get runs in queue
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=labels)
-        # confirm we could retrieve with the new labels
-        assert labeled_flow_run_id in flow_runs
+class TestSetFlowRunLabels:
+    async def test_set_flow_run_labels(self, flow_run_id):
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == []
 
-    async def test_get_flow_run_in_queue_respects_empty_flow_group_labels(
-        self, tenant_id, labeled_flow_id, labeled_flow_run_id
-    ):
-        labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
-            {"flow_group_id"}
-        )
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=[]
-        )
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
-        # confirm we could retrieve the run without labels
-        assert labeled_flow_run_id in flow_runs
+        await api.runs.set_flow_run_labels(flow_run_id=flow_run_id, labels=["a", "b"])
 
-        # set flow group labels to none and confirm the run isn't retrieved
-        await api.flow_groups.set_flow_group_labels(
-            flow_group_id=labeled_flow.flow_group_id, labels=None
+        fr = await models.FlowRun.where(id=flow_run_id).first({"labels"})
+        assert fr.labels == ["a", "b"]
+
+    async def test_set_flow_run_labels_must_have_value(self, flow_run_id):
+        with pytest.raises(ValueError, match="Invalid labels"):
+            await api.runs.set_flow_run_labels(flow_run_id=flow_run_id, labels=None)
+
+    async def test_set_flow_run_id_invalid(self):
+        assert not await api.runs.set_flow_run_labels(
+            flow_run_id=str(uuid.uuid4()), labels=["a"]
         )
-        flow_runs = await api.runs.get_runs_in_queue(tenant_id=tenant_id, labels=[])
-        assert labeled_flow_run_id not in flow_runs
+
+    async def test_set_flow_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid flow run ID"):
+            assert not await api.runs.set_flow_run_labels(
+                flow_run_id=None, labels=["a"]
+            )
+
+
+class TestSetFlowRunName:
+    async def test_set_flow_run_name(self, flow_run_id):
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name != "hello"
+
+        await api.runs.set_flow_run_name(flow_run_id=flow_run_id, name="hello")
+
+        fr = await models.FlowRun.where(id=flow_run_id).first({"name"})
+        assert fr.name == "hello"
+
+    @pytest.mark.parametrize("name", [None, ""])
+    async def test_set_flow_run_name_must_have_value(self, flow_run_id, name):
+        with pytest.raises(ValueError, match="Invalid name"):
+            await api.runs.set_flow_run_name(flow_run_id=flow_run_id, name=name)
+
+    async def test_set_flow_run_id_invalid(self):
+        assert not await api.runs.set_flow_run_name(
+            flow_run_id=str(uuid.uuid4()), name="hello"
+        )
+
+    async def test_set_flow_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid flow run ID"):
+            assert not await api.runs.set_flow_run_name(flow_run_id=None, name="hello")
+
+
+class TestSetTaskRunName:
+    async def test_set_task_run_name(self, task_run_id):
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name != "hello"
+
+        await api.runs.set_task_run_name(task_run_id=task_run_id, name="hello")
+
+        tr = await models.TaskRun.where(id=task_run_id).first({"name"})
+        assert tr.name == "hello"
+
+    @pytest.mark.parametrize("name", [None, ""])
+    async def test_set_task_run_name_must_have_value(self, task_run_id, name):
+        with pytest.raises(ValueError, match="Invalid name"):
+            await api.runs.set_task_run_name(task_run_id=task_run_id, name=name)
+
+    async def test_set_task_run_id_invalid(self):
+        assert not await api.runs.set_task_run_name(
+            task_run_id=str(uuid.uuid4()), name="hello"
+        )
+
+    async def test_set_task_run_id_none(self):
+        with pytest.raises(ValueError, match="Invalid task run ID"):
+            assert not await api.runs.set_task_run_name(task_run_id=None, name="hello")

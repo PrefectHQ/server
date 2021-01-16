@@ -5,8 +5,8 @@ import pendulum
 import pydantic
 
 import prefect
-from prefect_server.database.orm import HasuraModel, UUIDString
 from prefect.utilities import plugins
+from prefect_server.database.orm import HasuraModel, UUIDString
 
 models = plugins.MODELS
 
@@ -61,6 +61,7 @@ class Flow(HasuraModel):
     description: str = None
     serialized_flow: Dict[str, Any] = None
     environment: Dict[str, Any] = None
+    run_config: Dict[str, Any] = None
     storage: Dict[str, Any] = None
     parameters: List[Dict[str, Any]] = None
     flow_group_id: UUIDString = None
@@ -125,17 +126,19 @@ class FlowRun(HasuraModel):
     tenant_id: UUIDString = None
     flow_id: UUIDString = None
     parameters: Dict[str, Any] = None
+    labels: List[str] = None
+    run_config: Dict[str, Any] = None
     context: Dict[str, Any] = None
     version: int = None
     heartbeat: datetime.datetime = None
     scheduled_start_time: datetime.datetime = None
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
-    duration: datetime.timedelta = None
     auto_scheduled: bool = None
     name: str = None
     times_resurrected: int = None
     idempotency_key: str = None
+    agent_id: UUIDString = None
 
     # state fields
     state: str = None
@@ -168,9 +171,8 @@ class TaskRun(HasuraModel):
     heartbeat: datetime.datetime = None
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
-    duration: datetime.timedelta = None
-    run_count: int = None
     cache_key: str = None
+    name: str = None
 
     # state fields
     state: str = None
@@ -311,6 +313,7 @@ class FlowGroup(HasuraModel):
     default_parameters: dict = None
     schedule: dict = None
     labels: List[str] = None
+    run_config: Dict[str, Any] = None
 
     # relationships
     flows: List["Flow"] = None
@@ -329,6 +332,45 @@ class Message(HasuraModel):
     type: str = None
     text: str = None
     content: dict = None
+
+
+@plugins.register_model("AgentConfig")
+class AgentConfig(HasuraModel):
+    __hasura_type__ = "agent_config"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    updated: datetime.datetime = None
+    tenant_id: UUIDString = None
+    name: str = None
+    settings: dict = None
+
+
+@plugins.register_model("Agent")
+class Agent(HasuraModel):
+    __hasura_type__ = "agent"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    tenant_id: UUIDString = None
+    agent_config_id: UUIDString = None
+    name: str = None
+    type: str = None
+    core_version: str = None
+    labels: List[str] = None
+    last_queried: datetime.datetime = None
+
+
+@plugins.register_model("TaskRunArtifact")
+class TaskRunArtifact(HasuraModel):
+    __hasura_type__ = "task_run_artifact"
+
+    id: UUIDString = None
+    created: datetime.datetime = None
+    tenant_id: UUIDString = None
+    task_run_id: UUIDString = None
+    kind: str = None
+    data: dict = None
 
 
 # process forward references for all Pydantic models (meaning string class names)

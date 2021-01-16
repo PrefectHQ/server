@@ -1,4 +1,6 @@
 import datetime
+import hashlib
+import json
 import uuid
 from typing import Any, Dict, List
 
@@ -6,13 +8,12 @@ import pendulum
 from packaging import version as module_version
 from pydantic import BaseModel, Field, validator
 
+from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
-from prefect.utilities.graphql import with_args
-from prefect import api
-from prefect_server import config
-from prefect_server.database import models
-from prefect_server.utilities import logging
+from prefect.utilities.graphql import with_args, EnumValue
 from prefect.utilities.plugins import register_api
+from prefect_server import config
+from prefect_server.utilities import logging
 
 logger = logging.get_logger("api.flows")
 schedule_schema = ScheduleSchema()
@@ -30,6 +31,7 @@ class Model(BaseModel):
 
 class ClockSchema(Model):
     parameter_defaults: Dict = Field(default_factory=dict)
+    labels: List[str] = Field(default=None)
 
 
 class ScheduleSchema(Model):
@@ -94,6 +96,8 @@ class FlowSchema(Model):
     edges: List[EdgeSchema] = Field(default_factory=list)
     parameters: List[ParameterSchema] = Field(default_factory=list)
     environment: Dict[str, Any] = None
+    run_config: Dict[str, Any] = None
+    __version__: str = None
     storage: Dict[str, Any] = None
     schedule: ScheduleSchema = None
     reference_tasks: List[str] = Field(default_factory=list)
@@ -116,6 +120,7 @@ async def create_flow(
     version_group_id: str = None,
     set_schedule_active: bool = True,
     description: str = None,
+    idempotency_key: str = None,
 ) -> str:
     """
     Add a flow to the database.
@@ -126,6 +131,9 @@ async def create_flow(
         - version_group_id (str): A version group to add the Flow to
         - set_schedule_active (bool): Whether to set the flow's schedule to active
         - description (str): a description of the flow being created
+        - idempotency_key (optional, str): a key that, if matching the most recent call
+            to `create_flow` for this flow group, will prevent the creation of another
+            flow version
 
     Returns:
         str: The id of the new flow
@@ -137,12 +145,12 @@ async def create_flow(
     flow = FlowSchema(**serialized_flow)
 
     # core versions before 0.6.1 were used only for internal purposes-- this is our cutoff
-    core_version = flow.environment.get("__version__", None)
+    core_version = flow.__version__
     if core_version and module_version.parse(core_version) < module_version.parse(
         config.core_version_cutoff
     ):
         raise ValueError(
-            "Prefect Server requires new flows to be built with Prefect "
+            "Prefect backends require new flows to be built with Prefect "
             f"{config.core_version_cutoff}+, but this flow was built with "
             f"Prefect {core_version}."
         )
@@ -152,17 +160,6 @@ async def create_flow(
     if not project:
         raise ValueError("Invalid project.")
     tenant_id = project.tenant_id  # type: ignore
-
-    # check required parameters - can't load a flow that has required params and a shcedule
-    # NOTE: if we allow schedules to be set via UI in the future, we might skip or
-    # refactor this check
-    required_parameters = [p for p in flow.parameters if p.required]
-    if flow.schedule is not None and required_parameters:
-        required_names = {p.name for p in required_parameters}
-        if not all(
-            [required_names <= set(c.parameter_defaults) for c in flow.schedule.clocks]
-        ):
-            raise ValueError("Can not schedule a flow that has required parameters.")
 
     # set up task detail info
     task_lookup = {t.slug: t for t in flow.tasks}
@@ -184,7 +181,8 @@ async def create_flow(
         "version_group_id": {"_eq": version_group_id},
         "tenant_id": {"_eq": tenant_id},
     }
-    # set up a flow group if it's not already in the system
+
+    # lookup the associated flow group (may not exist yet)
     flow_group = await models.FlowGroup.where(
         {
             "_and": [
@@ -192,7 +190,10 @@ async def create_flow(
                 {"name": {"_eq": version_group_id}},
             ]
         }
-    ).first({"id", "schedule"})
+    ).first({"id", "schedule", "settings"})
+
+    # create the flow group or check for the idempotency key in the existing flow group
+    # settings
     if flow_group is None:
         flow_group_id = await models.FlowGroup(
             tenant_id=tenant_id,
@@ -201,10 +202,38 @@ async def create_flow(
                 "heartbeat_enabled": True,
                 "lazarus_enabled": True,
                 "version_locking_enabled": False,
+                "idempotency_key": idempotency_key,
             },
         ).insert()
     else:
         flow_group_id = flow_group.id
+
+        # check idempotency key and exit early if we find a matching key and flow,
+        # otherwise update the key for the group
+        last_idempotency_key = flow_group.settings.get("idempotency_key", None)
+        if (
+            last_idempotency_key
+            and idempotency_key
+            and last_idempotency_key == idempotency_key
+        ):
+            # get the most recent unarchived version, there should only be one
+            # unarchived flow at a time but it is safer not to presume
+            flow_model = await models.Flow.where(
+                {
+                    "version_group_id": {"_eq": version_group_id},
+                    "archived": {"_eq": False},
+                }
+            ).first(order_by={"version": EnumValue("desc")})
+            if flow_model:
+                return flow_model.id
+            # otherwise, despite the key matching we don't have a valid flow to return
+            # and will continue as though the key did not match
+
+        settings = flow_group.settings
+        settings["idempotency_key"] = idempotency_key
+        await models.FlowGroup.where({"id": {"_eq": flow_group.id}}).update(
+            set={"settings": settings}
+        )
 
     version = (await models.Flow.where(version_where).max({"version"}))["version"] or 0
 
@@ -220,7 +249,8 @@ async def create_flow(
         name=flow.name,
         serialized_flow=serialized_flow,
         environment=flow.environment,
-        core_version=flow.environment.get("__version__"),
+        run_config=flow.run_config,
+        core_version=flow.__version__,
         storage=flow.storage,
         parameters=flow.parameters,
         version_group_id=version_group_id,
@@ -229,7 +259,7 @@ async def create_flow(
         flow_group_id=flow_group_id,
         description=description,
         schedule=serialized_flow.get("schedule"),
-        is_schedule_active=set_schedule_active,
+        is_schedule_active=False,
         tasks=[
             models.Task(
                 id=t.id,
@@ -264,7 +294,12 @@ async def create_flow(
 
     # schedule runs
     if set_schedule_active:
-        await schedule_flow_runs(flow_id=flow_id)
+        # we don't want to error the Flow creation call as it would prevent other archiving logic
+        # from kicking in
+        try:
+            await api.flows.set_schedule_active(flow_id=flow_id)
+        except ValueError:
+            pass
 
     return flow_id
 
@@ -397,13 +432,41 @@ async def set_schedule_active(flow_id: str) -> bool:
     if flow_id is None:
         raise ValueError("Invalid flow id.")
 
+    flow = await models.Flow.where(id=flow_id).first(
+        {
+            "schedule": True,
+            "parameters": True,
+            "flow_group": {"schedule": True, "default_parameters": True},
+        }
+    )
+
+    if not flow:
+        return False
+
+    # logic for determining if it's appropriate to turn on the schedule for this flow
+    # we can set a flow run schedule to active if any required parameters are provided by:
+    # - the Flow's own clocks
+    # - the Flow Group's default parameters
+    # - some combination of the above two
+    required_parameters = {p.get("name") for p in flow.parameters if p.get("required")}
+    if flow.schedule is not None and required_parameters:
+        required_names = required_parameters.difference(
+            flow.flow_group.default_parameters or {}
+        )
+        clock_params = [
+            set(c.get("parameter_defaults", {}).keys())
+            for c in flow.schedule.get("clocks", [])
+        ]
+        if not all([required_names <= c for c in clock_params]):
+            raise ValueError("Can not schedule a flow that has required parameters.")
+
     result = await models.Flow.where(id=flow_id).update(
         set={"is_schedule_active": True}
     )
     if not result.affected_rows:
         return False
 
-    await schedule_flow_runs(flow_id=flow_id)
+    await api.flows.schedule_flow_runs(flow_id=flow_id)
     return True
 
 
@@ -516,15 +579,28 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
     # schedule every event with an idempotent flow run
     for event in flow_schedule.next(n=max_runs, return_events=True):
 
+        # if the event has parameter defaults or labels, we do allow for
+        # same-time scheduling
+        if event.parameter_defaults or event.labels is not None:
+            md5 = hashlib.md5()
+            param_string = str(sorted(json.dumps(event.parameter_defaults)))
+            label_string = str(sorted(json.dumps(event.labels)))
+            md5.update((param_string + label_string).encode("utf-8"))
+            idempotency_key = (
+                f"auto-scheduled:{event.start_time.in_tz('UTC')}:{md5.hexdigest()}"
+            )
         # if this run was already scheduled, continue
-        if last_scheduled_run and event.start_time <= last_scheduled_run:
+        elif last_scheduled_run and event.start_time <= last_scheduled_run:
             continue
+        else:
+            idempotency_key = f"auto-scheduled:{event.start_time.in_tz('UTC')}"
 
         run_id = await api.runs.create_flow_run(
             flow_id=flow_id,
             scheduled_start_time=event.start_time,
             parameters=event.parameter_defaults,
-            idempotency_key=f"auto-scheduled:{event.start_time.in_tz('UTC')}",
+            labels=event.labels,
+            idempotency_key=idempotency_key,
         )
 
         logger.debug(

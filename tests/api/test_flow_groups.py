@@ -1,9 +1,10 @@
 import uuid
+import pendulum
 
 import pytest
 
-from prefect import api
-from prefect_server.database import models
+from prefect import api, models
+from prefect.serialization.schedule import ScheduleSchema
 
 
 class TestSetFlowGroupDefaultParameter:
@@ -120,6 +121,39 @@ class TestSetFlowGroupLabels:
             )
 
 
+class TestSetFlowGroupRunConfig:
+    @pytest.mark.parametrize(
+        "run_config", [None, {"type": "UniversalRun", "labels": ["a"]}]
+    )
+    async def test_set_flow_group_run_config(self, flow_group_id, run_config):
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"run_config"}
+        )
+        assert flow_group.run_config is None
+
+        success = await api.flow_groups.set_flow_group_run_config(
+            flow_group_id=flow_group_id, run_config=run_config
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"run_config"}
+        )
+        assert flow_group.run_config == run_config
+
+    async def test_set_flow_group_run_config_for_invalid_flow_group(self):
+        success = await api.flow_groups.set_flow_group_run_config(
+            flow_group_id=str(uuid.uuid4()), run_config=None
+        )
+        assert success is False
+
+    async def test_set_flow_group_run_config_for_none_flow_group(self):
+        with pytest.raises(ValueError, match="Invalid flow group ID"):
+            await api.flow_groups.set_flow_group_run_config(
+                flow_group_id=None, run_config=None
+            )
+
+
 class TestSetFlowGroupSchedule:
     @pytest.mark.parametrize(
         "clock",
@@ -139,6 +173,50 @@ class TestSetFlowGroupSchedule:
 
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule["clocks"][0] == clock
+
+        schema = ScheduleSchema()
+        schedule = schema.load(flow_group.schedule)
+        assert schedule.clocks[0].start_date is None
+
+    @pytest.mark.parametrize(
+        "clock",
+        [
+            {"type": "CronClock", "cron": "42 0 0 * * *"},
+            {"type": "IntervalClock", "interval": 420000000},
+        ],
+    )
+    async def test_set_flow_group_schedule_raises_for_invalid_timezones(
+        self, flow_group_id, clock
+    ):
+        with pytest.raises(ValueError, match="timezone"):
+            await api.flow_groups.set_flow_group_schedule(
+                flow_group_id=flow_group_id, clocks=[clock], timezone="Kalamazoo"
+            )
+
+    @pytest.mark.parametrize(
+        "clock",
+        [
+            {"type": "CronClock", "cron": "42 0 0 * * *"},
+            {"type": "IntervalClock", "interval": 420000000},
+        ],
+    )
+    async def test_set_flow_group_schedule_respects_passed_timezones(
+        self, flow_group_id, clock
+    ):
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
+        assert flow_group.schedule is None
+
+        success = await api.flow_groups.set_flow_group_schedule(
+            flow_group_id=flow_group_id, clocks=[clock], timezone="US/Pacific"
+        )
+        assert success is True
+
+        schema = ScheduleSchema()
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
+        schedule = schema.load(flow_group.schedule)
+
+        assert schedule.clocks[0].start_date <= pendulum.now("utc")
+        assert schedule.clocks[0].start_date.timezone_name == "US/Pacific"
 
     async def test_setting_schedule_deletes_runs(self, flow_id, flow_group_id):
         """
@@ -195,8 +273,8 @@ class TestSetFlowGroupSchedule:
 
         flow_group = await models.FlowGroup.where(id=flow_group_id).first({"schedule"})
         assert flow_group.schedule["clocks"] == [
-            {"type": "CronClock", "cron": "42 0 0 * * *"},
-            {"type": "CronClock", "cron": "43 0 0 * * *"},
+            {"type": "CronClock", "cron": "42 0 0 * * *", "start_date": None},
+            {"type": "CronClock", "cron": "43 0 0 * * *", "start_date": None},
         ]
 
     @pytest.mark.parametrize(
@@ -359,37 +437,3 @@ class TestUpdateLazarusForFlow:
     async def test_enable_lazarus_for_flow_with_none_flow_id(self):
         with pytest.raises(ValueError, match="Invalid flow group ID"):
             await api.flow_groups.enable_lazarus(flow_group_id=None)
-
-
-class TestUpdateVersionLockingForFlow:
-    async def test_disable_version_locking_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            {"settings": {"version_locking_enabled": True}}
-        )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings.get("version_locking_enabled", False) is True
-        assert await api.flow_groups.disable_version_locking(
-            flow_group_id=flow_group_id
-        )
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings == {"version_locking_enabled": False}
-
-    async def test_enable_version_locking_for_flow(self, flow_id, flow_group_id):
-        await models.FlowGroup.where(id=flow_group_id).update(
-            {"settings": {"version_locking_enabled": False}}
-        )
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings.get("version_locking_enabled", True) is False
-        assert await api.flow_groups.enable_version_locking(flow_group_id=flow_group_id)
-
-        flow_group = await models.FlowGroup.where(id=flow_group_id).first({"settings"})
-        assert flow_group.settings == {"version_locking_enabled": True}
-
-    async def test_disable_version_locking_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow group ID"):
-            await api.flow_groups.disable_version_locking(flow_group_id=None)
-
-    async def test_enable_version_locking_for_flow_with_none_flow_id(self):
-        with pytest.raises(ValueError, match="Invalid flow group ID"):
-            await api.flow_groups.enable_version_locking(flow_group_id=None)

@@ -1,5 +1,0 @@
-enhancement:
-  - "Removed cloud artifact (sens-o-matic deletes tracking) for now - [#3](https://github.com/PrefectHQ/server/pull/12)"
-
-contributor:
-  - "[Dylan Hughes](https://github.com/dylanbhughes)"

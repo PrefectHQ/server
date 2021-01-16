@@ -39,19 +39,12 @@ extend type Mutation {
     input: enable_flow_lazarus_process_input!
   ): success_payload
 
-  "Enable version locking for a flow and its tasks. Version locking ensures that tasks run just once."
-  enable_flow_version_lock(
-    input: enable_flow_version_lock_input!
-  ): success_payload
-
-  "Disable version locking for a flow and its tasks. Version locking ensures that tasks run just once."
-  disable_flow_version_lock(
-    input: disable_flow_version_lock_input!
-  ): success_payload
-
   "Set labels for a flow group."
   set_flow_group_labels(input: set_flow_group_labels_input!): success_payload
-	  
+
+  "Set run_config for a flow group."
+  set_flow_group_run_config(input: set_flow_group_run_config_input!): success_payload
+
   "Set a schedule for a flow group."
   set_flow_group_schedule(
     input: set_flow_group_schedule_input!
@@ -87,6 +80,8 @@ input create_flow_input {
   set_schedule_active: Boolean
   "An optional description of this Flow"
   description: String
+  "An optional idempotency key for this flow to prevent multiple sequential creations within the version group"
+  idempotency_key: String
 }
 
 input create_flow_from_compressed_string_input {
@@ -100,6 +95,8 @@ input create_flow_from_compressed_string_input {
   set_schedule_active: Boolean
   "An optional description of this Flow"
   description: String
+  "An optional idempotency key for this flow to prevent multiple sequential creations within the version group"
+  idempotency_key: String
 }
 
 input delete_flow_input {
@@ -139,16 +136,6 @@ input disable_flow_lazarus_process_input {
   flow_id: UUID!
 }
 
-input enable_flow_version_lock_input {
-  "The ID of the flow to update"
-  flow_id: UUID!
-}
-
-input disable_flow_version_lock_input {
-  "The ID of the flow to update"
-  flow_id: UUID!
-}
-
 # ------------------------------------------------------
 # flow group inputs
 # ------------------------------------------------------
@@ -167,13 +154,22 @@ input set_flow_group_labels_input {
   labels: [String!]
 }
 
-	input set_flow_group_schedule_input {
+input set_flow_group_run_config_input {
+  "The ID of the flow group to update"
+  flow_group_id: UUID!
+  "The serialized run config to associate with the flow group"
+  run_config: JSON
+}
+
+input set_flow_group_schedule_input {
   "The ID of the flow group to update"
   flow_group_id: UUID!
   "A list of cron clocks for the schedule"
   cron_clocks: [cron_clock_input!]
   "A list of interval clocks for the schedule"
   interval_clocks: [interval_clock_input!]
+  "An optional timezone to use for the schedule"
+  timezone: String
 }
 
 input cron_clock_input {
