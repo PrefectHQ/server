@@ -122,7 +122,7 @@ class LocalAgent:
     def run_flow(self, flow_name, storage, environment, config, context):
         with prefect.utilities.configuration.set_temporary_config(config):
             with prefect.context(context):
-                environment.execute(storage.get_flow(storage.flows[flow_name]))
+                environment.execute(storage.get_flow(flow_name))
 
     async def start(self):
         self.logger.info(f"Starting {type(self).__name__}...")
