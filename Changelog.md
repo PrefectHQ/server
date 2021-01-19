@@ -1,5 +1,13 @@
 # Changelog
 
+## January 19, 2021 <Badge text="beta" type="success" />
+
+Released on January 19, 2021.
+
+### Enhancements
+
+- Add `sum` aggregate to ORM  - [#174](https://github.com/PrefectHQ/server/pull/174)
+
 ## January 5, 2021 <Badge text="beta" type="success" />
 
 Released on January 5, 2021.
