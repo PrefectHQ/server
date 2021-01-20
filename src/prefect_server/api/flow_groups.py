@@ -173,6 +173,33 @@ async def set_flow_group_labels(flow_group_id: str, labels: List[str] = None) ->
     return bool(result.affected_rows)
 
 
+@register_api("flow_groups.set_flow_group_description")
+async def set_flow_group_description(
+    flow_group_id: str, description: str = None
+) -> bool:
+    """
+    Sets description for a flow group.
+
+    Args:
+        - flow_group_id (str): the ID of the flow group to update
+        - description (str, optional): A markdown-compatible description for this flow group.
+            Providing `None` resets any previous flow group
+            `description` setting.
+
+    Returns:
+        - bool: whether setting `description` for the flow group was successful
+
+    Raises:
+        - ValueError: if flow group ID isn't provided
+    """
+    if not flow_group_id:
+        raise ValueError("Invalid flow group ID")
+    result = await models.FlowGroup.where(id=flow_group_id).update(
+        set=dict(description=description)
+    )
+    return bool(result.affected_rows)
+
+
 @register_api("flow_groups.set_flow_group_run_config")
 async def set_flow_group_run_config(
     flow_group_id: str, run_config: Dict[str, Any] = None
