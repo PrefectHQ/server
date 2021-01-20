@@ -8,7 +8,6 @@ Create Date: 2021-01-20 13:22:30.242349
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 
 # revision identifiers, used by Alembic.
@@ -21,7 +20,7 @@ depends_on = None
 def upgrade():
     op.add_column(
         "flow_group",
-        sa.Column("description", JSONB, nullable=True, server_default=None),
+        sa.Column("description", sa.String, nullable=True, server_default=None),
     )
 
 

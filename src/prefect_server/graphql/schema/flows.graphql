@@ -161,7 +161,7 @@ input set_flow_group_description_input {
   "The ID of the flow group to update"
   flow_group_id: UUID!
   "Description to associate with the flow group"
-  description: JSON
+  description: String
 }
 
 input set_flow_group_run_config_input {

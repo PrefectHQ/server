@@ -182,7 +182,7 @@ async def set_flow_group_description(
 
     Args:
         - flow_group_id (str): the ID of the flow group to update
-        - description (dict, optional): A markdown-compatible description for this flow group.
+        - description (str, optional): A markdown-compatible description for this flow group.
             Providing `None` resets any previous flow group
             `description` setting.
 
