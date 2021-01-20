@@ -12,15 +12,16 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 
 # revision identifiers, used by Alembic.
-revision = '9116e81c6dc2'
-down_revision = '7ca57ea2fdff'
+revision = "9116e81c6dc2"
+down_revision = "7ca57ea2fdff"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
     op.add_column(
-        "flow_group", sa.Column("description", JSONB, nullable=True, server_default=None)
+        "flow_group",
+        sa.Column("description", JSONB, nullable=True, server_default=None),
     )
 
 
