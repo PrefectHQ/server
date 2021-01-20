@@ -79,6 +79,34 @@ class TestSetFlowGroupRunConfig:
         assert flow_group.run_config == run_config
 
 
+class TestSetFlowGroupDescription:
+    mutation = """
+        mutation($input: set_flow_group_description_input!) {
+            set_flow_group_description(input: $input) {
+                success
+            }
+        }
+    """
+
+    @pytest.mark.parametrize(
+        "description", [None, "it does a thing.", "# TITLE\n it does *MANY* things"]
+    )
+    async def test_set_flow_group_description(
+        self, run_query, flow_group_id, description
+    ):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(flow_group_id=flow_group_id, description=description)
+            ),
+        )
+        assert result.data.set_flow_group_description.success is True
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"description"}
+        )
+        assert flow_group.description == description
+
+
 class TestSetFlowGroupSchedule:
     mutation = """
         mutation($input: set_flow_group_schedule_input!) {
