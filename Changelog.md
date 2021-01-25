@@ -1,5 +1,13 @@
 # Changelog
 
+## January 25, 2021 <Badge text="beta" type="success" />
+
+Released on January 25, 2021.
+
+### Enhancements
+
+- Add 'description' field for Flow Groups along with routes for updating - [#177](https://github.com/PrefectHQ/server/pull/177)
+
 ## January 19, 2021 <Badge text="beta" type="success" />
 
 Released on January 19, 2021.
