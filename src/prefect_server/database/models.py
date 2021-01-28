@@ -307,6 +307,7 @@ class FlowGroup(HasuraModel):
     id: UUIDString = None
     created: datetime.datetime = None
     updated: datetime.datetime = None
+    description: str = None
     tenant_id: UUIDString = None
     name: str = None
     settings: dict = None

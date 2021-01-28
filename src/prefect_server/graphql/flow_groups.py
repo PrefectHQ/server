@@ -17,6 +17,16 @@ async def resolve_set_flow_group_default_parameters(
     return {"success": result}
 
 
+@mutation.field("set_flow_group_description")
+async def resolve_set_flow_group_description(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    result = await api.flow_groups.set_flow_group_description(
+        flow_group_id=input["flow_group_id"], description=input.get("description")
+    )
+    return {"success": result}
+
+
 @mutation.field("set_flow_group_labels")
 async def resolve_set_flow_group_labels(
     obj: Any, info: GraphQLResolveInfo, input: dict

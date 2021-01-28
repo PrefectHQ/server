@@ -121,6 +121,39 @@ class TestSetFlowGroupLabels:
             )
 
 
+class TestSetFlowGroupDescription:
+    @pytest.mark.parametrize(
+        "description", [None, "it does a thing.", "# TITLE\n it does *MANY* things"]
+    )
+    async def test_set_flow_group_description(self, flow_group_id, description):
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"description"}
+        )
+        assert flow_group.description is None
+
+        success = await api.flow_groups.set_flow_group_description(
+            flow_group_id=flow_group_id, description=description
+        )
+        assert success is True
+
+        flow_group = await models.FlowGroup.where(id=flow_group_id).first(
+            {"description"}
+        )
+        assert flow_group.description == description
+
+    async def test_set_flow_group_description_for_invalid_flow_group(self):
+        success = await api.flow_groups.set_flow_group_description(
+            flow_group_id=str(uuid.uuid4()), description=None
+        )
+        assert success is False
+
+    async def test_set_flow_group_description_for_none_flow_group(self):
+        with pytest.raises(ValueError, match="Invalid flow group ID"):
+            await api.flow_groups.set_flow_group_description(
+                flow_group_id=None, description=None
+            )
+
+
 class TestSetFlowGroupRunConfig:
     @pytest.mark.parametrize(
         "run_config", [None, {"type": "UniversalRun", "labels": ["a"]}]

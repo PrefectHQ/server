@@ -39,6 +39,9 @@ extend type Mutation {
     input: enable_flow_lazarus_process_input!
   ): success_payload
 
+  "Set description for a flow group."
+  set_flow_group_description(input: set_flow_group_description_input!): success_payload
+
   "Set labels for a flow group."
   set_flow_group_labels(input: set_flow_group_labels_input!): success_payload
 
@@ -152,6 +155,13 @@ input set_flow_group_labels_input {
   flow_group_id: UUID!
   "Labels to associate with the flow group"
   labels: [String!]
+}
+
+input set_flow_group_description_input {
+  "The ID of the flow group to update"
+  flow_group_id: UUID!
+  "Description to associate with the flow group"
+  description: String
 }
 
 input set_flow_group_run_config_input {
