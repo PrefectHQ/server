@@ -1,5 +1,5 @@
 import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pendulum
 import pydantic
@@ -18,8 +18,8 @@ class Tenant(HasuraModel):
     id: UUIDString = None
     created: datetime.datetime = None
     updated: datetime.datetime = None
-    name: str = None
-    slug: str = None
+    name: Optional[str] = None
+    slug: Optional[str] = None
     info: Dict[str, Any] = None
     settings: Dict[str, Any] = None
 
@@ -34,8 +34,8 @@ class Project(HasuraModel):
     created: datetime.datetime = None
     updated: datetime.datetime = None
     tenant_id: UUIDString = None
-    name: str = None
-    description: str = None
+    name: Optional[str] = None
+    description: Optional[str] = None
 
     # relationships
     tenant: Tenant = None
@@ -55,10 +55,10 @@ class Flow(HasuraModel):
     schedule: Dict[str, Any] = None
     is_schedule_active: bool = None
     version: int = None
-    version_group_id: str = None
-    core_version: str = None
-    name: str = None
-    description: str = None
+    version_group_id: Optional[str] = None
+    core_version: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
     serialized_flow: Dict[str, Any] = None
     environment: Dict[str, Any] = None
     run_config: Dict[str, Any] = None
@@ -85,17 +85,17 @@ class Task(HasuraModel):
     updated: datetime.datetime = None
     tenant_id: UUIDString = None
     flow_id: UUIDString = None
-    name: str = None
-    slug: str = None
-    description: str = None
-    type: str = None
+    name: Optional[str] = None
+    slug: Optional[str] = None
+    description: Optional[str] = None
+    type: Optional[str] = None
     max_retries: int = None
     retry_delay: datetime.timedelta = None
-    trigger: str = None
+    trigger: Optional[str] = None
     tags: List[str] = None
     mapped: bool = None
     auto_generated: bool = None
-    cache_key: str = None
+    cache_key: Optional[str] = None
     is_root_task: bool = None
     is_terminal_task: bool = None
     is_reference_task: bool = None
@@ -112,7 +112,7 @@ class Edge(HasuraModel):
     flow_id: UUIDString = None
     upstream_task_id: UUIDString = None
     downstream_task_id: UUIDString = None
-    key: str = None
+    key: Optional[str] = None
     mapped: bool = None
 
 
@@ -135,15 +135,15 @@ class FlowRun(HasuraModel):
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
     auto_scheduled: bool = None
-    name: str = None
+    name: Optional[str] = None
     times_resurrected: int = None
-    idempotency_key: str = None
+    idempotency_key: Optional[str] = None
     agent_id: UUIDString = None
 
     # state fields
-    state: str = None
+    state: Optional[str] = None
     state_timestamp: datetime.datetime = None
-    state_message: str = None
+    state_message: Optional[str] = None
     state_result: Any = None
     state_start_time: datetime.datetime = None
     serialized_state: Dict[str, Any] = None
@@ -171,13 +171,13 @@ class TaskRun(HasuraModel):
     heartbeat: datetime.datetime = None
     start_time: datetime.datetime = None
     end_time: datetime.datetime = None
-    cache_key: str = None
-    name: str = None
+    cache_key: Optional[str] = None
+    name: Optional[str] = None
 
     # state fields
-    state: str = None
+    state: Optional[str] = None
     state_timestamp: datetime.datetime = None
-    state_message: str = None
+    state_message: Optional[str] = None
     state_result: Any = None
     state_start_time: datetime.datetime = None
     serialized_state: Dict[str, Any] = None
@@ -199,10 +199,10 @@ class FlowRunState(HasuraModel):
     tenant_id: UUIDString = None
     flow_run_id: UUIDString = None
     timestamp: datetime.datetime = None
-    message: str = None
-    result: str = None
+    message: Optional[str] = None
+    result: Optional[str] = None
     start_time: datetime.datetime = None
-    state: str = None
+    state: Optional[str] = None
     version: int = None
     serialized_state: Dict[str, Any] = None
 
@@ -238,10 +238,10 @@ class TaskRunState(HasuraModel):
     tenant_id: UUIDString = None
     task_run_id: UUIDString = None
     timestamp: datetime.datetime = None
-    message: str = None
-    result: str = None
+    message: Optional[str] = None
+    result: Optional[str] = None
     start_time: datetime.datetime = None
-    state: str = None
+    state: Optional[str] = None
     version: int = None
     serialized_state: Dict[str, Any] = None
 
@@ -278,9 +278,9 @@ class Log(HasuraModel):
     flow_run_id: UUIDString = None
     task_run_id: UUIDString = None
     timestamp: datetime.datetime = None
-    name: str = None
-    level: str = None
-    message: str = None
+    name: Optional[str] = None
+    level: Optional[str] = None
+    message: Optional[str] = None
     info: Dict[str, Any] = None
 
 
@@ -292,11 +292,11 @@ class CloudHook(HasuraModel):
     created: datetime.datetime = None
     updated: datetime.datetime = None
     tenant_id: UUIDString = None
-    version_group_id: str = None
+    version_group_id: Optional[str] = None
     states: List[str] = None
-    type: str = None
-    name: str = None
-    config: dict = None
+    type: Optional[str] = None
+    name: Optional[str] = None
+    config: Optional[dict] = None
     active: bool = None
 
 
@@ -307,12 +307,12 @@ class FlowGroup(HasuraModel):
     id: UUIDString = None
     created: datetime.datetime = None
     updated: datetime.datetime = None
-    description: str = None
+    description: Optional[str] = None
     tenant_id: UUIDString = None
-    name: str = None
-    settings: dict = None
-    default_parameters: dict = None
-    schedule: dict = None
+    name: Optional[str] = None
+    settings: Optional[dict] = None
+    default_parameters: Optional[dict] = None
+    schedule: Optional[dict] = None
     labels: List[str] = None
     run_config: Dict[str, Any] = None
 
@@ -330,9 +330,9 @@ class Message(HasuraModel):
     tenant_id: UUIDString = None
     user_id: UUIDString = None
     read: bool = None
-    type: str = None
-    text: str = None
-    content: dict = None
+    type: Optional[str] = None
+    text: Optional[str] = None
+    content: Optional[dict] = None
 
 
 @plugins.register_model("AgentConfig")
@@ -343,8 +343,8 @@ class AgentConfig(HasuraModel):
     created: datetime.datetime = None
     updated: datetime.datetime = None
     tenant_id: UUIDString = None
-    name: str = None
-    settings: dict = None
+    name: Optional[str] = None
+    settings: Optional[dict] = None
 
 
 @plugins.register_model("Agent")
@@ -355,9 +355,9 @@ class Agent(HasuraModel):
     created: datetime.datetime = None
     tenant_id: UUIDString = None
     agent_config_id: UUIDString = None
-    name: str = None
-    type: str = None
-    core_version: str = None
+    name: Optional[str] = None
+    type: Optional[str] = None
+    core_version: Optional[str] = None
     labels: List[str] = None
     last_queried: datetime.datetime = None
 
@@ -370,8 +370,8 @@ class TaskRunArtifact(HasuraModel):
     created: datetime.datetime = None
     tenant_id: UUIDString = None
     task_run_id: UUIDString = None
-    kind: str = None
-    data: dict = None
+    kind: Optional[str] = None
+    data: Optional[dict] = None
 
 
 # process forward references for all Pydantic models (meaning string class names)

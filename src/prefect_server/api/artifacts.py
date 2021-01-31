@@ -1,3 +1,5 @@
+from typing import Optional
+
 from prefect import models
 from prefect.utilities.plugins import register_api
 
@@ -7,7 +9,7 @@ async def create_task_run_artifact(
     task_run_id: str,
     kind: str,
     data: dict,
-    tenant_id: str = None,
+    tenant_id: Optional[str] = None,
 ) -> str:
     """
     Create a task run artifact.

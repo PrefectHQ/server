@@ -1,6 +1,6 @@
 import json
 import textwrap
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 import ariadne
 from box import Box
@@ -23,8 +23,8 @@ class GraphQLClient:
     async def execute(
         self,
         query: Union[str, Dict[str, Any]],
-        variables: Dict[str, Any] = None,
-        headers: dict = None,
+        variables: Optional[Dict[str, Any]] = None,
+        headers: Optional[dict] = None,
         raise_on_error: bool = True,
         as_box=True,
     ) -> dict:
@@ -86,7 +86,11 @@ class GraphQLClient:
         return result
 
     def log_query_debug_info(
-        self, query: str, variables: dict, errors: str = None, headers: dict = None
+        self,
+        query: str,
+        variables: dict,
+        errors: Optional[str] = None,
+        headers: Optional[dict] = None,
     ) -> None:
         """
         Creates a nicely-formatted representation of a query, variables, and any errors.

@@ -25,7 +25,7 @@ class ApolloError(GraphQLError):
     # the ApolloError's default message
     message: Optional[str] = None
 
-    def __init__(self, message: str = None, *args, **kwargs):
+    def __init__(self, message: Optional[str] = None, *args, **kwargs):
         if message is None:
             message = self.message
 

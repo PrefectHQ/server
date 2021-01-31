@@ -1,6 +1,8 @@
 import datetime
 import uuid
 
+from typing import Optional
+
 import pendulum
 from pydantic import BaseModel, validator
 
@@ -9,9 +11,9 @@ from prefect import models
 
 class Event(BaseModel):
 
-    id: str = None
+    id: Optional[str] = None
     timestamp: datetime.datetime = None
-    type: str = None
+    type: Optional[str] = None
 
     @validator("timestamp", pre=True, always=True)
     def set_timestamp(cls, v):

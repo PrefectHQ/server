@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import pendulum
 
@@ -11,9 +11,9 @@ from prefect_server.utilities import context
 async def register_agent(
     tenant_id: str,
     labels: List[str],
-    agent_config_id: str = None,
-    name: str = None,
-    type: str = None,
+    agent_config_id: Optional[str] = None,
+    name: Optional[str] = None,
+    type: Optional[str] = None,
 ) -> str:
     """
     Register a new agent
@@ -142,7 +142,7 @@ async def delete_agent_config(agent_config_id: str) -> bool:
 
 @register_api("agents.update_agent_config")
 async def update_agent_config(
-    agent_config_id: str, name: str = None, settings: dict = None
+    agent_config_id: str, name: Optional[str] = None, settings: Optional[dict] = None
 ) -> str:
     """
     Update an agent config

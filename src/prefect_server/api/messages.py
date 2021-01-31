@@ -1,3 +1,5 @@
+from typing import Optional
+
 from prefect import models
 from prefect.utilities.plugins import register_api
 
@@ -6,7 +8,7 @@ PREFECT_MESSAGE_TYPES = {"CLOUD_HOOK", "REQUIRES_APPROVAL"}
 
 @register_api("messages.create_message")
 async def create_message(
-    type: str, content: dict, tenant_id: str, text: str = None
+    type: str, content: dict, tenant_id: str, text: Optional[str] = None
 ) -> str:
     if type not in PREFECT_MESSAGE_TYPES:
         raise ValueError("Invalid message type.")

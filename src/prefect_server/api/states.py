@@ -4,6 +4,8 @@
 import asyncio
 import uuid
 
+from typing import Optional
+
 import pendulum
 
 import prefect
@@ -20,7 +22,7 @@ state_schema = prefect.serialization.state.StateSchema()
 
 @register_api("states.set_flow_run_state")
 async def set_flow_run_state(
-    flow_run_id: str, state: State, version: int = None, agent_id: str = None
+    flow_run_id: str, state: State, version: int = None, agent_id: Optional[str] = None
 ) -> models.FlowRunState:
     """
     Updates a flow run state.

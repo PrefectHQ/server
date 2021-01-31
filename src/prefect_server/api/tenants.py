@@ -1,5 +1,7 @@
 import slugify
 
+from typing import Optional
+
 from prefect import models
 from prefect.utilities.plugins import register_api
 
@@ -10,7 +12,7 @@ def verify_slug(slug: str) -> None:
 
 
 @register_api("tenants.create_tenant")
-async def create_tenant(name: str, slug: str = None) -> str:
+async def create_tenant(name: str, slug: Optional[str] = None) -> str:
     """
     Create a new tenant.
 

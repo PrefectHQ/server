@@ -1,5 +1,7 @@
 import logging
 
+from typing import Optional
+
 import json_log_formatter
 
 from prefect_server.configuration import config
@@ -39,7 +41,7 @@ def configure_logging() -> logging.Logger:
 prefect_logger = configure_logging()
 
 
-def get_logger(name: str = None) -> logging.Logger:
+def get_logger(name: Optional[str] = None) -> logging.Logger:
     """
     Returns a "prefect-server" logger.
 

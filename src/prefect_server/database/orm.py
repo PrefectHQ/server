@@ -1,7 +1,7 @@
 import datetime
 import json
 import uuid
-from typing import List, Union, cast, Any
+from typing import List, Optional, Union, cast, Any
 
 import pendulum
 import psycopg2
@@ -186,7 +186,7 @@ class HasuraModel(ORMModel):
         self,
         on_conflict: GQLObjectTypes = None,
         selection_set: GQLObjectTypes = None,
-        alias: str = None,
+        alias: Optional[str] = None,
         run_mutation: bool = True,
     ) -> dict:
         """
@@ -233,7 +233,7 @@ class HasuraModel(ORMModel):
     async def delete(
         self,
         selection_set: GQLObjectTypes = None,
-        alias: str = None,
+        alias: Optional[str] = None,
         run_mutation: bool = True,
     ) -> dict:
         """
@@ -277,7 +277,7 @@ class HasuraModel(ORMModel):
         objects: List[Union[dict, "HasuraModel"]],
         on_conflict: GQLObjectTypes = None,
         selection_set: GQLObjectTypes = None,
-        alias: str = None,
+        alias: Optional[str] = None,
         run_mutation: bool = True,
     ) -> dict:
         """
@@ -363,7 +363,7 @@ class ModelQuery:
         - where (dict): a Hasura where claus
     """
 
-    def __init__(self, model: HasuraModel, where: dict = None):
+    def __init__(self, model: HasuraModel, where: Optional[dict] = None):
         self.model = model
         self.where = where
 
@@ -371,12 +371,12 @@ class ModelQuery:
         self,
         set: GQLObjectTypes = None,
         increment: GQLObjectTypes = None,
-        append: dict = None,
-        prepend: dict = None,
-        delete_key: dict = None,
-        delete_elem: dict = None,
+        append: Optional[dict] = None,
+        prepend: Optional[dict] = None,
+        delete_key: Optional[dict] = None,
+        delete_elem: Optional[dict] = None,
         selection_set: GQLObjectTypes = None,
-        alias: str = None,
+        alias: Optional[str] = None,
         run_mutation: bool = True,
     ) -> dict:
         """
@@ -422,7 +422,7 @@ class ModelQuery:
     async def delete(
         self,
         selection_set: GQLObjectTypes = None,
-        alias: str = None,
+        alias: Optional[str] = None,
         run_mutation: bool = True,
     ) -> dict:
         """

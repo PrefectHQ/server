@@ -1,5 +1,5 @@
 import pendulum
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from prefect import api, models
 from prefect.serialization.schedule import ClockSchema
@@ -69,7 +69,7 @@ async def set_flow_group_default_parameters(
 
 @register_api("flow_groups.set_flow_group_schedule")
 async def set_flow_group_schedule(
-    flow_group_id: str, clocks: List[dict], timezone: str = None
+    flow_group_id: str, clocks: List[dict], timezone: Optional[str] = None
 ) -> bool:
     """
     Sets a schedule for a flow group
@@ -175,7 +175,7 @@ async def set_flow_group_labels(flow_group_id: str, labels: List[str] = None) ->
 
 @register_api("flow_groups.set_flow_group_description")
 async def set_flow_group_description(
-    flow_group_id: str, description: str = None
+    flow_group_id: str, description: Optional[str] = None
 ) -> bool:
     """
     Sets description for a flow group.

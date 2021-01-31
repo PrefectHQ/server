@@ -2,7 +2,7 @@ import datetime
 import hashlib
 import json
 import uuid
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import pendulum
 from packaging import version as module_version
@@ -40,15 +40,15 @@ class ScheduleSchema(Model):
 
 class TaskSchema(Model):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    name: str = None
+    name: Optional[str] = None
     slug: str
-    type: str = None
+    type: Optional[str] = None
     auto_generated: bool = False
     tags: List[str] = Field(default_factory=list)
     max_retries: int = 0
-    retry_delay: datetime.timedelta = None
-    cache_key: str = None
-    trigger: str = None
+    retry_delay: Optional[datetime.timedelta] = None
+    cache_key: Optional[str] = None
+    trigger: Optional[str] = None
     mapped: bool = False
     is_reference_task: bool = False
     is_root_task: bool = False
@@ -66,7 +66,7 @@ class EdgeSchema(Model):
     upstream_task: str
     downstream_task: str
     mapped: bool = False
-    key: str = None
+    key: Optional[str] = None
 
     @validator("upstream_task", pre=True)
     def _validate_upstream_task(cls, v):
@@ -84,22 +84,22 @@ class EdgeSchema(Model):
 
 
 class ParameterSchema(Model):
-    name: str = None
+    name: Optional[str] = None
     slug: str
     required: bool = False
     default: Any = None
 
 
 class FlowSchema(Model):
-    name: str = None
+    name: Optional[str] = None
     tasks: List[TaskSchema] = Field(default_factory=list)
     edges: List[EdgeSchema] = Field(default_factory=list)
     parameters: List[ParameterSchema] = Field(default_factory=list)
-    environment: Dict[str, Any] = None
-    run_config: Dict[str, Any] = None
-    __version__: str = None
-    storage: Dict[str, Any] = None
-    schedule: ScheduleSchema = None
+    environment: Optional[Dict[str, Any]] = None
+    run_config: Optional[Dict[str, Any]] = None
+    __version__: Optional[str] = None
+    storage: Optional[Dict[str, Any]] = None
+    schedule: Optional[ScheduleSchema] = None
     reference_tasks: List[str] = Field(default_factory=list)
 
     @validator("reference_tasks", pre=True)
@@ -117,10 +117,10 @@ class FlowSchema(Model):
 async def create_flow(
     serialized_flow: dict,
     project_id: str,
-    version_group_id: str = None,
+    version_group_id: Optional[str] = None,
     set_schedule_active: bool = True,
-    description: str = None,
-    idempotency_key: str = None,
+    description: Optional[str] = None,
+    idempotency_key: Optional[str] = None,
 ) -> str:
     """
     Add a flow to the database.

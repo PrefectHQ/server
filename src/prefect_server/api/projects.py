@@ -1,9 +1,13 @@
+from typing import Optional
+
 from prefect import models
 from prefect.utilities.plugins import register_api
 
 
 @register_api("projects.create_project")
-async def create_project(tenant_id: str, name: str, description: str = None) -> str:
+async def create_project(
+    tenant_id: str, name: str, description: Optional[str] = None
+) -> str:
     """
     Creates a project, returning its id
 

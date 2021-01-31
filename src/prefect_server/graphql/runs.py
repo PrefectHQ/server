@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, List
+from typing import Any, List, Optional
 
 from graphql import GraphQLResolveInfo
 
@@ -96,7 +96,7 @@ async def resolve_mapped_children(
 
 @mutation.field("create_flow_run")
 async def resolve_create_flow_run(
-    obj: Any, info: GraphQLResolveInfo, input: dict = None
+    obj: Any, info: GraphQLResolveInfo, input: Optional[dict] = None
 ) -> dict:
 
     input = input or {}

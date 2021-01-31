@@ -1,5 +1,5 @@
 import datetime
-from typing import Any, Iterable, List
+from typing import Any, Iterable, List, Optional
 
 import pendulum
 
@@ -20,15 +20,15 @@ SCHEDULED_STATES = [
 
 @register_api("runs.create_flow_run")
 async def create_flow_run(
-    flow_id: str = None,
-    parameters: dict = None,
-    context: dict = None,
+    flow_id: Optional[str] = None,
+    parameters: Optional[dict] = None,
+    context: Optional[dict] = None,
     scheduled_start_time: datetime.datetime = None,
-    flow_run_name: str = None,
-    version_group_id: str = None,
-    idempotency_key: str = None,
+    flow_run_name: Optional[str] = None,
+    version_group_id: Optional[str] = None,
+    idempotency_key: Optional[str] = None,
     labels: List[str] = None,
-    run_config: dict = None,
+    run_config: Optional[dict] = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -116,14 +116,14 @@ async def set_task_run_name(task_run_id: str, name: str) -> bool:
 
 @register_api("runs._create_flow_run")
 async def _create_flow_run(
-    flow_id: str = None,
-    parameters: dict = None,
-    context: dict = None,
+    flow_id: Optional[str] = None,
+    parameters: Optional[dict] = None,
+    context: Optional[dict] = None,
     scheduled_start_time: datetime.datetime = None,
-    flow_run_name: str = None,
-    version_group_id: str = None,
+    flow_run_name: Optional[str] = None,
+    version_group_id: Optional[str] = None,
     labels: List[str] = None,
-    run_config: dict = None,
+    run_config: Optional[dict] = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -451,7 +451,7 @@ async def get_runs_in_queue(
     tenant_id: str,
     before: datetime = None,
     labels: Iterable[str] = None,
-    agent_id: str = None,
+    agent_id: Optional[str] = None,
 ) -> List[str]:
 
     if tenant_id is None:

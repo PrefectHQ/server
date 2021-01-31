@@ -1,7 +1,7 @@
 import asyncio
 import json
 import uuid
-from typing import List
+from typing import List, Optional
 
 import httpx
 from box import Box
@@ -31,8 +31,8 @@ async def create_cloud_hook(
     tenant_id: str,
     type: str,
     states: List[str],
-    config: dict = None,
-    version_group_id: str = None,
+    config: Optional[dict] = None,
+    version_group_id: Optional[str] = None,
     name=None,
 ) -> str:
     """
@@ -372,8 +372,8 @@ async def _call_prefect_message(event: events.FlowRunStateChange):
 @register_api("cloud_hooks.test_cloud_hook")
 async def test_cloud_hook(
     cloud_hook_id: str,
-    flow_run_id: str = None,
-    state: prefect.engine.state.State = None,
+    flow_run_id: Optional[str] = None,
+    state: Optional[prefect.engine.state.State] = None,
 ):
     """
     Sends a test payload to a hook

@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, Iterable, List, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from box import Box
 
@@ -46,14 +46,14 @@ class Variable:
 
 
 class HasuraClient(GraphQLClient):
-    def __init__(self, url: str = None, headers=None) -> None:
+    def __init__(self, url: Optional[str] = None, headers=None) -> None:
         super().__init__(url=url or config.hasura.graphql_url, headers=headers)
 
     async def execute(
         self,
         query: Union[str, Dict[str, Any]],
-        variables: Dict[str, Any] = None,
-        headers: dict = None,
+        variables: Optional[Dict[str, Any]] = None,
+        headers: Optional[dict] = None,
         raise_on_error: bool = True,
         as_box: bool = True,
     ) -> dict:
@@ -119,7 +119,7 @@ class HasuraClient(GraphQLClient):
     async def execute_mutations_in_transaction(
         self,
         mutations: List[dict],
-        headers: dict = None,
+        headers: Optional[dict] = None,
         raise_on_error: bool = True,
         as_box: bool = True,
     ) -> Box:
@@ -171,11 +171,11 @@ class HasuraClient(GraphQLClient):
         self,
         graphql_type: str,
         objects: List[dict],
-        on_conflict: dict = None,
-        alias: str = None,
+        on_conflict: Optional[dict] = None,
+        alias: Optional[str] = None,
         selection_set: GQLObjectTypes = "affected_rows",
         run_mutation: bool = True,
-        insert_mutation_name: str = None,
+        insert_mutation_name: Optional[str] = None,
     ) -> Box:
         """
         Runs an `insert` mutation against the provided Hasura type, evaluating the provided
@@ -243,11 +243,11 @@ class HasuraClient(GraphQLClient):
         self,
         graphql_type: str,
         where: GQLObjectTypes = None,
-        id: str = None,
-        alias: str = None,
+        id: Optional[str] = None,
+        alias: Optional[str] = None,
         selection_set: GQLObjectTypes = "affected_rows",
         run_mutation: bool = True,
-        delete_mutation_name: str = None,
+        delete_mutation_name: Optional[str] = None,
     ) -> Box:
         """
         Runs an `delete` mutation against the provided Hasura type and `where` clause,
@@ -305,17 +305,17 @@ class HasuraClient(GraphQLClient):
         self,
         graphql_type: str,
         where: GQLObjectTypes = None,
-        id: str = None,
+        id: Optional[str] = None,
         set: GQLObjectTypes = None,
         increment: GQLObjectTypes = None,
-        append: dict = None,
-        prepend: dict = None,
-        delete_key: dict = None,
-        delete_elem: dict = None,
+        append: Optional[dict] = None,
+        prepend: Optional[dict] = None,
+        delete_key: Optional[dict] = None,
+        delete_elem: Optional[dict] = None,
         selection_set: GQLObjectTypes = "affected_rows",
-        alias: str = None,
+        alias: Optional[str] = None,
         run_mutation: bool = True,
-        update_mutation_name: str = None,
+        update_mutation_name: Optional[str] = None,
     ) -> Box:
         """
         Runs an `update` mutation against the provided Hasura type and `where` clause, applying
