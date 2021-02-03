@@ -12,28 +12,32 @@ class LoopServiceTest(LoopService):
     async def run_once(self):
         global COUNTER
         COUNTER += 1
+        print(COUNTER)
 
 
 @pytest.fixture(autouse=True)
-def reset_counter():
+def reset():
     global COUNTER
     COUNTER = 0
+    # reset running flag
+    LoopServiceTest.is_running = True
 
 
 async def test_stop_a_running_loop_service():
     ls = LoopServiceTest()
-    assert ls._stop_running is False
+    assert ls.is_running is True
 
     # start running service in background
-    asyncio.create_task(ls.run())
+    task = asyncio.create_task(ls.run())
     await asyncio.sleep(0.3)
 
     # stop the service
     ls.stop()
+    await task
 
     # the counter was incremented 3 times
     assert COUNTER == 3
-    assert ls._stop_running is True
+    assert ls.is_running is False
 
     # sleep and ensure the service isn't running anymore
     await asyncio.sleep(0.1)
@@ -41,13 +45,13 @@ async def test_stop_a_running_loop_service():
 
 
 async def test_overriding_loop_seconds_default():
-    ls = LoopServiceTest(loop_seconds=0.2)
+    ls = LoopServiceTest(loop_seconds=1)
 
     # start running service in background
-    asyncio.create_task(ls.run())
-    await asyncio.sleep(0.2)
-
+    task = asyncio.create_task(ls.run())
+    await asyncio.sleep(0.3)
     ls.stop()
+    await task
 
     # the counter was incremented 1 time
     assert COUNTER == 1
@@ -64,13 +68,15 @@ async def test_loop_service_with_run_time_longer_than_loop_interval(caplog):
             COUNTER += 1
 
     ls = LongLoopService()
-    asyncio.create_task(ls.run())
-    # if the task loops immediately, it should run twice in
-    # just over .4 seconds
-    await asyncio.sleep(0.41)
+    task = asyncio.create_task(ls.run())
+    # the task takes at least 0.2 seconds to run
+    # so it should ignore its loop interval and run
+    # at least twice in 0.4 seconds
+    await asyncio.sleep(0.4)
     ls.stop()
+    await task
 
-    assert COUNTER == 2
+    assert COUNTER > 1
 
     msg = "LongLoopService took longer to run than its loop interval of 0.1 seconds."
     assert any(msg in record.message for record in caplog.records)

@@ -44,21 +44,17 @@ class LoopService:
         self.loop_seconds = float(loop_seconds)
         self.name = type(self).__name__
         self.logger = utilities.logging.get_logger(self.name)
-        self._stop_running = False
 
     async def run(self) -> None:
         """
         Run the service forever.
         """
 
-        self._stop_running = False
-
         last_log = pendulum.now("UTC")
 
-        while not self._stop_running:
+        while self.is_running:
             start_time = pendulum.now("UTC")
 
-        while self.is_running:
             try:
                 await self.run_once()
 
@@ -66,29 +62,34 @@ class LoopService:
             except Exception as exc:
                 self.logger.error(f"Unexpected error: {repr(exc)}")
 
-            # next run is every "loop seconds" after each previous run *started*
+            # next run is every "loop seconds" after each previous run started
+            # note this might be in the past, leading to tight loops
             next_run = start_time.add(seconds=self.loop_seconds)
 
             # if the loop interval is too short, warn
-            if next_run < pendulum.now():
+            now = pendulum.now("UTC")
+            if next_run < now:
                 self.logger.warning(
                     f"{self.name} took longer to run than its loop interval of {self.loop_seconds} seconds."
                 )
+                next_run = now
 
             # don't log more than once every 5 minutes
-            if pendulum.now("UTC") - last_log > timedelta(minutes=5):
+            if now - last_log > timedelta(minutes=5):
                 self.logger.debug(
                     f"Heartbeat from {self.name}: next run at {next_run.replace(microsecond=0)}"
                 )
-                last_log = pendulum.now("UTC")
+                last_log = now
 
-            await asyncio.sleep((next_run - pendulum.now("UTC")).total_seconds())
+            await asyncio.sleep(max(0, (next_run - now).total_seconds()))
 
-    def stop(self) -> None:
+    @classmethod
+    def stop(cls) -> None:
         """
-        Stops a running LoopService
+        Stops a running LoopService. This is a classmethod, so it will affect
+        all instances of the class.
         """
-        self._stop_running = True
+        cls.is_running = False
 
     async def run_once(self) -> None:
         """
