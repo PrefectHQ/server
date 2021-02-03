@@ -1,6 +1,9 @@
 import asyncio
 import random
+from datetime import timedelta
 from typing import Union
+
+import pendulum
 
 from prefect_server import config, utilities
 
@@ -16,6 +19,7 @@ class LoopService:
     # if set, and no `loop_seconds` is provided, the service will attempt to load
     # `loop_seconds` from this config key
     loop_seconds_config_key = None
+
     # if no loop_seconds_config_key is provided, this will be the default
     loop_seconds_default = 600
 
@@ -44,19 +48,13 @@ class LoopService:
     async def run(self) -> None:
         """
         Run the service forever.
-
-        The service will start after a delay randomly chosen between 1 and `loop_seconds`.
-        This helps ensure that multiple services are staggered uniformly.
         """
 
-        # randomly stagger the start time
-        startup_delay = random.randint(0, int(self.loop_seconds))
-        self.logger.info(
-            f"{self.name} will start after an initial delay of {startup_delay} seconds..."
-        )
-        await asyncio.sleep(startup_delay)
+        last_log = pendulum.now("UTC")
 
         while self.is_running:
+            start_time = pendulum.now("UTC")
+
             try:
                 await self.run_once()
 
@@ -64,8 +62,34 @@ class LoopService:
             except Exception as exc:
                 self.logger.error(f"Unexpected error: {repr(exc)}")
 
-            self.logger.debug(f"Sleeping for {self.loop_seconds} seconds...")
-            await asyncio.sleep(self.loop_seconds)
+            # next run is every "loop seconds" after each previous run started
+            # note this might be in the past, leading to tight loops
+            next_run = start_time.add(seconds=self.loop_seconds)
+
+            # if the loop interval is too short, warn
+            now = pendulum.now("UTC")
+            if next_run < now:
+                self.logger.warning(
+                    f"{self.name} took longer to run than its loop interval of {self.loop_seconds} seconds."
+                )
+                next_run = now
+
+            # don't log more than once every 5 minutes
+            if now - last_log > timedelta(minutes=5):
+                self.logger.debug(
+                    f"Heartbeat from {self.name}: next run at {next_run.replace(microsecond=0)}"
+                )
+                last_log = now
+
+            await asyncio.sleep(max(0, (next_run - now).total_seconds()))
+
+    @classmethod
+    def stop(cls) -> None:
+        """
+        Stops a running LoopService. This is a classmethod, so it will affect
+        all instances of the class.
+        """
+        cls.is_running = False
 
     async def run_once(self) -> None:
         """
