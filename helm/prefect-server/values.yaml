@@ -264,6 +264,9 @@ agent:
   # be associated with the agent
   prefectLabels: []
 
+  # whether to include an init container which will create a default tenant prior to starting the agent
+  createTenant: false
+
   # image configures the container image for the agent deployment
   image:
     name: prefecthq/prefect
