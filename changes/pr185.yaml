@@ -1,0 +1,2 @@
+enhancement:
+  - "Cancel ad-hoc created flow runs instead of deleting them when archiving a flow - [#185](https://github.com/PrefectHQ/server/pull/185)"
