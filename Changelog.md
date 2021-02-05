@@ -1,5 +1,18 @@
 # Changelog
 
+## February 5, 2021 <Badge text="beta" type="success" />
+
+Released on February 5, 2021.
+
+### Enhancements
+
+- Install curl in server docker image for healthchecks - [#182](https://github.com/PrefectHQ/server/pull/182)
+- Improve `LoopService` interval handling - [#43](https://github.com/PrefectHQ/server/pull/43)
+
+### Breaking Changes
+
+- Move to `YYYY.MM.DD` versioning scheme away from `YYYY-MM-DD` - [#178](https://github.com/PrefectHQ/server/pull/178)
+
 ## January 25, 2021 <Badge text="beta" type="success" />
 
 Released on January 25, 2021.

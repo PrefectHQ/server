@@ -1,2 +1,0 @@
-breaking:
-  - "Move to `YYYY.MM.DD` versioning scheme away from `YYYY-MM-DD` - [#178](https://github.com/PrefectHQ/server/pull/178)"
