@@ -30,25 +30,6 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.agent.createTenant }}
-      initContainers:
-      - name: create-tenant
-        {{- with .Values.agent.podSecurityContext }}
-        securityContext:
-          {{- toYaml . | nindent 8 }}
-        {{- end }}
-        image: "{{ .Values.agent.image.name }}:{{ .Values.agent.image.tag |  default .Values.prefectVersionTag }}"
-        imagePullPolicy: {{ .Values.agent.image.pullPolicy  }}
-        command:
-          - bash
-          - "-c"
-          - "prefect server create-tenant --name default --slug default || [[ $(prefect server create-tenant --name default --slug default  2>&1) =~ 'Uniqueness violation' ]]"
-        env:
-          - name: PREFECT__CLOUD__API
-            value: {{ include "prefect-server.apollo-api-url" . }}
-          - name: PREFECT__BACKEND
-            value: server
-      {{- end }}
       containers:
       - name: agent
         {{- with .Values.agent.podSecurityContext }}

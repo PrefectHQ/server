@@ -1,0 +1,42 @@
+{{- if .Values.jobs.createTenant.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "prefect-server.nameField" (merge (dict "component" "create-tenant-job") .) }}
+  labels:
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: create-tenant-job
+  annotations:
+    {{- merge .Values.jobs.createTenant.annotations .Values.annotations | toYaml | nindent 4 }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "prefect-server.matchLabels" . | nindent 8 }}
+        app.kubernetes.io/component: create-tenant-job
+    spec:
+      imagePullSecrets: {{ concat .Values.jobs.createTenant.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
+      {{- with .Values.jobs.createTenant.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: create-tenant
+          {{- with .Values.jobs.createTenant.securityContext -}}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.jobs.createTenant.image.name }}:{{ .Values.jobs.createTenant.image.tag |  default .Values.prefectVersionTag }}"
+          imagePullPolicy: {{ .Values.jobs.createTenant.image.pullPolicy  }}
+          command:
+            - "bash"
+            - "-c"
+            - "prefect server create-tenant --name {{ .Values.jobs.createTenant.tenant.name }} --slug {{ .Values.jobs.createTenant.tenant.slug }} || [[ $(prefect server create-tenant --name {{ .Values.jobs.createTenant.tenant.name }} --slug {{ .Values.jobs.createTenant.tenant.slug }}  2>&1) =~ 'Uniqueness violation' ]]"
+          env:
+            - name: PREFECT__CLOUD__API
+              value: {{ include "prefect-server.apollo-api-url" . }}
+            - name: PREFECT__BACKEND
+              value: server
+      restartPolicy: OnFailure
+  backoffLimit: {{ .Values.jobs.createTenant.backoffLimit }}
+{{- end }}
