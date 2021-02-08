@@ -372,8 +372,10 @@ async def archive_flow(flow_id: str) -> bool:
         }
     ).get({"id"})
     msg = f"Flow {flow_id} was archived."
+    tasks = []
     for flow_run in fr_ids:
-        await api.states.cancel_flow_run(flow_run.id, state_message=msg)
+        tasks.append(api.states.cancel_flow_run(flow_run.id, state_message=msg))
+    await asyncio.gather(*tasks)
     return True
 
 
