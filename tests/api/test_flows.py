@@ -746,7 +746,7 @@ class TestArchive:
         flow = await models.Flow.where(id=flow_id).first({"archived"})
         assert flow.archived
 
-    async def test_archive_flow_deletes_scheduled_runs(self, flow_id):
+    async def test_archive_flow_deletes_auto_scheduled_runs(self, flow_id):
         # create scheduled api.runs since the fixture doesn't
 
         await api.flows.schedule_flow_runs(flow_id=flow_id)
@@ -764,6 +764,35 @@ class TestArchive:
             ).count()
             == 0
         )
+
+    async def test_archive_flow_cancels_ad_hoc_runs(self, flow_id):
+        # create one ad hoc run and 10 auto scheduled runs
+        flow_run_id = await api.runs.create_flow_run(flow_id)
+        await api.flows.schedule_flow_runs(flow_id=flow_id)
+
+        scheduled_runs = await models.FlowRun.where(
+            {
+                "flow_id": {"_eq": flow_id},
+                "state": {"_eq": "Scheduled"},
+                "auto_scheduled": {"_eq": True},
+            }
+        ).get({"id"})
+        assert scheduled_runs
+
+        await api.flows.archive_flow(flow_id)
+
+        # all auto scheduled deleted
+        assert (
+            await models.FlowRun.where(
+                {"id": {"_in": [r.id for r in scheduled_runs]}}
+            ).count()
+            == 0
+        )
+        ad_hoc_state = await models.FlowRun.where(id=flow_run_id).first(
+            {"state", "state_message"}
+        )
+        assert ad_hoc_state.state == "Cancelled"
+        assert "archived" in ad_hoc_state.state_message
 
     async def test_archive_flow_with_bad_id(self, flow_id):
         assert not await api.flows.archive_flow(str(uuid.uuid4()))

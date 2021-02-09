@@ -207,7 +207,9 @@ async def set_task_run_state(
 
 
 @register_api("states.cancel_flow_run")
-async def cancel_flow_run(flow_run_id: str) -> models.FlowRun:
+async def cancel_flow_run(
+    flow_run_id: str, state_message: str = None
+) -> models.FlowRun:
     """
     Cancel a flow run.
 
@@ -231,7 +233,7 @@ async def cancel_flow_run(flow_run_id: str) -> models.FlowRun:
         return flow_run
     else:
         if state.is_running():
-            state = Cancelling("Flow run is cancelling")
+            state = Cancelling(state_message or "Flow run is cancelling")
         else:
-            state = Cancelled("Flow run is cancelled")
+            state = Cancelled(state_message or "Flow run is cancelled")
         return await set_flow_run_state(flow_run_id=flow_run_id, state=state)

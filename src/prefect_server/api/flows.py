@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import hashlib
 import json
@@ -332,7 +333,8 @@ async def archive_flow(flow_id: str) -> bool:
     Archives a flow.
 
     Archiving a flow prevents it from scheduling new runs. It also:
-        - deletes any currently scheduled runs
+        - deletes any currently auto-scheduled runs
+        - cancels any ad-hoc created scheduled runs
         - resets the "last scheduled run time" of any schedules
 
     Args:
@@ -355,9 +357,28 @@ async def archive_flow(flow_id: str) -> bool:
 
     # delete scheduled flow runs
     await models.FlowRun.where(
-        {"flow_id": {"_eq": flow_id}, "state": {"_eq": "Scheduled"}}
+        {
+            "flow_id": {"_eq": flow_id},
+            "state": {"_eq": "Scheduled"},
+            "auto_scheduled": {"_eq": True},
+        }
     ).delete()
 
+    # cancel adhoc scheduled flow runs
+    fr_ids = await models.FlowRun.where(
+        {
+            "flow_id": {"_eq": flow_id},
+            "state": {"_eq": "Scheduled"},
+            "auto_scheduled": {"_eq": False},
+        }
+    ).get({"id"})
+    msg = f"Flow {flow_id} was archived."
+    await asyncio.gather(
+        *[
+            api.states.cancel_flow_run(flow_run.id, state_message=msg)
+            for flow_run in fr_ids
+        ]
+    )
     return True
 
 
