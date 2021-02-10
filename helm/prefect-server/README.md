@@ -39,11 +39,14 @@ Export the password as the error asks then set it within the subchart using `--s
 See comments in `values.yaml`.
 
 ### Tenant
+A tenant is needed for the server API to be operational.
+If there is no tenant in the database, the UI dashboard will fail to display and agents will error.
 
-To automatically create a default tenant, use the flag `--set jobs.createTenant.enabled=true`. 
-A Tenant is needed for the dashboard and the agent to run properly.
+To automatically create a default tenant, use the flag `--set jobs.createTenant.enabled=true`.
 
-Alternatively, you can create a tenant manually. See [Troubleshooting](#troubleshooting) section.
+To create the tenant manually when your chart is already installed, 
+run `prefect backend server && prefect server create-tenant --name default --slug default` to create a default tenant.
+Check out [Connecting to your Server](#connecting-to-your-server) to connect your local `prefect` to your server before creating the tenant.
 
 ### KubernetesAgent
 
@@ -103,12 +106,7 @@ Alternatively, you can port-forward the apollo service to your localhost
 
 If you go to the 'Home' page, it will likely direct you to create a tenant. Without a tenant, the dashboard cannot display.
 
-See [Tenant](#tenant) section to learn how to automatically create the default tenant during chart
-installation.
-
-To create the tenant manually when your chart is already installed, 
-run `prefect backend server && prefect server create-tenant --name default --slug default` to create a default tenant.
-Check out [Connecting to your Server](#connecting-to-your-server) to connect your local `prefect` to your server before creating the tenant.
+See the [Tenant](#tenant) section to learn how to create a default tenant.
 
 ### The UI loads but cannot connect to the API
 

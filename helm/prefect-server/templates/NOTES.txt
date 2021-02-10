@@ -41,20 +41,15 @@
 
 {{- end }}
 
-#3 The UI has been configured to point to '{{ .Values.ui.apolloApiUrl }}' by default. 
+#3 The UI has been configured to point to '{{ .Values.ui.apolloApiUrl }}' by default.
   - The API location you retrieved in #2 should match this url
   - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect
   - The location can also be changed within the UI itself per user
   - The API must be accessible from the the user's machine for the UI to work
 
-{{- if .Values.jobs.createTenant.enabled }}
+{{- if not .Values.jobs.createTenant.enabled }}
 
-#4 The `{{ .Values.jobs.createTenant.tenant.name }}` tenant was created.
-   The dashboard and the Agent (if enabled) should become functional without any further action.
-
-{{- else }}
-
-#4 You or your admin will likely have to create a tenant before the dashboard in the UI will work. 
+#4 You or your admin will likely have to create a tenant before the dashboard in the UI will work.
    The UI home page should have a 'Create tenant' tab to walk you through this process.
 
 {{- end }}
