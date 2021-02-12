@@ -1,5 +1,26 @@
 # Changelog
 
+## February 12, 2021 <Badge text="beta" type="success" />
+
+Released on February 12, 2021.
+
+### Features
+
+- Helm: Optionally create the default tenant before running Agent - [#183](https://github.com/PrefectHQ/server/pull/183)
+
+### Enhancements
+
+- Cancel ad-hoc created flow runs instead of deleting them when archiving a flow - [#185](https://github.com/PrefectHQ/server/pull/185)
+- Upgrade pydantic to 1.7.x - [#187](https://github.com/PrefectHQ/server/pull/187)
+
+### Fixes
+
+- Fix asyncpg errors on Apple M1 / arm64 - [#186](https://github.com/PrefectHQ/server/pull/186)
+
+### Contributors
+
+- [Michał @ DataRevenue](https://github.com/michcio1234)
+
 ## February 5, 2021 <Badge text="beta" type="success" />
 
 Released on February 5, 2021.

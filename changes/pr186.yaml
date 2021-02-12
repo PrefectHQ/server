@@ -1,2 +1,0 @@
-fix:
-  - "Fix asyncpg errors on Apple M1 / arm64 - [#186](https://github.com/PrefectHQ/server/pull/186)"

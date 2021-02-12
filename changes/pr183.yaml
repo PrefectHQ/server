@@ -1,6 +1,0 @@
-feature:
-  - "Helm: Optionally create the default tenant before running Agent - [#183](https://github.com/PrefectHQ/server/pull/183)"
-
-contributor:
-    - "[Michał @ DataRevenue](https://github.com/michcio1234)"
-
