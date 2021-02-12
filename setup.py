@@ -17,8 +17,7 @@ install_requires = [
     "json_log_formatter >= 0.3.0, < 0.4.0",
     "packaging >= 20.0, < 20.4",
     "psycopg2-binary >= 2.7, < 3.0",
-    # pin below 1.6 pending https://github.com/samuelcolvin/pydantic/issues/1710
-    "pydantic >= 1.5, < 1.6",
+    "pydantic >= 1.7, < 1.8",
     "python-slugify >= 1.2,< 5.0",
     "pyyaml >= 3.13, < 6.0",
     "starlette >= 0.13, < 0.14",
