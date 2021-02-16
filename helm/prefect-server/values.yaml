@@ -118,9 +118,6 @@ hasura:
     pullPolicy: IfNotPresent
     pullSecrets: []
 
-  options:
-    queryPlanCacheSize: "100"
-
   service:
     # type defines the service type and defaults to ClusterIP
     # because this service does not need to be exposed outside
