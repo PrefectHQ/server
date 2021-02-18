@@ -1,5 +1,13 @@
 # Changelog
 
+## February 18, 2021 <Badge text="beta" type="success" />
+
+Released on February 18, 2021.
+
+### Enhancements
+
+- Capture all 'connect' errors and uniformize into DB query errors - [#189](https://github.com/PrefectHQ/server/pull/189)
+
 ## February 12, 2021 <Badge text="beta" type="success" />
 
 Released on February 12, 2021.
