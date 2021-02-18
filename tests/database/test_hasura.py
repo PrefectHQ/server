@@ -1,6 +1,7 @@
 from textwrap import dedent
 from unittest.mock import MagicMock
 
+import httpx
 import pendulum
 import pytest
 from asynctest import CoroutineMock
@@ -125,7 +126,7 @@ class TestExecute:
                 "query { hello }", variables=dict(x=1, y=dict(z=2))
             )
 
-    async def test_handle_connection_error(self, monkeypatch):
+    async def test_handle_db_connection_error(self, monkeypatch):
         post = CoroutineMock(
             side_effect=lambda *args, **kwargs: MagicMock(
                 json=MagicMock(
@@ -148,6 +149,22 @@ class TestExecute:
                 )
         # confirm we waited while retrying, leaving a couple of seconds to be conservative
         assert pendulum.now("utc") > start_time.add(seconds=2)
+
+    @pytest.mark.parametrize(
+        "exc",
+        [
+            httpx._exceptions.ConnectError("Connect call failed"),
+            Exception("ConnectionClosed"),
+        ],
+    )
+    async def test_handle_hasura_connection_error(self, monkeypatch, exc):
+        post = CoroutineMock(side_effect=exc)
+        monkeypatch.setattr("prefect_server.utilities.http.httpx_client.post", post)
+        with set_temporary_config("hasura.execute_retry_seconds", 3):
+            with pytest.raises(ValueError, match="database query error"):
+                await hasura_client.execute(
+                    "query { hello }", variables=dict(x=1, y=dict(z=2))
+                )
 
 
 class TestGenerateInsertGraphQL:

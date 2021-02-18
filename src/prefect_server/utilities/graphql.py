@@ -53,13 +53,18 @@ class GraphQLClient:
         if prefect_server.config.debug:
             ariadne.gql(query)
 
-        # timeout of 30 seconds
-        response = await httpx_client.post(
-            self.url,
-            json=dict(query=query, variables=variables or {}),
-            headers=headers or self.headers,
-            timeout=30,
-        )
+        try:
+            # timeout of 30 seconds
+            response = await httpx_client.post(
+                self.url,
+                json=dict(query=query, variables=variables or {}),
+                headers=headers or self.headers,
+                timeout=30,
+            )
+        except Exception as exc:
+            if "connect" in str(exc).lower():
+                raise ValueError("database query error")
+            raise
         try:
             result = response.json()
         except json.decoder.JSONDecodeError as exc:
