@@ -34,8 +34,9 @@ RUN apt-get update \
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH} /tini-${ARCH}
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH}.sha256sum /tini.sha256sum
-RUN echo "$(cat tini.sha256sum)" | sha256sum -c && mv /tini-${ARCH} /tini
-RUN chmod +x /tini
+RUN echo "$(cat tini.sha256sum)" | sha256sum -c \
+ && mv /tini-${ARCH} /tini \
+ && chmod +x /tini
 
 WORKDIR /apollo
 COPY . .
