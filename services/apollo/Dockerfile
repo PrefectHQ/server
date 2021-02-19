@@ -25,6 +25,8 @@ RUN apt-get update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
+# TODO: Install tini (once we move to a newer version of debian, apt-get install will work)
+
 WORKDIR /apollo
 COPY . .
 
@@ -32,4 +34,5 @@ RUN npm ci && \
     npm run build && \
     chmod +x post-start.sh
 
+ENTRYPOINT ["tini", "-g", "--"]
 CMD ["npm", "run", "serve"]
