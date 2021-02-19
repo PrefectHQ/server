@@ -44,5 +44,5 @@ RUN npm ci && \
     npm run build && \
     chmod +x post-start.sh
 
-#ENTRYPOINT ["/tini", "-g", "--"]
+ENTRYPOINT ["/tini", "-g", "--"]
 CMD ["npm", "run", "serve"]
