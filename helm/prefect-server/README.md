@@ -139,3 +139,19 @@ variables {
     {"input": {"before": "2020-11-13T19:16:01.973734+00:00", "labels": [], "tenant_id": null}}
 }
 ```
+
+### Upgrading Hasura
+
+If you are using managed database (e.g. Cloud SQL) and upgrading hasura image version to 1.3.3, make sure that hasura user is the owner of hdb_catalog schema. 
+You can find [more details in hasura documentation](https://hasura.io/docs/1.0/graphql/core/deployment/postgres-requirements.html#notes-for-managed-databases-aws-rds-gcp-cloud-sql-etc).
+
+Moreover, double check if hasura user owns hdb_catalog.insert_event_log function. 
+To check functions ownership, run following SQL query: 
+```
+SELECT proname, proowner::regrole FROM pg_proc WHERE pronamespace::regnamespace::text = 'hdb_catalog';
+```
+
+To change function ownership, run: 
+```
+ALTER FUNCTION hdb_catalog.insert_event_log OWNER TO hasura;
+```
