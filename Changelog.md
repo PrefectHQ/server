@@ -1,5 +1,13 @@
 # Changelog
 
+## February 22, 2021 <Badge text="beta" type="success" />
+
+Released on February 22, 2021.
+
+### Fixes
+
+- Add `tini` init process to GraphQL and Apollo containers to reap zombies - [#191](https://github.com/PrefectHQ/server/pull/191)
+
 ## February 18, 2021 <Badge text="beta" type="success" />
 
 Released on February 18, 2021.
