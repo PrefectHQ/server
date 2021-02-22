@@ -12,6 +12,10 @@ ENV PREFECT_SERVER_VERSION=${PREFECT_SERVER_VERSION:-master}
 ARG RELEASE_TIMESTAMP
 ENV RELEASE_TIMESTAMP=$RELEASE_TIMESTAMP
 
+# Architecture to support. Necessary for a working tini entrypoint on non-x86/64 builds
+ARG ARCH
+ENV ARCH=${ARCH:-amd64}
+
 # Image Labels
 LABEL maintainer="help@prefect.io"
 LABEL org.label-schema.schema-version = "1.0"
@@ -25,6 +29,15 @@ RUN apt-get update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
+# Install tini with checksum verification
+# Once we upgrade to a newer version of Debian (Buster+), we can just `apt-get install tini`
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH} /tini-${ARCH}
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH}.sha256sum /tini.sha256sum
+RUN echo "$(cat tini.sha256sum)" | sha256sum -c \
+ && mv /tini-${ARCH} /tini \
+ && chmod +x /tini
+
 WORKDIR /apollo
 COPY . .
 
@@ -32,4 +45,5 @@ RUN npm ci && \
     npm run build && \
     chmod +x post-start.sh
 
+ENTRYPOINT ["/tini", "-g", "--"]
 CMD ["npm", "run", "serve"]
