@@ -50,8 +50,6 @@ spec:
               value: "true"
             - name: HASURA_GRAPHQL_SERVER_PORT
               value: "3000"
-            - name: HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE
-              value: {{ .Values.hasura.options.queryPlanCacheSize | quote }}
           ports:
             - name: http
               containerPort: 3000
