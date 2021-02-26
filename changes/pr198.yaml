@@ -1,0 +1,2 @@
+enhancement:
+  - "Upgrade apollo base image to debian-buster - [#198](https://github.com/PrefectHQ/server/pull/198)"
