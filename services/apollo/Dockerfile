@@ -1,5 +1,5 @@
 ARG NODE_VERSION=${NODE_VERSION:-14.15.1}
-FROM node:${NODE_VERSION}-slim
+FROM node:${NODE_VERSION}-buster-slim
 
 # Prefect Version, default to MASTER
 ARG PREFECT_VERSION

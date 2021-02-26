@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.0.0-experimental
 
 ARG PYTHON_VERSION=${PYTHON_VERSION:-3.7}
-FROM python:${PYTHON_VERSION}-slim
+FROM python:${PYTHON_VERSION}-slim-buster
 
 # Prefect Version, default to MASTER
 ARG PREFECT_SERVER_VERSION
