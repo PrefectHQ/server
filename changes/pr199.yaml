@@ -1,0 +1,2 @@
+enhancement:
+  - "Install `tini` from apt instead of GitHub in apollo image - [#199](https://github.com/PrefectHQ/server/pull/199)"
