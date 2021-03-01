@@ -25,18 +25,9 @@ LABEL org.label-schema.version=${PREFECT_VERSION}
 LABEL org.label-schema.build-date=${RELEASE_TIMESTAMP}
 
 RUN apt-get update \
- && apt-get install curl --no-install-recommends -y \
+ && apt-get install curl tini --no-install-recommends -y \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
-
-# Install tini with checksum verification
-# Once we upgrade to a newer version of Debian (Buster+), we can just `apt-get install tini`
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH} /tini-${ARCH}
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH}.sha256sum /tini.sha256sum
-RUN echo "$(cat tini.sha256sum)" | sha256sum -c \
- && mv /tini-${ARCH} /tini \
- && chmod +x /tini
 
 WORKDIR /apollo
 COPY . .
@@ -45,5 +36,5 @@ RUN npm ci && \
     npm run build && \
     chmod +x post-start.sh
 
-ENTRYPOINT ["/tini", "-g", "--"]
+ENTRYPOINT ["tini", "-g", "--"]
 CMD ["npm", "run", "serve"]
