@@ -12,10 +12,6 @@ ENV PREFECT_SERVER_VERSION=${PREFECT_SERVER_VERSION:-master}
 ARG RELEASE_TIMESTAMP
 ENV RELEASE_TIMESTAMP=$RELEASE_TIMESTAMP
 
-# Architecture to support. Necessary for a working tini entrypoint on non-x86/64 builds
-ARG ARCH
-ENV ARCH=${ARCH:-amd64}
-
 # Image Labels
 LABEL maintainer="help@prefect.io"
 LABEL org.label-schema.schema-version = "1.0"
