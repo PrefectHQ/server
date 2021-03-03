@@ -10,10 +10,23 @@ class TestReraiseAsAPIError:
                 raise ValueError("TEST")
 
     async def test_captures_specified_exception(self):
-        with pytest.raises(APIError, match=APIError.__message__) as exc_info:
+        with pytest.raises(APIError) as exc_info:
             async with reraise_as_api_error(ValueError):
                 raise ValueError("TEST")
         assert "TEST" not in str(exc_info)
+
+    @pytest.mark.parametrize("match", ["TEST", "TEST (FOO|BAR)"])
+    async def test_captures_specified_exception_with_match(self, match):
+        # Parameterized to test with substring match and regex
+        with pytest.raises(APIError) as exc_info:
+            async with reraise_as_api_error(ValueError, match=match):
+                raise ValueError("TEST FOO")
+        assert "TEST" not in str(exc_info)
+
+    async def test_does_not_capture_other_exception_with_match(self):
+        with pytest.raises(ValueError):
+            async with reraise_as_api_error(ValueError, match="TEST BAR"):
+                raise ValueError("TEST FOO")
 
     async def test_logs_exception_information(self, caplog):
         with pytest.raises(APIError):

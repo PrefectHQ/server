@@ -1,7 +1,9 @@
+import re
 from contextlib import asynccontextmanager
 from typing import Optional, Type, TYPE_CHECKING
 
 from graphql import GraphQLError
+
 
 if TYPE_CHECKING:
     from logging import Logger
@@ -66,6 +68,7 @@ class Unauthorized(ApolloError):
 @asynccontextmanager
 async def reraise_as_api_error(
     exception_type: Type[Exception],
+    match: str = None,
     logger: "Logger" = None,
 ):
     """
@@ -74,6 +77,7 @@ async def reraise_as_api_error(
 
     Args:
         exception_type: The exception type to capture
+        match: An optional regex string to filter exceptions by
         logger: The logger to use to record the true exception
 
     Yields:
@@ -82,6 +86,8 @@ async def reraise_as_api_error(
     try:
         yield
     except exception_type as exc:
+        if match and not re.match(match, str(exc)):
+            raise
         if logger:
             logger.error(f"Encountered internal API exception: {exc}", exc_info=True)
         raise APIError() from exc
