@@ -511,13 +511,17 @@ async def set_schedule_inactive(flow_id: str) -> bool:
     if not result.affected_rows:
         return False
 
-    deleted_runs = await models.FlowRun.where(
+    # Delete all auto-scheduled runs
+    runs_to_delete = await models.FlowRun.where(
         {
             "flow_id": {"_eq": flow_id},
             "state": {"_eq": "Scheduled"},
             "auto_scheduled": {"_eq": True},
         }
-    ).delete()
+    ).get({"id"})
+    await asyncio.gather(
+        *[api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete]
+    )
 
     return True
 

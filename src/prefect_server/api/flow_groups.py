@@ -1,4 +1,5 @@
 import pendulum
+import asyncio
 from typing import List, Dict, Any
 
 from prefect import api, models
@@ -106,13 +107,18 @@ async def set_flow_group_schedule(
         set=dict(schedule=dict(type="Schedule", clocks=clocks))
     )
 
-    deleted_runs = await models.FlowRun.where(
+    # Delete all auto-scheduled runs
+    runs_to_delete = await models.FlowRun.where(
         {
             "flow": {"flow_group_id": {"_eq": flow_group_id}},
             "state": {"_eq": "Scheduled"},
             "auto_scheduled": {"_eq": True},
         }
-    ).delete()
+    ).get({"id"})
+    await asyncio.gather(
+        *[api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete]
+    )
+
     return bool(result.affected_rows)
 
 
@@ -136,13 +142,17 @@ async def delete_flow_group_schedule(flow_group_id: str) -> bool:
         set=dict(schedule=None)
     )
 
-    deleted_runs = await models.FlowRun.where(
+    # Delete all auto-scheduled runs
+    runs_to_delete = await models.FlowRun.where(
         {
             "flow": {"flow_group_id": {"_eq": flow_group_id}},
             "state": {"_eq": "Scheduled"},
             "auto_scheduled": {"_eq": True},
         }
-    ).delete()
+    ).get({"id"})
+    await asyncio.gather(
+        *[api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete]
+    )
 
     return bool(result.affected_rows)
 

@@ -11,6 +11,7 @@ from prefect.utilities.plugins import register_api
 from prefect_server import config
 from prefect_server.utilities import exceptions, names
 
+
 SCHEDULED_STATES = [
     s.__name__
     for s in prefect.engine.state.__dict__.values()
@@ -419,8 +420,28 @@ async def delete_flow_run(flow_run_id: str) -> bool:
     if not flow_run_id:
         raise ValueError("Invalid flow run ID.")
 
-    result = await models.FlowRun.where(id=flow_run_id).delete()
-    return bool(result.affected_rows)  # type: ignore
+    # Delete task run states and task runs first to speedup deletion which can be
+    # _very_ slow on the large task tables due since they are implemented as
+    # row-triggers and the foreign key checks are slow
+
+    client = prefect.plugins.hasura.client
+    result = await client.execute_mutations_in_transaction(
+        # Use a transaction to maintain atomicity
+        mutations=[
+            await models.TaskRunState.where(
+                {"task_run": {"flow_run_id": {"_eq": flow_run_id}}}
+            ).delete(run_mutation=False, alias="delete_task_run_states"),
+            await models.TaskRun.where({"flow_run_id": {"_eq": flow_run_id}}).delete(
+                run_mutation=False,
+                alias="delete_task_runs",
+            ),
+            await models.FlowRun.where(id=flow_run_id).delete(
+                run_mutation=False, alias="delete_flow_run"
+            ),
+        ]
+    )
+
+    return bool(result.data.delete_flow_run.affected_rows)  # type: ignore
 
 
 @register_api("runs.update_flow_run_agent")
