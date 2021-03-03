@@ -419,6 +419,15 @@ async def delete_flow_run(flow_run_id: str) -> bool:
     if not flow_run_id:
         raise ValueError("Invalid flow run ID.")
 
+    # Delete task run states and task runs _first_ to speedup deletion which can be
+    # _very_ slow on the large task tables due since they are implemented as
+    # row-triggers and the foreign key checks are slow
+    # TODO: Implement as transaction
+    await models.TaskRunState.where(
+        {"task_run": {"flow_run_id": {"_eq": flow_run_id}}}
+    ).delete()
+    await models.TaskRun.where({"flow_run_id": {"_eq": flow_run_id}}).delete()
+
     result = await models.FlowRun.where(id=flow_run_id).delete()
     return bool(result.affected_rows)  # type: ignore
 
