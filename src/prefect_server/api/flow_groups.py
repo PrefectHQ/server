@@ -1,4 +1,5 @@
 import pendulum
+import asyncio
 from typing import List, Dict, Any
 
 from prefect import api, models
@@ -115,9 +116,7 @@ async def set_flow_group_schedule(
         }
     ).get({"id"})
     await asyncio.gather(
-        *[
-            await api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete
-        ]
+        *[await api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete]
     )
 
     return bool(result.affected_rows)
@@ -152,9 +151,7 @@ async def delete_flow_group_schedule(flow_group_id: str) -> bool:
         }
     ).get({"id"})
     await asyncio.gather(
-        *[
-            await api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete
-        ]
+        *[await api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete]
     )
 
     return bool(result.affected_rows)
