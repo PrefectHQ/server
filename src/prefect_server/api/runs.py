@@ -10,7 +10,6 @@ from prefect.utilities.graphql import EnumValue
 from prefect.utilities.plugins import register_api
 from prefect_server import config
 from prefect_server.utilities import exceptions, names
-from prefect_server.database.hasura import HasuraClient
 
 
 SCHEDULED_STATES = [
@@ -425,7 +424,7 @@ async def delete_flow_run(flow_run_id: str) -> bool:
     # _very_ slow on the large task tables due since they are implemented as
     # row-triggers and the foreign key checks are slow
 
-    client = HasuraClient()
+    client = prefect.plugins.hasura.client
     result = await client.execute_mutations_in_transaction(
         # Use a transaction to maintain atomicity
         mutations=[
