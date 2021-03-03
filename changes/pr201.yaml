@@ -1,7 +1,7 @@
 fix:
   - "Fixed the execution of the `create-tenant-job` in the Helm charts to allow
   for custom Apollo ports -
-  [#200](https://github.com/PrefectHQ/server/pull/200)"
+  [#201](https://github.com/PrefectHQ/server/pull/201)"
 
 contributor:
   - "[Jay Vercellone](https://github.com/jverce)"
