@@ -1,5 +1,28 @@
 # Changelog
 
+## March 4, 2021 <Badge text="beta" type="success" />
+
+Released on March 4, 2021.
+
+### Enhancements
+
+- Upgrade hasura version to 1.3.3 - [#188](https://github.com/PrefectHQ/server/pull/188)
+- Upgrade apollo base image to debian-buster - [#198](https://github.com/PrefectHQ/server/pull/198)
+- Install `tini` from apt instead of GitHub in apollo image - [#199](https://github.com/PrefectHQ/server/pull/199)
+
+### Fixes
+
+- Fixed the execution of the `create-tenant-job` in the Helm charts to allow for custom Apollo ports - [#201](https://github.com/PrefectHQ/server/pull/201)
+- Improve `delete_flow_run` performance by avoiding slow deletion triggers - [#202](https://github.com/PrefectHQ/server/pull/202)
+
+### Breaking Changes
+
+- Server instances with managed databases require [manual SQL to upgrade](https://github.com/PrefectHQ/server/tree/master/helm/prefect-server#Upgrading-Hasura) - [#188](https://github.com/PrefectHQ/server/pull/188)
+
+### Contributors
+
+- [Jay Vercellone](https://github.com/jverce)
+
 ## February 22, 2021 <Badge text="beta" type="success" />
 
 Released on February 22, 2021.
