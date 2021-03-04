@@ -322,7 +322,17 @@ async def delete_flow(flow_id: str) -> bool:
     if not flow_id:
         raise ValueError("Must provide flow ID.")
 
-    # delete the flow
+    # Delete flow runs first to speedup deletion cascades and avoid timeouts
+    runs_to_delete = await models.FlowRun.where(
+        {
+            "flow_id": {"_eq": flow_id},
+        }
+    ).get({"id"})
+    await asyncio.gather(
+        *[api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete]
+    )
+
+    # Delete the flow
     result = await models.Flow.where(id=flow_id).delete()
     return bool(result.affected_rows)
 
@@ -355,14 +365,17 @@ async def archive_flow(flow_id: str) -> bool:
     if not result.affected_rows:
         return False
 
-    # delete scheduled flow runs
-    await models.FlowRun.where(
+    # Delete all auto-scheduled runs
+    runs_to_delete = await models.FlowRun.where(
         {
             "flow_id": {"_eq": flow_id},
             "state": {"_eq": "Scheduled"},
             "auto_scheduled": {"_eq": True},
         }
-    ).delete()
+    ).get({"id"})
+    await asyncio.gather(
+        *[api.runs.delete_flow_run(flow_run.id) for flow_run in runs_to_delete]
+    )
 
     # cancel adhoc scheduled flow runs
     fr_ids = await models.FlowRun.where(

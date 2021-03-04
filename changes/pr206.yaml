@@ -1,0 +1,2 @@
+enhancement:
+  - "Improve `archive_flow` performance with auto-scheduled flow runs - [#206](https://github.com/PrefectHQ/server/pull/206)"
