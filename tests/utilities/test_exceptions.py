@@ -15,9 +15,9 @@ class TestReraiseAsAPIError:
                 raise ValueError("TEST")
         assert "TEST" not in str(exc_info)
 
-    @pytest.mark.parametrize("match", ["TEST", "TEST (FOO|BAR)", "FOO"])
+    @pytest.mark.parametrize("match", ["TEST", "TEST (FOO|BAR)", "foo"])
     async def test_captures_specified_exception_with_match(self, match):
-        # Parameterized to test with substring match and regex
+        # Parameterized to test with substring matches, regex syntax, and ignore case
         with pytest.raises(APIError) as exc_info:
             async with reraise_as_api_error(ValueError, match=match):
                 raise ValueError("TEST FOO")

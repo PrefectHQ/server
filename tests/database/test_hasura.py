@@ -14,6 +14,7 @@ from prefect.utilities.graphql import EnumValue, parse_graphql
 from prefect_server.database.hasura import Variable
 from prefect_server.utilities import exceptions
 from prefect_server.utilities.tests import set_temporary_config
+from prefect_server.utilities.exceptions import APIError
 
 hasura_client = prefect.plugins.hasura.client
 
@@ -157,11 +158,11 @@ class TestExecute:
             Exception("ConnectionClosed"),
         ],
     )
-    async def test_handle_hasura_connection_error(self, monkeypatch, exc):
+    async def test_handles_hasura_connection_error_as_api_error(self, monkeypatch, exc):
         post = CoroutineMock(side_effect=exc)
         monkeypatch.setattr("prefect_server.utilities.http.httpx_client.post", post)
         with set_temporary_config("hasura.execute_retry_seconds", 3):
-            with pytest.raises(ValueError, match="database query error"):
+            with pytest.raises(APIError):
                 await hasura_client.execute(
                     "query { hello }", variables=dict(x=1, y=dict(z=2))
                 )

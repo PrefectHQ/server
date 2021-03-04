@@ -86,7 +86,7 @@ async def reraise_as_api_error(
     try:
         yield
     except exception_type as exc:
-        if match and not re.search(match, str(exc)):
+        if match and not re.search(match, str(exc), re.IGNORECASE):
             raise
         if logger:
             logger.error(f"Encountered internal API exception: {exc}", exc_info=True)
