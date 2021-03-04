@@ -15,7 +15,7 @@
 */}}
 {{- define "prefect-server.apollo-api-url" -}}
 {{- $host := include "prefect-server.apollo-hostname" . -}}
-{{- $port := "4200" -}}
-{{ printf "http://%s:%s/graphql/" $host $port }}
+{{- $port := (.Values.apollo.service.port | default 4200) -}}
+{{ printf "http://%s:%v/graphql" $host $port }}
 {{- end -}}
 
