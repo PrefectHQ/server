@@ -55,7 +55,7 @@ class GraphQLClient:
             ariadne.gql(query)
 
         # Capture "connect" errors and re-raise as `APIError`
-        with reraise_as_api_error(Exception, match="connect", logger=self.logger):
+        async with reraise_as_api_error(Exception, match="connect", logger=self.logger):
             # timeout of 30 seconds
             response = await httpx_client.post(
                 self.url,
