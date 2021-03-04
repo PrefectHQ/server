@@ -8,6 +8,7 @@ from box import Box
 import prefect_server
 from prefect.utilities.graphql import parse_graphql
 from prefect_server.utilities.http import httpx_client
+from prefect_server.utilities.exceptions import reraise_as_api_error
 
 # define common objects for binding resolvers
 query = ariadne.QueryType()
@@ -53,7 +54,8 @@ class GraphQLClient:
         if prefect_server.config.debug:
             ariadne.gql(query)
 
-        try:
+        # Capture "connect" errors and re-raise as `APIError`
+        async with reraise_as_api_error(Exception, match="connect", logger=self.logger):
             # timeout of 30 seconds
             response = await httpx_client.post(
                 self.url,
@@ -61,10 +63,7 @@ class GraphQLClient:
                 headers=headers or self.headers,
                 timeout=30,
             )
-        except Exception as exc:
-            if "connect" in str(exc).lower():
-                raise ValueError("database query error")
-            raise
+
         try:
             result = response.json()
         except json.decoder.JSONDecodeError as exc:
