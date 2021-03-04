@@ -1,2 +1,0 @@
-fix:
-  - "Improve `delete_flow_run` performance by avoiding slow deletion triggers - [#202](https://github.com/PrefectHQ/server/pull/202)"
