@@ -1,0 +1,2 @@
+fix:
+  - "Allow `create_agent` to be called without passing settings - [#207](https://github.com/PrefectHQ/server/pull/207)"
