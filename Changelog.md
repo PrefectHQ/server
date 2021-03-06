@@ -1,5 +1,18 @@
 # Changelog
 
+## March 6, 2021 <Badge text="beta" type="success" />
+
+Released on March 6, 2021.
+
+### Enhancements
+
+- Add `APIError` to replace 'database query error' and consolidate Cloud/Server exception types - [#204](https://github.com/PrefectHQ/server/pull/204)
+- Improve `archive_flow` performance with auto-scheduled flow runs - [#206](https://github.com/PrefectHQ/server/pull/206)
+
+### Fixes
+
+- Allow `create_agent` to be called without passing settings - [#207](https://github.com/PrefectHQ/server/pull/207)
+
 ## March 4, 2021 <Badge text="beta" type="success" />
 
 Released on March 4, 2021.

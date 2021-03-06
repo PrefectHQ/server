@@ -1,2 +1,0 @@
-enhancement:
-  - "Add `APIError` to replace 'database query error' and consolidate Cloud/Server exception types - [#204](https://github.com/PrefectHQ/server/pull/204)"
