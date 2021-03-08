@@ -5,7 +5,8 @@ from typing import Union
 
 import pendulum
 
-from prefect_server import config, utilities
+import prefect
+from prefect_server import utilities
 
 
 class LoopService:
@@ -32,12 +33,16 @@ class LoopService:
 
                 # split the key on '.' and recurse
                 split_keys = self.loop_seconds_config_key.split(".")
-                cfg = config
+
+                # Load the current backend config
+                cfg = prefect.plugins.backend_config
                 for key in split_keys[:-1]:
                     cfg = cfg.get(key, {})
+
                 loop_seconds = cfg.get(split_keys[-1])
             else:
                 loop_seconds = self.loop_seconds_default
+
         if loop_seconds == 0:
             raise ValueError("`loop_seconds` must be greater than 0.")
 
