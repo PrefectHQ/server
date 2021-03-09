@@ -70,6 +70,7 @@ jobs:
           helm repo index /tmp --url https://prefecthq.github.io/server/ --merge ./index.yaml
 
       - name: Commit and push 
+        run: |
           cp -r /tmp . &&
           git add -a &&
           git commit -m "Release ${{ steps.get_version.outputs.VERSION }}" &&
