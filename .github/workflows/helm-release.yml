@@ -28,15 +28,6 @@ jobs:
         with:
           version: v3.4.1
 
-      - name: Install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-
-      - name: Install Python requirements
-        run: |
-          pip install pyyaml
-
       - name: Prepare GPG key for signing
         run: |
           gpg_dir=.cr-gpg
@@ -54,17 +45,14 @@ jobs:
       - name: Add dependency chart repos
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
-    
-      - name: Update chart version to new tag
-        run: |
-          cd helm &&
-          ./version-chart.py prefect-server ${{ steps.get_version.outputs.VERSION }}
-
+          
       - name: Package helm chart
         run: |
           mkdir /tmp/chart &&
           cd helm &&
-          helm package prefect-server --destination /tmp/chart
+          helm package prefect-server --destination /tmp/chart --dependency-update --version $VERSION --app-version $VERSION
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
 
       - name: Update chart index
         run: |
