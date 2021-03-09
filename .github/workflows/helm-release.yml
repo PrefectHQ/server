@@ -62,6 +62,6 @@ jobs:
       - name: Commit and push 
         run: |
           cp -r /tmp/chart . &&
-          git add -a &&
+          git add . &&
           git commit -m "Release ${{ steps.get_version.outputs.VERSION }}" &&
           git push origin gh-pages
