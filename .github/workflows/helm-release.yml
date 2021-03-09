@@ -57,11 +57,13 @@ jobs:
     
       - name: Update chart version to new tag
         run: |
-          ./helm/version-chart.py prefect-server ${{ steps.get_version.outputs.VERSION }}
+          cd helm &&
+          ./version-chart.py prefect-server ${{ steps.get_version.outputs.VERSION }}
 
       - name: Package helm chart
         run: |
-          cd helm && mkdir /tmp
+          mkdir /tmp &&
+          cd helm &&
           helm package prefect-server --destination /tmp
 
       - name: Update chart index
