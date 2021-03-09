@@ -62,18 +62,18 @@ jobs:
 
       - name: Package helm chart
         run: |
-          mkdir /tmp &&
+          mkdir /tmp/chart &&
           cd helm &&
-          helm package prefect-server --destination /tmp
+          helm package prefect-server --destination /tmp/chart
 
       - name: Update chart index
         run: |
           git checkout gh-pages &&
-          helm repo index /tmp --url https://prefecthq.github.io/server/ --merge ./index.yaml
+          helm repo index /tmp/chart --url https://prefecthq.github.io/server/ --merge ./index.yaml
 
       - name: Commit and push 
         run: |
-          cp -r /tmp . &&
+          cp -r /tmp/chart . &&
           git add -a &&
           git commit -m "Release ${{ steps.get_version.outputs.VERSION }}" &&
           git push origin gh-pages
