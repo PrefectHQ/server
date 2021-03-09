@@ -33,6 +33,10 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Install Python requirements
+        run: |
+          pip install pyyaml
+
       - name: Prepare GPG key for signing
         run: |
           gpg_dir=.cr-gpg
