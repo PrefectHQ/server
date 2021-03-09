@@ -1,0 +1,76 @@
+name: Release Helm Chart
+
+on:
+  push:
+    tags:
+      - "*\\.*\\.*"  # only run on version tags
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get the version tag
+        id: get_version
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.4.1
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Python requirements
+        run: |
+          pip install yaml
+
+      - name: Prepare GPG key for signing
+        run: |
+          gpg_dir=.cr-gpg
+          mkdir "$gpg_dir"
+          keyring="$gpg_dir/secring.gpg"
+          base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring"
+          passphrase_file="$gpg_dir/passphrase"
+          echo "$GPG_PASSPHRASE" > "$passphrase_file"
+          echo "SIGN_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV"
+          echo "SIGN_KEYRING=$keyring" >> "$GITHUB_ENV"
+        env:
+          GPG_KEYRING_BASE64: "${{ secrets.GPG_KEYRING_BASE64 }}"
+          GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
+
+      - name: Add dependency chart repos
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+    
+      - name: Update chart version to new tag
+        run: |
+          ./helm/version-chart.py prefect-server ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Package helm chart
+        run: |
+          cd helm && mkdir /tmp
+          helm package prefect-server --destination /tmp
+
+      - name: Update chart index
+        run: |
+          git checkout gh-pages &&
+          helm repo index /tmp --url https://prefecthq.github.io/server/ --merge ./index.yaml
+
+      - name: Commit and push 
+          cp -r /tmp . &&
+          git add -a &&
+          git commit -m "Release ${{ steps.get_version.outputs.VERSION }}" &&
+          git push origin gh-pages
