@@ -1,5 +1,8 @@
 # Prefect Server Helm Chart
 
+<!-- TOC -->autoauto- [Prefect Server Helm Chart](#prefect-server-helm-chart)auto    - [Usage](#usage)auto        - [Installing released versions](#installing-released-versions)auto            - [Verifying package integrity](#verifying-package-integrity)auto        - [Installing development versions](#installing-development-versions)auto        - [Upgrading](#upgrading)auto            - [Important notes about upgrading](#important-notes-about-upgrading)auto    - [Options:](#options)auto        - [Tenant](#tenant)auto        - [KubernetesAgent](#kubernetesagent)auto        - [Database](#database)auto    - [Versioning](#versioning)auto        - [Development](#development)auto    - [Connecting to your Server](#connecting-to-your-server)auto        - [Configure `prefect` to point to your service](#configure-prefect-to-point-to-your-service)auto        - [Forward your service to localhost](#forward-your-service-to-localhost)auto    - [Troubleshooting](#troubleshooting)auto        - [The UI loads but the dashboard is blank](#the-ui-loads-but-the-dashboard-is-blank)auto        - [The UI loads but cannot connect to the API](#the-ui-loads-but-cannot-connect-to-the-api)auto        - [The database deploys correctly but other services fail with "bad password"](#the-database-deploys-correctly-but-other-services-fail-with-bad-password)auto        - [The agent is running but when I look at the logs I am getting GraphQL errors](#the-agent-is-running-but-when-i-look-at-the-logs-i-am-getting-graphql-errors)auto        - [Upgrading Hasura](#upgrading-hasura)autoauto<!-- /TOC -->
+
+
 ## Usage
 
 ### Installing released versions
