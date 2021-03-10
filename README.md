@@ -21,7 +21,9 @@
 
 # Prefect Server
 
-Please note: this repo is for Prefect Server development. If you want to run Prefect Server, install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
+Please note: this repo is for Prefect Server development. If you want to run Prefect Server, the best first step is to install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
+
+If you want to install Prefect Server on Kubernetes, take a look at the [Server Helm Chart](./helm/prefect-server).
 
 If you would like to work on the Prefect UI or open a UI-specific issue, please visit [the Prefect UI repository](https://github.com/PrefectHQ/ui).
 
