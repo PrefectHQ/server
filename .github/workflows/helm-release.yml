@@ -14,9 +14,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get the version tag
+      - name: Get the version tags
         id: get_version
-        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+        run: |
+          echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+          CORE_VERSION=$(\
+            git ls-remote --tags --refs --sort="v:refname" \
+            git://github.com/PrefectHQ/prefect.git | tail -n1 | sed 's/.*\///' \
+          )
+          echo ::set-output name=CORE_VERSION::core-$CORE_VERSION
 
       - name: Configure Git
         run: |
@@ -48,8 +54,10 @@ jobs:
           
       - name: Package helm chart
         run: |
-          mkdir /tmp/chart &&
-          cd helm &&
+          mkdir /tmp/chart
+          cd helm
+          # Update the core version tag
+          gsed -i "s/^prefectVersionTag:.*$/prefectVersionTag: \"$CORE_VERSION\"/" prefect-server/values.yaml
           helm package prefect-server \
             --destination /tmp/chart \
             --dependency-update \
@@ -60,6 +68,7 @@ jobs:
             --passphrase-file $SIGN_PASSPHRASE_FILE
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
+          CORE_VERSION: ${{ steps.get_version.outputs.CORE_VERSION }}
           SIGN_KEYRING: ${{ env.SIGN_KEYRING }}
           SIGN_PASSPHRASE_FILE: ${{ env.SIGN_PASSPHRASE_FILE }}
 
