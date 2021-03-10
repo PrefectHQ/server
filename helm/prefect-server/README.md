@@ -61,11 +61,20 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
 
     _Setting typical flags for customization__
     ```
+    # The kubernetes namespace to install into, can be anything or excldued to install in the default namespace
+    NAMESPACE=prefect-server
+    # The Helm "release" name, can be anything but we recommend matching the chart name
+    NAME=prefect-server
+    # The path to your config that overrides values in `values.yaml`
+    CONFIG_PATH=path/to/your/config.yaml
+    # The chart version to install
+    VERSION=2021.03.06
+
     helm install \
-        --namespace my-kubernetes-namespace \
-        --version 2021.03.06 \
-        --values path/to/your/config.yaml \
-        my-prefect-server \
+        --namespace $NAMESPACE \
+        --version $VERSION \
+        --values $CONFIG_PATH \
+        $NAME \
         prefecthq/prefect-server
     ```
 
