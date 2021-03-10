@@ -60,7 +60,7 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
     ```
 
     Setting some typical flags for customization
-    ```
+    ```shell
     # The kubernetes namespace to install into, can be anything or excldued to install in the default namespace
     NAMESPACE=prefect-server
     # The Helm "release" name, can be anything but we recommend matching the chart name
