@@ -54,12 +54,12 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
 
 4. Install the Helm chart
 
-    _Using defaults_
+    Using default options
     ```
     $ helm install prefecthq/prefect-server --generate-name
     ```
 
-    _Setting typical flags for customization__
+    Setting some typical flags for customization
     ```
     # The kubernetes namespace to install into, can be anything or excldued to install in the default namespace
     NAMESPACE=prefect-server
@@ -80,7 +80,7 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
 
     _If chart installation fails, `--debug` can provide more information_
 
-    _See [Helm install docs](https://helm.sh/docs/helm/helm_install/) for all options.
+    See [Helm install docs](https://helm.sh/docs/helm/helm_install/) for all options.
 
 
 #### Verifying package integrity
