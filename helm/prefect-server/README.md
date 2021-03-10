@@ -70,14 +70,16 @@ Development versions of the Helm chart will always be available directly from th
     ```
     $ helm upgrade <name-of-last-release> prefecthq/prefect-server [--version <specific-tag>]
     ```
-    for development versions, use
+
+    _If a version is not provided, the latest version will be used_
+
+    for development versions, make sure your cloned repository is updated (`git pull`) and reference the local chart
     ```
     $ helm upgrade <name-of-last-release> .
     ```
 
-    _If a version is not provided, the latest version will be used_
 
-**Important notes about upgrading**
+#### Important notes about upgrading
 
 This will only update infrastructure that is modified.
 You will need to continue to set any values that you set during the original install (e.g. `--set agent.enabled=true`).
