@@ -10,10 +10,17 @@
 # on why the `appVersion` cannot be set at install time.
 serverVersionTag: null
 
-# prefectVersionTag configures the default tag for prefect core
-# images which are used for the create-tenant job and agent both
-# of which are optional and disabled by default
+# prefectVersionTag configures the default tag for Prefect Core based
+# services, including the agent and default tenant creation job.
+# This value is automatically pinned on chart release to the latest
+# core version.
 prefectVersionTag: "latest"
+
+# uiVersionTag configures the default tag for the Prefect UI service.
+# It is defined here for easy update using `sed` for automation.
+# This value is automatically pinned on chart release to the latest
+# ui version.
+uiVersionTag: "latest"
 
 # imagePullSecrets provides configuration to reference the k8s Secret
 # resources the Helm chart's pods can get credentials from to pull
@@ -211,7 +218,7 @@ ui:
 
   image:
     name: prefecthq/ui
-    tag: null
+    tag: null  # See `uiVersionTag` instead
     pullPolicy: Always
     pullSecrets: []
 

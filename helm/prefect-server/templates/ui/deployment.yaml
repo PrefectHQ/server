@@ -35,7 +35,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.ui.image.name }}:{{ .Values.ui.image.tag |  default .Values.serverVersionTag | default .Chart.AppVersion }}"
+          image: "{{ .Values.ui.image.name }}:{{ .Values.ui.image.tag | default .Values.uiVersionTag }}"
           imagePullPolicy: {{ .Values.ui.image.pullPolicy  }}
           command: 
             - "/intercept.sh"

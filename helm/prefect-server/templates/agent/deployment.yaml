@@ -36,7 +36,7 @@ spec:
         securityContext:
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        image: "{{ .Values.agent.image.name }}:{{ .Values.agent.image.tag |  default .Values.prefectVersionTag }}"
+        image: "{{ .Values.agent.image.name }}:{{ .Values.agent.image.tag | default .Values.prefectVersionTag }}"
         imagePullPolicy: {{ .Values.agent.image.pullPolicy  }}
         command:
           - bash

@@ -149,6 +149,18 @@ Development versions of the Helm chart will always be available directly from th
     $ helm upgrade $NAME .
     ```
 
+3. Upgrades can also be used enable features or change options
+
+    ```shell
+    NAME=prefect-server
+
+    helm upgrade \
+        $NAME \
+        prefecthq/prefect-server \
+        --set agent.enabled=true \
+        --set jobs.createTenant.enabled=true
+    ```
+
 
 #### Important notes about upgrading
 
@@ -203,9 +215,11 @@ The `appVersion` will always match the `version` of an official release.
 
 If you need to override the version of the Server image tags, you may do so globally with `--set serverVersionTag=<VERSION>` or override each service individually.
 
-There are some optional services that use Prefect Core images (the agent and tenant creation job).
-These images follow the value of `prefectVersionTag` which defaults to `latest`.
-If using the agent in production, we recommend pinning this version to the version of Prefect you are using to ensure the agent matches your flow.
+Some services rely on related Prefect images. 
+These are set using `prefectVersionTag` and `uiVersionTag` which is pinned to the latest releases on chart release.
+You may want to manage these version tags separately as Prefect Core and the UI are released more frequently than the Server.
+
+If using the agent in production, we recommend ensuring `prefectVersionTag` matches the version of Prefect you are using to ensure the agent matches your flow.
 
 
 ### Development
