@@ -10,9 +10,13 @@
 # on why the `appVersion` cannot be set at install time.
 serverVersionTag: null
 
-# prefectVersionTag configures the default tag for prefect core
-# images which are used for the create-tenant job and agent both
-# of which are optional and disabled by default
+# prefectVersionTag configures the default tag for related Prefect
+# services which include:
+# - UI
+# - Agent (optional)
+# - Default tenant creation job (optional)
+# This value is automatically pinned on chart release to the current
+# core version.
 prefectVersionTag: "latest"
 
 # imagePullSecrets provides configuration to reference the k8s Secret
