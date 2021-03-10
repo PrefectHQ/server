@@ -141,7 +141,7 @@ Development versions of the Helm chart will always be available directly from th
     # Choose a version to upgrade to or omit the flag to use the latest version
     VERSION=2021.03.06
 
-    helm upgrade $NAME prefecthq/prefect-server [--version $VERSION]
+    helm upgrade $NAME prefecthq/prefect-server --version $VERSION
     ```
 
     For development versions, make sure your cloned repository is updated (`git pull`) and reference the local chart
