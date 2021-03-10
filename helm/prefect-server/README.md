@@ -54,16 +54,28 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
 
 4. Install the Helm chart
 
+    _Using defaults_
     ```
     $ helm install prefecthq/prefect-server --generate-name
     ```
 
-    _A name of your choice can be provided instead of `--generate-name`_
+    _Setting typical flags for customization__
+    ```
+    helm install \
+        --namespace my-kubernetes-namespace \
+        --version 2021.03.06 \
+        --values path/to/your/config.yaml \
+        my-prefect-server \
+        prefecthq/prefect-server
+    ```
 
     _If chart installation fails, `--debug` can provide more information_
 
+    _See [Helm install docs](https://helm.sh/docs/helm/helm_install/) for all options.
+
 
 #### Verifying package integrity
+_Checking package integrity is not required and is included as an optional security measure_
 
 The hosted charts are signed using GPG to ensure package integrity.
 
