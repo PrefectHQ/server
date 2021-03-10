@@ -215,14 +215,11 @@ The `appVersion` will always match the `version` of an official release.
 
 If you need to override the version of the Server image tags, you may do so globally with `--set serverVersionTag=<VERSION>` or override each service individually.
 
-Some services use the Prefect Core version tags, including:
-- UI
-- Agent (optional)
-- Create tenant job (optional)
+Some services rely on related Prefect images. 
+These are set using `prefectVersionTag` and `uiVersionTag` which is pinned to the latest releases on chart release.
+You may want to manage these version tags separately as Prefect Core and the UI are released more frequently than the Server.
 
-These images follow the value of `prefectVersionTag` which is pinned to the latest core release on chart release.
-You may want to manage this version tag separately as Prefect Core is released more frequently than the Server.
-If using the agent in production, we recommend ensuring this version matches the version of Prefect you are using to ensure the agent matches your flow.
+If using the agent in production, we recommend ensuring `prefectVersionTag` matches the version of Prefect you are using to ensure the agent matches your flow.
 
 
 ### Development

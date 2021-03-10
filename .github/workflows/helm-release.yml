@@ -23,6 +23,11 @@ jobs:
             git://github.com/PrefectHQ/prefect.git | tail -n1 | sed 's/.*\///' \
           )
           echo ::set-output name=CORE_VERSION::core-$CORE_VERSION
+          UI_VERSION=$(\
+            git ls-remote --tags --refs --sort="v:refname" \
+            git://github.com/PrefectHQ/ui.git | tail -n1 | sed 's/.*\///' \
+          )
+          echo ::set-output name=UI_VERSION::$UI_VERSION
 
       - name: Configure Git
         run: |
@@ -58,6 +63,8 @@ jobs:
           cd helm
           # Update the core version tag
           sed -i "s/^prefectVersionTag:.*$/prefectVersionTag: \"$CORE_VERSION\"/" prefect-server/values.yaml
+          # Update the UI version tag
+          sed -i "s/^prefectVersionTag:.*$/uiVersionTag: \"$UI_VERSION\"/" prefect-server/values.yaml
           helm package prefect-server \
             --destination /tmp/chart \
             --dependency-update \
@@ -69,6 +76,7 @@ jobs:
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
           CORE_VERSION: ${{ steps.get_version.outputs.CORE_VERSION }}
+          UI_VERSION: ${{ steps.get_version.outputs.UI_VERSION }}
           SIGN_KEYRING: ${{ env.SIGN_KEYRING }}
           SIGN_PASSPHRASE_FILE: ${{ env.SIGN_PASSPHRASE_FILE }}
 
