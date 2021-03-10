@@ -1,5 +1,13 @@
 # Changelog
 
+## March 10, 2021 <Badge text="beta" type="success" />
+
+Released on March 10, 2021.
+
+### Features
+
+- Release the Server Helm Chart to a Helm repository - [#209](https://github.com/PrefectHQ/server/pull/209)
+
 ## March 6, 2021 <Badge text="beta" type="success" />
 
 Released on March 6, 2021.
