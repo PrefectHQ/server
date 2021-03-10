@@ -2,6 +2,36 @@
 
 ## Usage
 
+### Installing released versions
+
+The Helm chart is automatically versioned and released alongside Server. 
+For each Github Release of Server there is a corresponding version of the Helm chart.
+The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_repository/) deployed to the web courtesy of Github Pages.
+
+1. Let you local Helm manager know about the repository.
+```
+$ helm repo add prefecthq https://prefecthq.github.io/server/
+```
+
+2. Sync versions available in the repo to your local cache.
+```
+$ helm repo update
+```
+
+3. Search for available charts and versions
+```
+$ helm search repo [name]
+```
+
+4. Install the Helm chart
+```
+$ helm install prefecthq/prefect-server --generate-name
+```
+
+### Installing development versions
+
+Development versions of the Helm chart will always be available directly from this Github repository.
+
 1. Clone repository
 
 2. Change to this directory
@@ -12,18 +42,31 @@
 $ helm dependency update
 ```
 
-4. Install the chart with your desired name e.g. "my-prefect-server"
+4. Install the chart
 
 ```
-$ helm install <name-to-label-release> . [helm options]
+$ helm install . --generate-name --verify
 ```
+
+_Note: The verify flag is optional but will use gpg to verify the integrity of the chart package_
 
 ### Upgrading
 
-Upgrades can be run with the following command
+1. Look up the name of the last release
+
+```
+$ helm list
+```
+
+2. Run the upgrade, if a version is not provided, the latest will be used.
+```
+$ helm upgrade <name-of-last-release> prefecthq/prefect-server [--version <specific-tag>]
+```
+for development versions, use
 ```
 $ helm upgrade <name-of-last-release> .
 ```
+
 
 This will only update infrastructure that is modified.
 You will need to continue to set any values that you set during the original install (e.g. `--set agent.enabled=true`).
