@@ -36,7 +36,8 @@ spec:
         securityContext:
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        image: "{{ .Values.agent.image.name }}:{{ .Values.agent.image.tag |  default .Values.prefectVersionTag }}"
+        {{- /* We need to trim `core-` off the prefectVersionTag to include the K8s orchestration extras */ }}
+        image: "{{ .Values.agent.image.name }}:{{ .Values.agent.image.tag |  default (.Values.prefectVersionTag | replace "core-" "") }}"
         imagePullPolicy: {{ .Values.agent.image.pullPolicy  }}
         command:
           - bash
