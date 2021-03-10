@@ -57,11 +57,15 @@ jobs:
       - name: Update chart index
         run: |
           git checkout gh-pages &&
-          helm repo index /tmp/chart --url https://prefecthq.github.io/server/ --merge ./index.yaml
+          helm repo index /tmp/chart --url https://prefecthq.github.io/server/charts --merge ./index.yaml
 
       - name: Commit and push 
         run: |
-          cp -r /tmp/chart . &&
-          git add . &&
-          git commit -m "Release ${{ steps.get_version.outputs.VERSION }}" &&
-          git push origin gh-pages
+          cp /tmp/chart/index.yml . &&
+          cp /tmp/chart/prefect-server-$VERSION.tgz ./charts &&
+          git add ./index.yml ./charts/prefect-server-$VERSION.tgz &&
+          git commit -m "Release $VERSION" &&
+          echo "Skipping push for testing"
+          # git push origin gh-pages
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
