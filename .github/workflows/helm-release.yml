@@ -74,15 +74,16 @@ jobs:
 
       - name: Update chart index
         run: |
-          git checkout gh-pages &&
+          git stash  # Stash changes to the values.yaml so checkout doesn't complain
+          git checkout gh-pages
           helm repo index /tmp/chart --url https://prefecthq.github.io/server/charts --merge ./index.yaml
 
       - name: Commit and push 
         run: |
-          cp /tmp/chart/index.yaml . &&
-          cp /tmp/chart/prefect-server-$VERSION.* ./charts &&
-          git add ./index.yaml ./charts/prefect-server-$VERSION.* &&
-          git commit -m "Release $VERSION" &&
+          cp /tmp/chart/index.yaml .
+          cp /tmp/chart/prefect-server-$VERSION.* ./charts
+          git add ./index.yaml ./charts/prefect-server-$VERSION.*
+          git commit -m "Release $VERSION"
           git push origin gh-pages
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
