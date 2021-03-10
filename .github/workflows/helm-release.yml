@@ -1,0 +1,79 @@
+name: Release Helm Chart
+
+on:
+  push:
+    tags:
+      - "*\\.*\\.*"  # only run on version tags
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get the version tag
+        id: get_version
+        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.4.1
+
+      - name: Prepare GPG key for signing
+        run: |
+          gpg_dir=/tmp/.gpg
+          mkdir "$gpg_dir"
+          keyring="$gpg_dir/secring.gpg"
+          base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring"
+          passphrase_file="$gpg_dir/passphrase"
+          echo "$GPG_PASSPHRASE" > "$passphrase_file"
+          echo "SIGN_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV"
+          echo "SIGN_KEYRING=$keyring" >> "$GITHUB_ENV"
+        env:
+          GPG_KEYRING_BASE64: "${{ secrets.GPG_KEYRING_BASE64 }}"
+          GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
+
+      - name: Add dependency chart repos
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          
+      - name: Package helm chart
+        run: |
+          mkdir /tmp/chart &&
+          cd helm &&
+          helm package prefect-server \
+            --destination /tmp/chart \
+            --dependency-update \
+            --version $VERSION \
+            --app-version $VERSION \
+            --sign --key 'michael@prefect.io' \
+            --keyring $SIGN_KEYRING \
+            --passphrase-file $SIGN_PASSPHRASE_FILE
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+          SIGN_KEYRING: ${{ env.SIGN_KEYRING }}
+          SIGN_PASSPHRASE_FILE: ${{ env.SIGN_PASSPHRASE_FILE }}
+
+      - name: Update chart index
+        run: |
+          git checkout gh-pages &&
+          helm repo index /tmp/chart --url https://prefecthq.github.io/server/charts --merge ./index.yaml
+
+      - name: Commit and push 
+        run: |
+          cp /tmp/chart/index.yaml . &&
+          cp /tmp/chart/prefect-server-$VERSION.* ./charts &&
+          git add ./index.yaml ./charts/prefect-server-$VERSION.* &&
+          git commit -m "Release $VERSION" &&
+          git push origin gh-pages
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
