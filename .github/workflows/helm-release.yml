@@ -61,9 +61,9 @@ jobs:
 
       - name: Commit and push 
         run: |
-          cp /tmp/chart/index.yml . &&
+          cp /tmp/chart/index.yaml . &&
           cp /tmp/chart/prefect-server-$VERSION.tgz ./charts &&
-          git add ./index.yml ./charts/prefect-server-$VERSION.tgz &&
+          git add ./index.yaml ./charts/prefect-server-$VERSION.tgz &&
           git commit -m "Release $VERSION" &&
           echo "Skipping push for testing"
           # git push origin gh-pages
