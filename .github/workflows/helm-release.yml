@@ -57,7 +57,7 @@ jobs:
           mkdir /tmp/chart
           cd helm
           # Update the core version tag
-          gsed -i "s/^prefectVersionTag:.*$/prefectVersionTag: \"$CORE_VERSION\"/" prefect-server/values.yaml
+          sed -i "s/^prefectVersionTag:.*$/prefectVersionTag: \"$CORE_VERSION\"/" prefect-server/values.yaml
           helm package prefect-server \
             --destination /tmp/chart \
             --dependency-update \
