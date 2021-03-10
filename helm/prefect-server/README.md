@@ -145,12 +145,24 @@ SET TIME ZONE 'UTC';
 
 ## Versioning
 
-The Helm chart in this repo is set to use the `latest` images for Prefect infrastructure by default.
-The default `imagePullPolicy` is `Always` so these images will be updated when your deployments are rolled over.
-This could result in some deployments being on mismatched versions which may not be guaranteed to work well together.
-For production usage, we recommend setting the `prefectVersion` value to a specific tag to avoid unexpected upgrades.
+Released Helm charts have versions matching Prefect Server image tags. 
+The chart uses `appVersion` to infer the image tags to download.
+The `appVersion` will always match the `version` of an official release.
 
-When the Helm chart is published to a chart repository, we will pin the version for you.
+If you need to override the version of the Server image tags, you may do so globally with `--set serverVersionTag=<VERSION>` or override each service individually.
+
+There are some optional services that use Prefect Core images (the agent and tenant creation job).
+These images follow the value of `prefectVersionTag` which defaults to `latest`.
+If using the agent in production, we recommend pinning this version to the version of Prefect you are using to ensure the agent matches your flow.
+
+
+### Development
+
+The Helm chart in this repo sets the `appVersion` to `latest` to always pull the most recent images.
+The chart `version` _must_ follow semantic versioning per Helm's standards and is pinned to `0.0.0`.
+
+The default `imagePullPolicy` is `Always` so images will be updated when your deployments are rolled over.
+This could result in some deployments being on mismatched versions which may not be guaranteed to work well together.
 
 ##  Connecting to your Server
 
