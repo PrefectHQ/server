@@ -64,7 +64,7 @@ jobs:
           # Update the core version tag
           sed -i "s/^prefectVersionTag:.*$/prefectVersionTag: \"$CORE_VERSION\"/" prefect-server/values.yaml
           # Update the UI version tag
-          sed -i "s/^prefectVersionTag:.*$/uiVersionTag: \"$UI_VERSION\"/" prefect-server/values.yaml
+          sed -i "s/^uiVersionTag:.*$/uiVersionTag: \"$UI_VERSION\"/" prefect-server/values.yaml
           helm package prefect-server \
             --destination /tmp/chart \
             --dependency-update \
