@@ -9,24 +9,33 @@ For each Github Release of Server there is a corresponding version of the Helm c
 The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_repository/) deployed to the web courtesy of Github Pages.
 
 1. Let you local Helm manager know about the repository.
-```
-$ helm repo add prefecthq https://prefecthq.github.io/server/
-```
+
+    ```
+    $ helm repo add prefecthq https://prefecthq.github.io/server/
+    ```
 
 2. Sync versions available in the repo to your local cache.
-```
-$ helm repo update
-```
+
+    ```
+    $ helm repo update
+    ```
 
 3. Search for available charts and versions
-```
-$ helm search repo [name]
-```
+
+    ```
+    $ helm search repo [name]
+    ```
 
 4. Install the Helm chart
-```
-$ helm install prefecthq/prefect-server --generate-name
-```
+
+    ```
+    $ helm install prefecthq/prefect-server --generate-name --verify
+    ```
+
+    _The verify flag is optional but will use gpg to verify the integrity of the chart package_
+
+    _A name of your choice can be provided instead of --generate-name_
+
 
 ### Installing development versions
 
@@ -38,35 +47,37 @@ Development versions of the Helm chart will always be available directly from th
 
 3. Download the postgresql dependency if you are not using an existing database
 
-```
-$ helm dependency update
-```
+    ```
+    $ helm dependency update
+    ```
 
 4. Install the chart
 
-```
-$ helm install . --generate-name --verify
-```
-
-_Note: The verify flag is optional but will use gpg to verify the integrity of the chart package_
+    ```
+    $ helm install . --generate-name
+    ```
 
 ### Upgrading
 
 1. Look up the name of the last release
 
-```
-$ helm list
-```
+    ```
+    $ helm list
+    ```
 
-2. Run the upgrade, if a version is not provided, the latest will be used.
-```
-$ helm upgrade <name-of-last-release> prefecthq/prefect-server [--version <specific-tag>]
-```
-for development versions, use
-```
-$ helm upgrade <name-of-last-release> .
-```
+2. Run the upgrade
 
+    ```
+    $ helm upgrade <name-of-last-release> prefecthq/prefect-server [--version <specific-tag>]
+    ```
+    for development versions, use
+    ```
+    $ helm upgrade <name-of-last-release> .
+    ```
+
+    _If a version is not provided, the latest version will be used_
+
+**Important notes about upgrading**
 
 This will only update infrastructure that is modified.
 You will need to continue to set any values that you set during the original install (e.g. `--set agent.enabled=true`).
