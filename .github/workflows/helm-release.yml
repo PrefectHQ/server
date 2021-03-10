@@ -30,7 +30,7 @@ jobs:
 
       - name: Prepare GPG key for signing
         run: |
-          gpg_dir=.helm-gpg
+          gpg_dir=/tmp/.gpg
           mkdir "$gpg_dir"
           keyring="$gpg_dir/secring.gpg"
           base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring"
