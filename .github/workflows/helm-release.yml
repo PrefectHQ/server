@@ -30,7 +30,7 @@ jobs:
 
       - name: Prepare GPG key for signing
         run: |
-          gpg_dir=.cr-gpg
+          gpg_dir=.helm-gpg
           mkdir "$gpg_dir"
           keyring="$gpg_dir/secring.gpg"
           base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring"
@@ -50,9 +50,18 @@ jobs:
         run: |
           mkdir /tmp/chart &&
           cd helm &&
-          helm package prefect-server --destination /tmp/chart --dependency-update --version $VERSION --app-version $VERSION
+          helm package prefect-server \
+            --destination /tmp/chart \
+            --dependency-update \
+            --version $VERSION \
+            --app-version $VERSION \
+            --sign --key 'michael@prefect.io' \
+            --keyring $SIGN_KEYRING \
+            --passphrase-file $SIGN_PASSPHRASE_FILE
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
+          SIGN_KEYRING: ${{ env.SIGN_KEYRING }}
+          SIGN_PASSPHRASE_FILE: ${{ env.SIGN_PASSPHRASE_FILE }}
 
       - name: Update chart index
         run: |
@@ -62,8 +71,8 @@ jobs:
       - name: Commit and push 
         run: |
           cp /tmp/chart/index.yaml . &&
-          cp /tmp/chart/prefect-server-$VERSION.tgz ./charts &&
-          git add ./index.yaml ./charts/prefect-server-$VERSION.tgz &&
+          cp /tmp/chart/prefect-server-$VERSION.* ./charts &&
+          git add ./index.yaml ./charts/prefect-server-$VERSION.* &&
           git commit -m "Release $VERSION" &&
           git push origin gh-pages
         env:
