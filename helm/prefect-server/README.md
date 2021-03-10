@@ -149,6 +149,18 @@ Development versions of the Helm chart will always be available directly from th
     $ helm upgrade $NAME .
     ```
 
+3. Upgrades can also be used enable features or change options
+
+    ```shell
+    NAME=prefect-server
+
+    helm upgrade \
+        $NAME \
+        prefecthq/prefect-server \
+        --set agent.enabled=true \
+        --set jobs.createTenant.enabled=true
+    ```
+
 
 #### Important notes about upgrading
 
