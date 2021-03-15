@@ -1,0 +1,5 @@
+enhancement:
+  - "Set uvicorn server log level - [#217](https://github.com/PrefectHQ/server/pull/217)"
+
+contributor:
+  - "[Peter Roelants](https://github.com/peterroelants)"
