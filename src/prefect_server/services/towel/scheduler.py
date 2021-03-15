@@ -2,6 +2,7 @@ import asyncio
 
 from prefect import api, models
 from prefect.utilities.graphql import EnumValue
+
 from prefect_server.services.loop_service import LoopService
 
 
@@ -41,7 +42,7 @@ class Scheduler(LoopService):
                     "id",
                 },
                 # deterministic sort for batching
-                order_by=["id"],
+                order_by=[{"id": EnumValue("desc")}],
                 limit=500,
                 offset=500 * iterations,
             )
