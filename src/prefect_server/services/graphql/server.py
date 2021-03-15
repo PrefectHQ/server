@@ -60,7 +60,7 @@ def _get_uvicorn_log_level():
         return uvicorn_log_level
     else:
         logger.warning(
-            f"{repr(uvicorn_log_level)} not a valid uvicorn log level, falling back on default."
+            f"{uvicorn_log_level!r} not a valid uvicorn log level, falling back on default."
         )
         return None
 
