@@ -2,15 +2,14 @@ import datetime
 from typing import Any, Iterable, List
 
 import pendulum
-
 import prefect
 from prefect import api, models
 from prefect.engine.state import Pending, Queued, Scheduled
 from prefect.utilities.graphql import EnumValue
 from prefect.utilities.plugins import register_api
+
 from prefect_server import config
 from prefect_server.utilities import exceptions, names
-
 
 SCHEDULED_STATES = [
     s.__name__
@@ -30,6 +29,7 @@ async def create_flow_run(
     idempotency_key: str = None,
     labels: List[str] = None,
     run_config: dict = None,
+    auto_scheduled: bool = False,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -46,7 +46,8 @@ async def create_flow_run(
         - idempotency_key (str, optional): An optional idempotency key to prevent duplicate run creation.
             Idempotency keys are only respected for 24 hours after a flow is created.
         - labels (List[str], optional): a list of labels to apply to this individual flow run
-        - run-config (dict, optional): A run-config override for this flow run.
+        - run-config (dict, optional): a run-config override for this flow run.
+        - auto_scheduled (bool, optional): a flag that indicates whether this flow run was auto-scheduled
     """
 
     if idempotency_key is not None:
@@ -73,6 +74,7 @@ async def create_flow_run(
         version_group_id=version_group_id,
         labels=labels,
         run_config=run_config,
+        auto_scheduled=auto_scheduled,
     )
 
     if idempotency_key is not None:
@@ -125,6 +127,7 @@ async def _create_flow_run(
     version_group_id: str = None,
     labels: List[str] = None,
     run_config: dict = None,
+    auto_scheduled: bool = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -140,6 +143,8 @@ async def _create_flow_run(
             recent unarchived version of the group
         - labels (List[str], optional): a list of labels to apply to this individual flow run
         - run-config (dict, optional): A run-config override for this flow run.
+        - auto_scheduled (bool, optional): a flag that indicates whether this flow run was auto-scheduled
+
     """
 
     if flow_id is None and version_group_id is None:
@@ -225,6 +230,7 @@ async def _create_flow_run(
         context=context or {},
         scheduled_start_time=scheduled_start_time,
         name=flow_run_name or names.generate_slug(2),
+        auto_scheduled=auto_scheduled or False,
         states=[
             models.FlowRunState(
                 tenant_id=flow.tenant_id,

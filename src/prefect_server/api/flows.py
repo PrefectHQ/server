@@ -7,12 +7,12 @@ from typing import Any, Dict, List
 
 import pendulum
 from packaging import version as module_version
-from pydantic import BaseModel, Field, validator
-
 from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
-from prefect.utilities.graphql import with_args, EnumValue
+from prefect.utilities.graphql import EnumValue, with_args
 from prefect.utilities.plugins import register_api
+from pydantic import BaseModel, Field, validator
+
 from prefect_server import config
 from prefect_server.utilities import logging
 
@@ -500,7 +500,9 @@ async def set_schedule_active(flow_id: str) -> bool:
     if not result.affected_rows:
         return False
 
-    await api.flows.schedule_flow_runs(flow_id=flow_id)
+    # kick off async scheduling of runs
+    asyncio.create_task(api.flows.schedule_flow_runs(flow_id=flow_id))
+
     return True
 
 
@@ -639,6 +641,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
             parameters=event.parameter_defaults,
             labels=event.labels,
             idempotency_key=idempotency_key,
+            auto_scheduled=True,
         )
 
         logger.debug(
@@ -646,9 +649,5 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
         )
 
         run_ids.append(run_id)
-
-    await models.FlowRun.where({"id": {"_in": run_ids}}).update(
-        set={"auto_scheduled": True}
-    )
 
     return run_ids

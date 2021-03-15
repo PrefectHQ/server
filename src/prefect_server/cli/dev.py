@@ -8,12 +8,12 @@ import time
 from pathlib import Path
 
 import click
+import prefect
 import sqlalchemy
 from click.testing import CliRunner
-
-import prefect
-import prefect_server
 from prefect import models
+
+import prefect_server
 from prefect_server import config
 
 
@@ -239,7 +239,7 @@ def clear_data():
     """
 
     async def _clear_data():
-        await models.Project.where().delete()
+        await models.Tenant.where().delete()
 
     asyncio.run(_clear_data())
     click.secho("Done!", fg="green")
