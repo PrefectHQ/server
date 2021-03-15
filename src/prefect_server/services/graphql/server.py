@@ -56,7 +56,7 @@ def _get_uvicorn_log_level():
     # Uvicorn log levels are lower case
     uvicorn_log_level = prefect_log_level.lower()
     if uvicorn_log_level in uvicorn.config.LOG_LEVELS:
-        logger.info(f"Using uvicorn log level = {repr(uvicorn_log_level)}")
+        logger.info(f"Using uvicorn log level = {uvicorn_log_level!r}")
         return uvicorn_log_level
     else:
         logger.warning(
