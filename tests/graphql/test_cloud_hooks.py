@@ -4,12 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 import uvicorn
 from asynctest import CoroutineMock
+from prefect import api, models
+from prefect.engine.state import Failed, Running, Success
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from prefect import api, models
-from prefect.engine.state import Failed, Running, Success
 from prefect_server import config
 from prefect_server.utilities import tests
 
@@ -367,7 +367,7 @@ class TestTestWebhook:
         assert event["id"] == call_args[1]["headers"]["X-PREFECT-EVENT-ID"]
 
     @pytest.mark.parametrize(
-        "state_type", ["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"]
+        "state_type", ["SUBMITTED", "RUNNING", "SUCCESS", "FAILED"]
     )
     async def test_test_webhook_with_custom_state(
         self, run_query, tenant_id, state_type, cloud_hook_mock
@@ -395,7 +395,7 @@ class TestTestWebhook:
         )
 
     @pytest.mark.parametrize(
-        "state_type", ["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"]
+        "state_type", ["SUBMITTED", "RUNNING", "SUCCESS", "FAILED"]
     )
     async def test_test_slack_cloud_hook(
         self, run_query, tenant_id, state_type, cloud_hook_mock
@@ -405,7 +405,7 @@ class TestTestWebhook:
             tenant_id=tenant_id,
             type="SLACK_WEBHOOK",
             config={"url": "http://0.0.0.0:8100/hook"},
-            states=["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"],
+            states=["SUBMITTED", "RUNNING", "SUCCESS", "FAILED"],
         )
 
         await run_query(
@@ -453,7 +453,7 @@ class TestTestWebhook:
         assert blocks[2]["text"]["text"] == f"*Message:* Test {'SUCCESS'.lower()} state"
 
     @pytest.mark.parametrize(
-        "state_type", ["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"]
+        "state_type", ["SUBMITTED", "RUNNING", "SUCCESS", "FAILED"]
     )
     async def test_test_prefect_message_webhook(
         self, run_query, tenant_id, flow_run_id, state_type
@@ -477,7 +477,7 @@ class TestTestWebhook:
         assert len(messages) == 1
 
     @pytest.mark.parametrize(
-        "state_type", ["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"]
+        "state_type", ["SUBMITTED", "RUNNING", "SUCCESS", "FAILED"]
     )
     async def test_test_prefect_message_webhook_while_specifying_flow_run_id(
         self, run_query, tenant_id, flow_run_id, state_type
@@ -507,7 +507,7 @@ class TestTestWebhook:
         assert len(messages) == 1
 
     @pytest.mark.parametrize(
-        "state_type", ["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"]
+        "state_type", ["SUBMITTED", "RUNNING", "SUCCESS", "FAILED"]
     )
     async def test_test_twilio_cloud_hook(
         self, run_query, tenant_id, flow_id, flow_run_id, monkeypatch, state_type
@@ -558,7 +558,7 @@ class TestTestWebhook:
         )
 
     @pytest.mark.parametrize(
-        "state_type", ["SUBMITTED", "SCHEDULED", "RUNNING", "SUCCESS", "FAILED"]
+        "state_type", ["SUBMITTED", "RUNNING", "SUCCESS", "FAILED"]
     )
     async def test_test_pagerduty_cloud_hook(
         self, run_query, tenant_id, flow_id, flow_run_id, monkeypatch, state_type

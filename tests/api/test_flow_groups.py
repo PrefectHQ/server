@@ -261,12 +261,12 @@ class TestSetFlowGroupSchedule:
 
         # make sure we're starting from a clean slate
         # sleep to allow background scheduled runs to complete
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
         await api.flows.set_schedule_active(flow_id=flow_id)
         # runs are created in the background, so we need to sleep here
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
         # create one manual run that won't be deleted
         await api.runs.create_flow_run(flow_id=flow_id)
@@ -383,14 +383,14 @@ class TestDeleteFlowGroupSchedule:
         clock = {"type": "CronClock", "cron": "42 0 0 * * *"}
 
         # finish background scheduling
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         success = await api.flow_groups.set_flow_group_schedule(
             flow_group_id=flow_group_id, clocks=[clock]
         )
         assert success is True
 
         await api.flows.set_schedule_active(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
         success = await api.flow_groups.delete_flow_group_schedule(

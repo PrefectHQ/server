@@ -833,13 +833,13 @@ class TestUnarchiveFlow:
 
     async def test_unarchive_schedules_new_runs(self, flow_id):
         # sleep for background scheduling
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await api.flows.archive_flow(flow_id=flow_id)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.unarchive_flow(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
 
@@ -1036,24 +1036,24 @@ class TestSetScheduleActive:
 
     async def test_set_schedule_active_schedules_new_runs(self, flow_id):
         # sleep for background scheduling
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.set_schedule_active(flow_id=flow_id)
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
     async def test_set_schedule_active_doesnt_duplicate_runs(self, flow_id):
         # sleep for background scheduling
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.set_schedule_active(flow_id=flow_id)
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await api.flows.set_schedule_active(flow_id=flow_id)
 
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
@@ -1089,13 +1089,13 @@ class TestSetScheduleInactive:
     async def test_set_schedule_inactive_deletes_only_auto_scheduled_runs(
         self, flow_id
     ):
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.set_schedule_active(flow_id=flow_id)
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
         # create one manual run that won't be deleted
         await api.runs.create_flow_run(flow_id=flow_id)
@@ -1119,12 +1119,12 @@ class TestSetScheduleInactive:
         api.runs.
         """
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.set_schedule_active(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
             {"scheduled_start_time"}
         )
@@ -1132,11 +1132,11 @@ class TestSetScheduleInactive:
         start_times = {r.scheduled_start_time for r in runs}
 
         await api.flows.set_schedule_inactive(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.set_schedule_active(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         new_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
             {"scheduled_start_time"}
         )
@@ -1159,12 +1159,12 @@ class TestSetScheduleInactive:
             serialized_flow=flow.serialize(), project_id=project_id
         )
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.set_schedule_active(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
             {"scheduled_start_time"}
         )
@@ -1172,11 +1172,11 @@ class TestSetScheduleInactive:
         start_times = {r.scheduled_start_time for r in runs}
 
         await api.flows.set_schedule_inactive(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.set_schedule_active(flow_id=flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         new_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
             {"scheduled_start_time"}
         )
@@ -1447,13 +1447,13 @@ class TestScheduleRuns:
         await api.flows.create_flow(
             project_id=project_id, serialized_flow=flow.serialize()
         )
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where().count() == run_count + 10
 
     async def test_schedule_max_runs(self, flow_id):
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         await api.flows.schedule_flow_runs(flow_id, max_runs=50)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 50
 
     async def test_schedule_flow_runs_with_no_id(self):
@@ -1471,12 +1471,12 @@ class TestScheduleRuns:
         )
 
         # ensure the flow's schedule is active
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         await models.Flow.where(id=flow_id).update(set=dict(is_schedule_active=True))
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
 
         await api.flows.schedule_flow_runs(flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
     async def test_schedule_runs_gives_preference_to_flow_group_schedule(
@@ -1502,7 +1502,7 @@ class TestScheduleRuns:
 
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         await api.flows.schedule_flow_runs(flow_id)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
         # assert the 10 scheduled runs were scheduled months out, not for the next 10 minutes
         flow_runs = await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).get(
             selection_set={"scheduled_start_time"},
