@@ -2,9 +2,8 @@ import asyncio
 import uuid
 
 import pendulum
-import pytest
-
 import prefect
+import pytest
 from prefect import api, models
 from prefect.engine.state import Scheduled, Success
 
@@ -434,7 +433,7 @@ class TestDeleteFlowRun:
         assert not result.data.delete_flow_run.success
 
 
-class TestIdempotentCreateRun:
+class TestCreateRunIdempotencyKey:
     mutation = """
         mutation($input: create_flow_run_input!) {
             create_flow_run(input: $input) {

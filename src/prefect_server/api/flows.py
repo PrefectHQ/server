@@ -7,12 +7,12 @@ from typing import Any, Dict, List
 
 import pendulum
 from packaging import version as module_version
-from pydantic import BaseModel, Field, validator
-
 from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
-from prefect.utilities.graphql import with_args, EnumValue
+from prefect.utilities.graphql import EnumValue, with_args
 from prefect.utilities.plugins import register_api
+from pydantic import BaseModel, Field, validator
+
 from prefect_server import config
 from prefect_server.utilities import logging
 

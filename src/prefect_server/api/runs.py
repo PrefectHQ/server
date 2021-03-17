@@ -1,86 +1,22 @@
 import datetime
+import uuid
 from typing import Any, Iterable, List
 
 import pendulum
-
 import prefect
 from prefect import api, models
 from prefect.engine.state import Pending, Queued, Scheduled
 from prefect.utilities.graphql import EnumValue
 from prefect.utilities.plugins import register_api
+
 from prefect_server import config
 from prefect_server.utilities import exceptions, names
-
 
 SCHEDULED_STATES = [
     s.__name__
     for s in prefect.engine.state.__dict__.values()
     if isinstance(s, type) and issubclass(s, (Scheduled, Queued))
 ]
-
-
-@register_api("runs.create_flow_run")
-async def create_flow_run(
-    flow_id: str = None,
-    parameters: dict = None,
-    context: dict = None,
-    scheduled_start_time: datetime.datetime = None,
-    flow_run_name: str = None,
-    version_group_id: str = None,
-    idempotency_key: str = None,
-    labels: List[str] = None,
-    run_config: dict = None,
-) -> Any:
-    """
-    Creates a new flow run for an existing flow.
-
-    Args:
-        - flow_id (str): A string representing the current flow id
-        - parameters (dict, optional): A dictionary of parameters that were specified for the flow
-        - context (dict, optional): A dictionary of context values
-        - scheduled_start_time (datetime.datetime): When the flow_run should be scheduled to run. If `None`,
-            defaults to right now. Must be UTC.
-        - flow_run_name (str, optional): An optional string representing this flow run
-        - version_group_id (str, optional): An optional version group ID; if provided, will run the most
-            recent unarchived version of the group
-        - idempotency_key (str, optional): An optional idempotency key to prevent duplicate run creation.
-            Idempotency keys are only respected for 24 hours after a flow is created.
-        - labels (List[str], optional): a list of labels to apply to this individual flow run
-        - run-config (dict, optional): A run-config override for this flow run.
-    """
-
-    if idempotency_key is not None:
-
-        where = {
-            "idempotency_key": {"_eq": idempotency_key},
-        }
-        if flow_id is not None:
-            where.update({"flow_id": {"_eq": flow_id}})
-        if version_group_id is not None:
-            where.update({"flow": {"version_group_id": {"_eq": version_group_id}}})
-        run = await models.FlowRun.where(where).first(
-            {"id"}, order_by={"created": EnumValue("desc")}
-        )
-        if run is not None:
-            return run.id
-
-    flow_run_id = await _create_flow_run(
-        flow_id=flow_id,
-        parameters=parameters,
-        context=context,
-        scheduled_start_time=scheduled_start_time,
-        flow_run_name=flow_run_name,
-        version_group_id=version_group_id,
-        labels=labels,
-        run_config=run_config,
-    )
-
-    if idempotency_key is not None:
-        await models.FlowRun.where(id=flow_run_id).update(
-            {"idempotency_key": idempotency_key}
-        )
-
-    return flow_run_id
 
 
 @register_api("runs.set_flow_run_labels")
@@ -115,8 +51,8 @@ async def set_task_run_name(task_run_id: str, name: str) -> bool:
     return bool(result.affected_rows)
 
 
-@register_api("runs._create_flow_run")
-async def _create_flow_run(
+@register_api("runs.create_flow_run")
+async def create_flow_run(
     flow_id: str = None,
     parameters: dict = None,
     context: dict = None,
@@ -125,6 +61,7 @@ async def _create_flow_run(
     version_group_id: str = None,
     labels: List[str] = None,
     run_config: dict = None,
+    idempotency_key: str = None,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -140,6 +77,9 @@ async def _create_flow_run(
             recent unarchived version of the group
         - labels (List[str], optional): a list of labels to apply to this individual flow run
         - run-config (dict, optional): A run-config override for this flow run.
+        - idempotency_key (str, optional): An optional idempotency key to prevent duplicate run creation.
+            idempotency keys are unique to each flow, but can be repeated across different flows.
+
     """
 
     if flow_id is None and version_group_id is None:
@@ -217,6 +157,7 @@ async def _create_flow_run(
     state = Scheduled(message="Flow run scheduled.", start_time=scheduled_start_time)
 
     run = models.FlowRun(
+        id=str(uuid.uuid4()),
         tenant_id=flow.tenant_id,
         flow_id=flow_id or flow.id,
         labels=run_labels,
@@ -225,22 +166,28 @@ async def _create_flow_run(
         context=context or {},
         scheduled_start_time=scheduled_start_time,
         name=flow_run_name or names.generate_slug(2),
-        states=[
-            models.FlowRunState(
-                tenant_id=flow.tenant_id,
-                **models.FlowRunState.fields_from_state(
-                    Pending(message="Flow run created")
-                ),
-            )
-        ],
+        idempotency_key=idempotency_key,
     )
 
-    flow_run_id = await run.insert()
+    # upsert the flow run against the idempotency key, returning the id of the
+    # new or existing run
+    insert_result = await run.insert(
+        on_conflict=dict(
+            constraint="ix_flow_run_idempotency_key_unique",
+            update_columns=["idempotency_key"],
+        ),
+        selection_set={"returning": {"id"}},
+    )
 
-    # apply the flow run's initial state via `set_flow_run_state`
-    await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=state)
+    # if the run id matches the returned id, the insert succeeded and the
+    # initial state should be set otherwise, the idempotency key was matched and
+    # we take no action
+    if run.id == insert_result.returning.id:
+        # apply the flow run's initial state via `set_flow_run_state`
+        await api.states.set_flow_run_state(flow_run_id=run.id, state=state)
 
-    return flow_run_id
+    # return the database id
+    return insert_result.returning.id
 
 
 @register_api("runs.get_or_create_task_run")
