@@ -1,11 +1,9 @@
 import uuid
 
 import pendulum
-import pytest
-
 import prefect
+import pytest
 from prefect import api, models
-from prefect.run_configs import UniversalRun
 from prefect.engine.state import (
     Failed,
     Finished,
@@ -15,7 +13,9 @@ from prefect.engine.state import (
     Submitted,
     Success,
 )
+from prefect.run_configs import UniversalRun
 from prefect.utilities.graphql import EnumValue, with_args
+
 from prefect_server import config
 from prefect_server.utilities.exceptions import NotFound
 
@@ -348,10 +348,10 @@ class TestCreateRun:
         ).get(
             {"state", "start_time", "message"}, order_by={"timestamp": EnumValue("asc")}
         )
-        assert len(frs) == 2
-        assert frs[1].state == "Scheduled"
-        assert frs[1].start_time == dt
-        assert frs[1].message == "Flow run scheduled."
+        assert len(frs) == 1
+        assert frs[0].state == "Scheduled"
+        assert frs[0].start_time == dt
+        assert frs[0].message == "Flow run scheduled."
 
     async def test_create_flow_run_also_creates_task_runs(self, project_id):
 
@@ -407,7 +407,7 @@ class TestCreateRun:
         assert fr.context["b"] == 2
 
 
-class TestCreateIdempotentRun:
+class TestCreateRunIdempotencyKey:
     async def test_create_idempotent_flow_run_with_key(self, simple_flow_id):
         flow_run_id_1 = await api.runs.create_flow_run(
             flow_id=simple_flow_id, idempotency_key="abc"

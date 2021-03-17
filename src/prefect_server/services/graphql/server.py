@@ -51,9 +51,25 @@ def health(request: Request) -> JSONResponse:
     return JSONResponse(dict(status="ok", version=app_version))
 
 
+def _get_uvicorn_log_level():
+    prefect_log_level = prefect_server.configuration.config.logging.level
+    # Uvicorn log levels are lower case
+    uvicorn_log_level = prefect_log_level.lower()
+    if uvicorn_log_level in uvicorn.config.LOG_LEVELS:
+        logger.info(f"Using uvicorn log level = {uvicorn_log_level!r}")
+        return uvicorn_log_level
+    else:
+        logger.warning(
+            f"{uvicorn_log_level!r} not a valid uvicorn log level, falling back on default."
+        )
+        return None
+
+
 if __name__ == "__main__":
     uvicorn.run(
         app,
         host=prefect_server.config.services.graphql.host,
         port=prefect_server.config.services.graphql.port,
+        log_level=_get_uvicorn_log_level(),
+        access_log=not prefect_server.configuration.config.services.graphql.disable_access_logs,
     )

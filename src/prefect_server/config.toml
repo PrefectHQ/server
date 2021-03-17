@@ -70,6 +70,7 @@ format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
     port = 4201
     debug = false
     path = "/graphql/"
+    disable_access_logs = false
 
     [services.scheduler]
     # run scheduler every 5 minutes
