@@ -23,6 +23,8 @@ rules:
   resources:
   - events
   - pods
+  - pods/log
+  - services
   verbs:
   - '*'
 ---
