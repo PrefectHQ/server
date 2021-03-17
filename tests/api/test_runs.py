@@ -11,7 +11,7 @@ from prefect.engine.state import (
     Running,
     Scheduled,
     Submitted,
-    Success
+    Success,
 )
 from prefect.run_configs import UniversalRun
 from prefect.utilities.graphql import EnumValue, with_args
