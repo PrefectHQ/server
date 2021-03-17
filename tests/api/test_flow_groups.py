@@ -1,8 +1,8 @@
+import asyncio
 import uuid
+
 import pendulum
-
 import pytest
-
 from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
 
@@ -260,9 +260,13 @@ class TestSetFlowGroupSchedule:
         assert flow_group.schedule is None
 
         # make sure we're starting from a clean slate
+        # sleep to allow background scheduled runs to complete
+        await asyncio.sleep(0.5)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
         await api.flows.set_schedule_active(flow_id=flow_id)
+        # runs are created in the background, so we need to sleep here
+        await asyncio.sleep(0.5)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
         # create one manual run that won't be deleted
         await api.runs.create_flow_run(flow_id=flow_id)
@@ -378,12 +382,15 @@ class TestDeleteFlowGroupSchedule:
         # update the flow group schedule and confirm the runs have been repopulated
         clock = {"type": "CronClock", "cron": "42 0 0 * * *"}
 
+        # finish background scheduling
+        await asyncio.sleep(0.5)
         success = await api.flow_groups.set_flow_group_schedule(
             flow_group_id=flow_group_id, clocks=[clock]
         )
         assert success is True
 
         await api.flows.set_schedule_active(flow_id=flow_id)
+        await asyncio.sleep(0.5)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
         success = await api.flow_groups.delete_flow_group_schedule(

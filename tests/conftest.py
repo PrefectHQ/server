@@ -36,3 +36,18 @@ def cloud_hook_mock(monkeypatch):
         "prefect_server.api.cloud_hooks.cloud_hook_httpx_client.post", post_mock
     )
     return post_mock
+
+
+@pytest.fixture(autouse=True)
+def finish_background_scheduling(event_loop):
+    """
+    Scheduling flow runs happens in the background, which means tests
+    can complete before it even starts. This prints an asyncio debug
+    error. This fixture cancels those background scheduling tasks.
+    """
+    try:
+        yield
+    finally:
+        for task in asyncio.all_tasks(event_loop):
+            if task._coro.__name__ == "schedule_flow_runs":
+                task.cancel()

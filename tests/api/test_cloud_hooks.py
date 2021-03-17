@@ -3,15 +3,15 @@ import uuid
 from unittest.mock import MagicMock
 
 import pendulum
+import prefect
 import pytest
 import uvicorn
 from asynctest import CoroutineMock
+from prefect import api, models
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-import prefect
-from prefect import api, models
 from prefect_server import config
 from prefect_server.utilities import events, exceptions, tests
 
@@ -464,7 +464,7 @@ class TestMatchHooks:
         # sleep to allow hooks to fire
         await asyncio.sleep(0.1)
 
-        assert {h.id for h in matched_hooks} == {hook_id_1}
+        assert hook_id_1 in {h.id for h in matched_hooks}
 
     async def test_matching_does_not_respect_state_parents(
         self, tenant_id, flow_run_id, matched_hooks
