@@ -123,7 +123,13 @@ async def create_flow_run(
     elif flow.archived:
         raise ValueError(f"Flow {flow.id} is archived.")
 
-    # determine active labels
+    # Determine active labels based on the following hierarchy:
+    # - Provided labels
+    # - Provided run config
+    # - Flow group labels
+    # - Flow group run config
+    # - Flow run config
+    # - Flow environment
     if labels is not None:
         run_labels = labels
     elif run_config is not None:
