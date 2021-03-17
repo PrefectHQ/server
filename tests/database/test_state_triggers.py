@@ -4,7 +4,6 @@ associated run's details via Postgres trigger
 """
 import pendulum
 import pytest
-
 from prefect import models
 
 
@@ -14,7 +13,9 @@ class TestFlowRunStateTrigger:
         self, tenant_id, flow_run_id, original_version
     ):
 
-        await models.FlowRun.where(id=flow_run_id).update({"version": original_version})
+        await models.FlowRun.where(id=flow_run_id).update(
+            {"version": original_version, "message": "original"}
+        )
         old_run = await models.FlowRun.where(id=flow_run_id).first({"version"})
 
         dt = pendulum.now("UTC")
@@ -31,9 +32,13 @@ class TestFlowRunStateTrigger:
             serialized_state={"a": "b"},
         ).insert()
 
-        new_run = await models.FlowRun.where(id=flow_run_id).first({"version"})
+        new_run = await models.FlowRun.where(id=flow_run_id).first(
+            {"version", "state", "state_message"}
+        )
 
         assert new_run.version == 10
+        assert new_run.state_message == "x"
+        assert new_run.state == "z"
 
     async def test_trigger_updates_highest_version_when_multiple_states_inserted(
         self, tenant_id, flow_run_id
@@ -249,7 +254,9 @@ class TestTaskRunStateTrigger:
         self, tenant_id, task_run_id, original_version
     ):
 
-        await models.TaskRun.where(id=task_run_id).update({"version": original_version})
+        await models.TaskRun.where(id=task_run_id).update(
+            {"version": original_version, "message": "original"}
+        )
         old_run = await models.TaskRun.where(id=task_run_id).first({"version"})
 
         dt = pendulum.now("UTC")
@@ -266,9 +273,13 @@ class TestTaskRunStateTrigger:
             serialized_state={"a": "b"},
         ).insert()
 
-        new_run = await models.TaskRun.where(id=task_run_id).first({"version"})
+        new_run = await models.TaskRun.where(id=task_run_id).first(
+            {"version", "state", "state_message"}
+        )
 
         assert new_run.version == 10
+        assert new_run.state_message == "x"
+        assert new_run.state == "z"
 
     async def test_trigger_updates_highest_version_when_multiple_states_inserted(
         self, tenant_id, task_run_id
