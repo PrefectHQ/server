@@ -57,7 +57,12 @@ class Scheduler(LoopService):
                 *[api.flows.schedule_flow_runs(flow.id) for flow in flows],
                 return_exceptions=True,
             )
-            runs_scheduled += sum(len(ids) for ids in all_run_ids)
+            runs_scheduled += sum(
+                len(ids)
+                for ids in all_run_ids
+                # only include lists to avoid errors
+                if isinstance(id, list)
+            )
 
         self.logger.info(f"Scheduled {runs_scheduled} flow runs.")
         return runs_scheduled
