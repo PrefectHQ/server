@@ -556,7 +556,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
     """
 
     if max_runs is None:
-        max_runs = 10
+        max_runs = 50
 
     if flow_id is None:
         raise ValueError("Invalid flow id.")
