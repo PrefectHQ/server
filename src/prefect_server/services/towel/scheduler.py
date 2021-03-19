@@ -61,7 +61,7 @@ class Scheduler(LoopService):
                 len(ids)
                 for ids in all_run_ids
                 # only include lists to avoid errors
-                if isinstance(id, list)
+                if isinstance(ids, list)
             )
 
         self.logger.info(f"Scheduled {runs_scheduled} flow runs.")
