@@ -54,7 +54,8 @@ class Scheduler(LoopService):
 
             # concurrently schedule all runs
             all_run_ids = await asyncio.gather(
-                *[api.flows.schedule_flow_runs(flow.id) for flow in flows]
+                *[api.flows.schedule_flow_runs(flow.id) for flow in flows],
+                return_exceptions=True,
             )
             runs_scheduled += sum(len(ids) for ids in all_run_ids)
 
