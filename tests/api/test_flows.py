@@ -2,10 +2,9 @@ import datetime
 import uuid
 
 import pendulum
+import prefect
 import pydantic
 import pytest
-
-import prefect
 from prefect import api, models
 from prefect.utilities.graphql import EnumValue
 
@@ -749,7 +748,7 @@ class TestArchive:
     async def test_archive_flow_deletes_auto_scheduled_runs(self, flow_id):
         # create scheduled api.runs since the fixture doesn't
 
-        await api.flows.schedule_flow_runs(flow_id=flow_id)
+        await api.flows.set_schedule_active(flow_id=flow_id)
 
         scheduled_runs = await models.FlowRun.where(
             {"flow_id": {"_eq": flow_id}, "state": {"_eq": "Scheduled"}}
@@ -768,7 +767,7 @@ class TestArchive:
     async def test_archive_flow_cancels_ad_hoc_runs(self, flow_id):
         # create one ad hoc run and 10 auto scheduled runs
         flow_run_id = await api.runs.create_flow_run(flow_id)
-        await api.flows.schedule_flow_runs(flow_id=flow_id)
+        await api.flows.set_schedule_active(flow_id=flow_id)
 
         scheduled_runs = await models.FlowRun.where(
             {
@@ -831,13 +830,24 @@ class TestUnarchiveFlow:
         with pytest.raises(ValueError, match="Must provide flow ID."):
             await api.flows.unarchive_flow(flow_id=None)
 
-    async def test_unarchive_schedules_new_runs(self, flow_id):
+    async def test_unarchive_schedules_new_runs_if_schedule_active(self, flow_id):
         await api.flows.archive_flow(flow_id=flow_id)
+        await api.flows.set_schedule_active(flow_id=flow_id)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
         await api.flows.unarchive_flow(flow_id=flow_id)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
+
+    async def test_unarchive_does_not_schedule_new_runs_if_schedule_inactive(
+        self, flow_id
+    ):
+        await api.flows.archive_flow(flow_id=flow_id)
+        await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
+
+        await api.flows.unarchive_flow(flow_id=flow_id)
+        assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
 
 class TestDeleteFlow:
@@ -1389,12 +1399,14 @@ class TestScheduledRunAttributes:
 
 class TestScheduleRuns:
     async def test_schedule_runs(self, flow_id):
+        await api.flows.set_schedule_active(flow_id)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert len(await api.flows.schedule_flow_runs(flow_id)) == 10
 
     async def test_schedule_runs_doesnt_run_for_inactive_schedule(self, flow_id):
+        flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
+        assert not flow.is_schedule_active
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
-        await api.flows.set_schedule_inactive(flow_id)
         assert await api.flows.schedule_flow_runs(flow_id) == []
 
     async def test_schedule_runs_doesnt_run_for_archived_flow(
@@ -1409,6 +1421,7 @@ class TestScheduleRuns:
         self,
         flow_id,
     ):
+        await api.flows.set_schedule_active(flow_id)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert len(await api.flows.schedule_flow_runs(flow_id)) == 10
         assert await api.flows.schedule_flow_runs(flow_id) == []
@@ -1430,6 +1443,7 @@ class TestScheduleRuns:
         assert await models.FlowRun.where().count() == run_count + 10
 
     async def test_schedule_max_runs(self, flow_id):
+        await api.flows.set_schedule_active(flow_id)
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         await api.flows.schedule_flow_runs(flow_id, max_runs=50)
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 50
