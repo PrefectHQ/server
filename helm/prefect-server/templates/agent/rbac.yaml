@@ -23,6 +23,14 @@ rules:
   resources:
   - events
   - pods
+  - pods/log
+  - services
+  verbs:
+  - '*'
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
   verbs:
   - '*'
 ---

@@ -1,11 +1,11 @@
 import datetime
 
 import pendulum
-import pytest
-
 import prefect
+import pytest
 from prefect import api, models
 from prefect.engine.state import Running, Submitted, Success
+
 from prefect_server import config
 
 START_TIME = pendulum.now()
@@ -61,7 +61,9 @@ async def flow_id(project_id):
     flow.add_task(prefect.Parameter("x", default=1))
 
     flow_id = await api.flows.create_flow(
-        project_id=project_id, serialized_flow=flow.serialize()
+        project_id=project_id,
+        serialized_flow=flow.serialize(),
+        set_schedule_active=False,
     )
 
     return flow_id

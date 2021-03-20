@@ -16,5 +16,5 @@
 #
 # Here's an example of a PR that adds an enhancement
 
-migration:
-  - "Improve run detail triggers when version is the same or missing - [#218](https://github.com/PrefectHQ/server/pull/218)"
+fix:
+  - "Ensure that errors in scheduling do not interrupt other scheduling operations - [#224](https://github.com/PrefectHQ/server/pull/224)"
