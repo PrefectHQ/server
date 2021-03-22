@@ -45,7 +45,7 @@
   - The API location you retrieved in #2 should match this url
   - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect
   - The location can also be changed within the UI itself per user
-  - The API must be accessible from the the user's machine for the UI to work
+  - The API must be accessible from the user's machine for the UI to work
 
 {{- if not .Values.jobs.createTenant.enabled }}
 
