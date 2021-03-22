@@ -3,8 +3,35 @@ import pendulum
 
 import pytest
 
+import prefect
 from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
+
+
+class TestDeleteFlowGroup:
+    async def test_delete_tenant_deletes_flow_group(self, tenant_id, flow_group_id):
+        await models.Tenant.where(id=tenant_id).delete()
+        assert not await models.FlowGroup.where(id=flow_group_id).first()
+
+    async def test_delete_flow_group_deletes_flows_and_runs(
+        self, flow_group_id, flow_id, flow_run_id
+    ):
+        await api.states.set_flow_run_state(
+            flow_run_id=flow_run_id,
+            state=prefect.engine.state.Scheduled(),
+        )
+
+        assert await models.Flow.where(id=flow_id).first()
+        assert await models.FlowRun.where(id=flow_run_id).first()
+
+        assert await api.flow_groups.delete_flow_group(flow_group_id)
+
+        assert not await models.Flow.where(id=flow_id).first()
+        assert not await models.FlowRun.where(id=flow_run_id).first()
+
+    async def test_delete_flow_group_with_none_id(self):
+        with pytest.raises(ValueError, match="Must provide flow group ID."):
+            await api.flow_groups.delete_flow_group(flow_group_id=None)
 
 
 class TestSetFlowGroupDefaultParameter:
