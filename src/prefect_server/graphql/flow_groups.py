@@ -7,6 +7,17 @@ from prefect import api
 from prefect_server.utilities.graphql import mutation
 
 
+@mutation.field("delete_flow_group")
+async def resolve_delete_flow_group(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    return {
+        "success": await api.flow_groups.delete_flow_group(
+            flow_group_id=input["flow_group_id"]
+        )
+    }
+
+
 @mutation.field("set_flow_group_default_parameters")
 async def resolve_set_flow_group_default_parameters(
     obj: Any, info: GraphQLResolveInfo, input: dict
