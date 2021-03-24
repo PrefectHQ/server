@@ -79,7 +79,7 @@ In order to run the system:
    prefect-server dev infrastructure
    ```
 
-   _If when starting the infrastructure, you receive and error message stating_ `infrastructure_hasura_1 exited with code 137`, _it is likely a memory issue with Docker. Bumping Docker Memory to 8GB should solve this._
+   _If when starting the infrastructure, you receive an error message stating_ `infrastructure_hasura_1 exited with code 137`, _it is likely a memory issue with Docker. Bumping Docker Memory to 8GB should solve this._
 
 1. Run the database migrations and apply Hasura metadata:
 
