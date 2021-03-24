@@ -202,6 +202,30 @@ apollo:
     type: LoadBalancer
     port: 4200
 
+  ingress:
+    enabled: false
+
+    # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
+    # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
+    # ingressClassName: nginx
+
+    annotations: {}
+    labels: {}
+
+    ## Hosts must be provided if Ingress is enabled.
+    hosts: []
+      # - prefecthq-apollo.domain.com
+
+    ## Path to use for ingress rules
+    path: /
+
+    ## TLS configuration for Prefect Ingress
+    ## Secret must be manually created in the namespace
+    tls: []
+    # - secretName: prefecthq-apollo-general-tls
+    #   hosts:
+    #   - prefecthq-apollo.example.com
+
   labels: {}
   annotations: {}
   replicas: 1
@@ -243,7 +267,7 @@ ui:
 
     annotations: {}
     labels: {}
-    
+
     ## Hosts must be provided if Ingress is enabled.
     hosts: []
       # - prefecthq-ui.domain.com
