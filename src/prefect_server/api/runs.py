@@ -6,11 +6,14 @@ import pendulum
 import prefect
 from prefect import api, models
 from prefect.engine.state import Pending, Queued, Scheduled
+from prefect.utilities import logging
 from prefect.utilities.graphql import EnumValue
 from prefect.utilities.plugins import register_api
 
 from prefect_server import config
 from prefect_server.utilities import exceptions, names
+
+logger = logging.get_logger("api.runs")
 
 SCHEDULED_STATES = [
     s.__name__
@@ -160,7 +163,6 @@ async def create_flow_run(
     missing = set(required_parameters).difference(run_parameters)
     if missing:
         raise ValueError(f"Required parameters were not supplied: {missing}")
-    state = Scheduled(message="Flow run scheduled.", start_time=scheduled_start_time)
 
     run = models.FlowRun(
         id=str(uuid.uuid4()),
@@ -189,8 +191,19 @@ async def create_flow_run(
     # initial state should be set otherwise, the idempotency key was matched and
     # we take no action
     if run.id == insert_result.returning.id:
+
         # apply the flow run's initial state via `set_flow_run_state`
-        await api.states.set_flow_run_state(flow_run_id=run.id, state=state)
+        await api.states.set_flow_run_state(
+            flow_run_id=run.id,
+            state=Scheduled(
+                message="Flow run scheduled.", start_time=scheduled_start_time
+            ),
+        )
+
+        logger.debug(
+            f"Flow run {insert_result.returning.id} of flow {flow_id or flow.id} "
+            f"scheduled for {scheduled_start_time}"
+        )
 
     # return the database id
     return insert_result.returning.id
