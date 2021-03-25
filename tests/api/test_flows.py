@@ -1041,8 +1041,7 @@ class TestSetScheduleActive:
         flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
         assert flow.is_schedule_active is True
 
-    @pytest.mark.parametrize("x", range(5))
-    async def test_set_schedule_active_schedules_new_runs(self, flow_id, x):
+    async def test_set_schedule_active_schedules_new_runs(self, flow_id):
         await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 0
 
