@@ -2,15 +2,17 @@ import datetime
 from typing import Any, Iterable, List
 
 import pendulum
-
 import prefect
 from prefect import api, models
 from prefect.engine.state import Pending, Queued, Scheduled
+from prefect.utilities import logging
 from prefect.utilities.graphql import EnumValue
 from prefect.utilities.plugins import register_api
+
 from prefect_server import config
 from prefect_server.utilities import exceptions, names
 
+logger = logging.get_logger("api.runs")
 
 SCHEDULED_STATES = [
     s.__name__
@@ -239,6 +241,10 @@ async def _create_flow_run(
 
     # apply the flow run's initial state via `set_flow_run_state`
     await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=state)
+
+    logger.debug(
+        f"Flow run {flow_run_id} of flow {flow_id or flow.id} scheduled for {scheduled_start_time}"
+    )
 
     return flow_run_id
 
