@@ -504,7 +504,6 @@ class TestAggregates:
         assert result["version"] == 2
 
 
-
 class TestRootFields:
     class TestModel(orm.HasuraModel):
         __hasura_type__ = "abc"
