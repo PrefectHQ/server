@@ -1,5 +1,27 @@
 # Changelog
 
+## March 20, 2021 <Badge text="beta" type="success" />
+
+Released on March 20, 2021.
+
+### Enhancements
+
+- Add more permissions to agent role in helm chart - [#221](https://github.com/PrefectHQ/server/pull/221)
+- Set uvicorn server log level and access logs - [#217](https://github.com/PrefectHQ/server/pull/217)
+
+### Fixes
+
+- Ensure the scheduler queries with deterministic order - [#215](https://github.com/PrefectHQ/server/pull/215)
+- Ensure that errors in scheduling do not interrupt other scheduling operations - [#224](https://github.com/PrefectHQ/server/pull/224)
+
+### Database Migrations
+
+- Improve run detail triggers when version is the same or missing - [#218](https://github.com/PrefectHQ/server/pull/218)
+
+### Contributors
+
+- [Peter Roelants](https://github.com/peterroelants)
+
 ## March 10, 2021 <Badge text="beta" type="success" />
 
 Released on March 10, 2021.

@@ -7,6 +7,36 @@ from prefect.serialization.schedule import ClockSchema
 from prefect.utilities.plugins import register_api
 
 
+@register_api("flow_groups.delete_flow_group")
+async def delete_flow_group(flow_group_id: str) -> bool:
+    """
+    Deletes a flow group.
+
+    Args:
+        - flow_group_id (str): the flow group id
+
+    Returns:
+        - bool: if the delete succeeded
+
+    Raises:
+        - ValueError: if a flow group ID is not provided
+    """
+    if not flow_group_id:
+        raise ValueError("Must provide flow group ID.")
+
+    # Delete flows first to speedup deletion cascades and avoid timeouts
+    flows_to_delete = await models.Flow.where(
+        {
+            "flow_group_id": {"_eq": flow_group_id},
+        }
+    ).get({"id"})
+    await asyncio.gather(*[api.flows.delete_flow(flow.id) for flow in flows_to_delete])
+
+    # Delete the flow group
+    result = await models.FlowGroup.where(id=flow_group_id).delete()
+    return bool(result.affected_rows)
+
+
 @register_api("flow_groups.update_setting")
 async def update_setting(flow_group_id: str, key: str, value: any) -> None:
     """

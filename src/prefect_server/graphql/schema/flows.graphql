@@ -39,6 +39,9 @@ extend type Mutation {
     input: enable_flow_lazarus_process_input!
   ): success_payload
 
+  "Delete a flow group."
+  delete_flow_group(input: delete_flow_group_input!): success_payload
+
   "Set description for a flow group."
   set_flow_group_description(input: set_flow_group_description_input!): success_payload
 
@@ -142,6 +145,11 @@ input disable_flow_lazarus_process_input {
 # ------------------------------------------------------
 # flow group inputs
 # ------------------------------------------------------
+
+input delete_flow_group_input {
+  "The ID of the flow group to delete"
+  flow_group_id: UUID!
+}
 
 input set_flow_group_default_parameters_input {
   "The ID of the flow group to update"

@@ -5,6 +5,23 @@ from prefect import models
 from prefect.serialization.schedule import ScheduleSchema
 
 
+class TestDeleteFlowGroup:
+    mutation = """
+        mutation($input: delete_flow_group_input!) {
+            delete_flow_group(input: $input) {
+                success
+            }
+        }
+    """
+
+    async def test_delete_flow_group(self, run_query, flow_group_id):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(input=dict(flow_group_id=flow_group_id)),
+        )
+        assert not await models.FlowGroup.where(id=flow_group_id).first()
+
+
 class TestSetFlowGroupLabels:
     mutation = """
         mutation($input: set_flow_group_labels_input!) {
