@@ -234,9 +234,10 @@ async def get_or_create_task_run(
             states=[
                 models.TaskRunState(
                     tenant_id=task.tenant_id,
-                    **models.TaskRunState.fields_from_state(
-                        Pending(message="Task run created")
-                    ),
+                    state="Pending",
+                    timestamp=pendulum.now(),
+                    message="Task run created",
+                    serialized_state=Pending(message="Task run created").serialize(),
                 )
             ],
         ).insert()

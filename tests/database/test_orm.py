@@ -504,41 +504,6 @@ class TestAggregates:
         assert result["version"] == 2
 
 
-class TestRunModels:
-    @pytest.mark.parametrize(
-        "state",
-        [
-            Running(message="running", result=1),
-            Scheduled(message="scheduled", result=1, start_time=pendulum.now()),
-        ],
-    )
-    async def test_flow_run_fields_from_state(self, state):
-        dt = pendulum.now()
-        info = models.FlowRunState.fields_from_state(state)
-
-        assert info["state"] == type(state).__name__
-        assert info["timestamp"] > dt
-        assert info["message"] == state.message
-        assert info["result"] == state.result
-        assert info["serialized_state"] == state.serialize()
-
-    @pytest.mark.parametrize(
-        "state",
-        [
-            Running(message="running", result=1),
-            Scheduled(message="scheduled", result=1, start_time=pendulum.now()),
-        ],
-    )
-    async def test_task_run_fields_from_state(self, state):
-        dt = pendulum.now()
-        info = models.TaskRunState.fields_from_state(state)
-
-        assert info["state"] == type(state).__name__
-        assert info["timestamp"] > dt
-        assert info["message"] == state.message
-        assert info["result"] == state.result
-        assert info["serialized_state"] == state.serialize()
-
 
 class TestRootFields:
     class TestModel(orm.HasuraModel):
