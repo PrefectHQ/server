@@ -636,7 +636,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
             idempotency_key = f"auto-scheduled:{event.start_time.in_tz('UTC')}"
 
         schedule_coros.append(
-            await api.runs.create_flow_run(
+            api.runs.create_flow_run(
                 flow_id=flow_id,
                 scheduled_start_time=event.start_time,
                 parameters=event.parameter_defaults,
@@ -646,7 +646,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
         )
 
     # schedule runs concurrently
-    await asyncio.gather(*schedule_coros)
+    run_ids.extend(await asyncio.gather(*schedule_coros))
 
     await models.FlowRun.where({"id": {"_in": run_ids}}).update(
         set={"auto_scheduled": True}
