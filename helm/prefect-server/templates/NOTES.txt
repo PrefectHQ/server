@@ -16,7 +16,7 @@
 
 {{- else if .Values.ui.ingress.enabled -}}
 
-#1 The UI has been exposed using ingress:
+#1 The UI has been exposed using ingress and is available at the following hosts:
 
 {{- range .Values.ui.ingress.hosts }}
   http{{ if $.Values.ui.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ui.ingress.path }}
