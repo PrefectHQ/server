@@ -206,9 +206,7 @@ SET TIME ZONE 'UTC';
 
 ### Ingress
 
-If you have Ingress controller configured you might prefer to expose ouside traffic to services using Ingress rules.
-
-Ingress rule creation is suported for `ui` and `apollo` components of this chart.  
+Ingress rule creation is suported for `ui` and `apollo` components of this chart. You must have an Ingress controller (i.e. nginx) installed to your cluster and configured independently of this chart.
 
 To create an Ingress rule for a component,
 1. Disable direct service access by setting `<component>.service.type` to `ClusterIP` instead of `LoadBalancer`
