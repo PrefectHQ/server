@@ -44,7 +44,7 @@
 
 {{- else if .Values.apollo.ingress.enabled -}}
 
-#2 The Apollo GraphQL API has been exposed using ingress:
+#2 The Apollo GraphQL API has been exposed using ingress and is available at the following hosts:
 
 {{- range .Values.apollo.ingress.hosts }}
   http{{ if $.Values.apollo.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.apollo.ingress.path }}
