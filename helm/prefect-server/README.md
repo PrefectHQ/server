@@ -214,7 +214,7 @@ To create an Ingress rule resource set `service.type: ClusterIP` of the corespon
 
 Created component Ingress rules will be automatically configured to forward traffic from specified hosts to coresponding services.
 
-You can secure an Ingress by specifying a Secret that contains a TLS private key and certificate. For information how to create that secret refere to [official Kubernetes documentation - Ingress tls](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls).
+You can secure an Ingress by specifying a `Secret` that contains a TLS private key and certificate. For information how to setup the secret, refer to the [Ingress section of the official Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls).
 
 ## Versioning
 
