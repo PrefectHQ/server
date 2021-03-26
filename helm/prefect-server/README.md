@@ -210,7 +210,10 @@ If you have Ingress controller configured you might prefer to expose ouside traf
 
 Ingress rule creation is suported for `ui` and `apollo` components of this chart.  
 
-To create an Ingress rule resource set `service.type: ClusterIP` of the coresponding component and enable Ingress by setting `ingress.enables: true` and configuring list of hosts `ingress.hosts`. See configuration example in `values.yaml` file.  
+To create an Ingress rule for a component,
+1. Disable direct service access by setting `<component>.service.type` to `ClusterIP` instead of `LoadBalancer`
+2. Enable the Ingress by setting `<component>.ingress.enabled` to `true`
+3. Configuring the list of hosts at `<component>.ingress.hosts` to include your domains. _There is an example in values.yaml_ 
 
 Created component Ingress rules will be automatically configured to forward traffic from specified hosts to coresponding services.
 
