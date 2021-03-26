@@ -1,0 +1,43 @@
+{{- if .Values.ui.ingress.enabled }}
+{{- $serviceName := include "prefect-server.nameField" (merge (dict "component" "ui") .) -}}
+{{- $servicePort := .Values.ui.service.port -}}
+{{- $ingressPath := .Values.ui.ingress.path -}}
+{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
+apiVersion: networking.k8s.io/v1beta1
+{{ else }}
+apiVersion: extensions/v1beta1
+{{ end -}}
+kind: Ingress
+metadata:
+  name: {{ $serviceName }}
+{{- if .Values.ui.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.ui.ingress.annotations | indent 4 }}
+{{- end }}
+  labels: 
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+{{- if .Values.ui.ingress.labels }}
+{{ toYaml .Values.ui.ingress.labels | indent 4 }}
+{{- end }}
+spec:
+  {{- if or (.Capabilities.APIVersions.Has "networking.k8s.io/v1") (.Capabilities.APIVersions.Has "networking.k8s.io/v1beta1") }}
+  {{- if .Values.ui.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.ui.ingress.ingressClassName }}
+  {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ui.ingress.hosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            backend:
+              serviceName: {{ $serviceName }}
+              servicePort: {{ $servicePort }}
+    {{- end -}}
+  {{- if .Values.ui.ingress.tls }}
+  tls:
+{{ tpl (toYaml .Values.ui.ingress.tls | indent 4) . }}
+  {{- end -}}
+{{- end -}}

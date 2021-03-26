@@ -1,0 +1,43 @@
+{{- if .Values.apollo.ingress.enabled }}
+{{- $serviceName := include "prefect-server.nameField" (merge (dict "component" "apollo") .) -}}
+{{- $servicePort := .Values.apollo.service.port -}}
+{{- $ingressPath := .Values.apollo.ingress.path -}}
+{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
+apiVersion: networking.k8s.io/v1beta1
+{{ else }}
+apiVersion: extensions/v1beta1
+{{ end -}}
+kind: Ingress
+metadata:
+  name: {{ $serviceName }}
+{{- if .Values.apollo.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.apollo.ingress.annotations | indent 4 }}
+{{- end }}
+  labels: 
+    {{- include "prefect-server.commonLabels" . | nindent 4 }}
+    app.kubernetes.io/component: apollo
+{{- if .Values.apollo.ingress.labels }}
+{{ toYaml .Values.apollo.ingress.labels | indent 4 }}
+{{- end }}
+spec:
+  {{- if or (.Capabilities.APIVersions.Has "networking.k8s.io/v1") (.Capabilities.APIVersions.Has "networking.k8s.io/v1beta1") }}
+  {{- if .Values.apollo.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.apollo.ingress.ingressClassName }}
+  {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.apollo.ingress.hosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: {{ $ingressPath }}
+            backend:
+              serviceName: {{ $serviceName }}
+              servicePort: {{ $servicePort }}
+    {{- end -}}
+  {{- if .Values.apollo.ingress.tls }}
+  tls:
+{{ tpl (toYaml .Values.apollo.ingress.tls | indent 4) . }}
+  {{- end -}}
+{{- end -}}
