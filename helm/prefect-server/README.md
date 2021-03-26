@@ -178,6 +178,7 @@ Development versions of the Helm chart will always be available directly from th
 See comments in `values.yaml`.
 
 ### Tenant
+
 A tenant is needed for the server API to be operational.
 If there is no tenant in the database, the UI dashboard will fail to display and agents will error.
 
@@ -207,6 +208,18 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 SET TIME ZONE 'UTC';
 ```
 
+### Ingress
+
+If you have Ingress controller configured you might prefer to expose ouside traffic to services using Ingress rules.
+
+Ingress rule creation is suported for `ui` and `apollo` components of this chart.  
+
+To create an Ingress rule resource set `service.type: ClusterIP` of the coresponding component and enable Ingress by setting `ingress.enables: true` and configuring list of hosts `ingress.hosts`. See configuration example in `values.yaml` file.  
+
+Created component Ingress rules will be automatically configured to forward traffic from specified hosts to coresponding services.
+
+You can secure an Ingress by specifying a Secret that contains a TLS private key and certificate. For information how to create that secret refere to [official Kubernetes documentation - Ingress tls](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls).
+
 ## Versioning
 
 Released Helm charts have versions matching Prefect Server image tags.
@@ -220,7 +233,6 @@ These are set using `prefectVersionTag` and `uiVersionTag` which is pinned to th
 You may want to manage these version tags separately as Prefect Core and the UI are released more frequently than the Server.
 
 If using the agent in production, we recommend ensuring `prefectVersionTag` matches the version of Prefect you are using to ensure the agent matches your flow.
-
 
 ### Development
 
