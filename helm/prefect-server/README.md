@@ -82,8 +82,8 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
 
     See [Helm install docs](https://helm.sh/docs/helm/helm_install/) for all options.
 
-
 #### Verifying package integrity
+
 _Checking package integrity is not required and is included as an optional security measure_
 
 The hosted charts are signed using GPG to ensure package integrity.
@@ -102,8 +102,6 @@ The hosted charts are signed using GPG to ensure package integrity.
     ```
 
 3. Add `--verify` to your installation and upgrade commands to verify package integrity
-
-
 
 ### Installing development versions
 
@@ -161,7 +159,6 @@ Development versions of the Helm chart will always be available directly from th
         --set jobs.createTenant.enabled=true
     ```
 
-
 #### Important notes about upgrading
 
 - Updates will only update infrastructure that is modified.
@@ -171,7 +168,6 @@ Development versions of the Helm chart will always be available directly from th
     ```
     $ helm upgrade ... --set postgresql.postgresqlPassword=$POSTGRESQL_PASSWORD
     ```
-
 
 ## Options:
 
@@ -242,9 +238,10 @@ The chart `version` _must_ follow semantic versioning per Helm's standards and i
 The default `imagePullPolicy` is `Always` so images will be updated when your deployments are rolled over.
 This could result in some deployments being on mismatched versions which may not be guaranteed to work well together.
 
-##  Connecting to your Server
+## Connecting to your Server
 
 When you run `prefect backend server`, it configures the CLI to expect Server interactions rather than Prefect Cloud. By default, the CLI looks for the Server API at `localhost`. To connect the CLI to your newly deployed server, you'll either need to point the CLI to an external IP or forward the service to `localhost`
+
 ### Configure `prefect` to point to your service
 
 To designate your local `prefect` to point to the Kubernetes server,
@@ -263,7 +260,6 @@ To review the configuration file run `prefect config`.
 
 Alternatively, you can port-forward the apollo service to your localhost
 `kubectl port-forward svc/<APOLO-SERVICE> 4200:4200 -n <namespace>`.
-
 
 ## Troubleshooting
 
