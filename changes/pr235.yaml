@@ -1,0 +1,3 @@
+
+enhancement:
+  - "Update `LoopServices` to use the config to specify loop times - [#235](https://github.com/PrefectHQ/server/pull/235)"
