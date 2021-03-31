@@ -12,6 +12,7 @@
     - [Tenant](#tenant)
     - [KubernetesAgent](#kubernetesagent)
     - [Database](#database)
+    - [Ingress](#ingress)
 - [Versioning](#versioning)
     - [Development](#development)
 - [Connecting to your Server](#connecting-to-your-server)
