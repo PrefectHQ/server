@@ -7,12 +7,12 @@ from typing import Any, Dict, List
 
 import pendulum
 from packaging import version as module_version
-from pydantic import BaseModel, Field, validator
-
 from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
-from prefect.utilities.graphql import with_args, EnumValue
+from prefect.utilities.graphql import EnumValue, with_args
 from prefect.utilities.plugins import register_api
+from pydantic import BaseModel, Field, validator
+
 from prefect_server import config
 from prefect_server.utilities import logging
 
@@ -614,6 +614,8 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
     else:
         last_scheduled_run = pendulum.now("UTC")
 
+    schedule_coros = []
+
     # schedule every event with an idempotent flow run
     for event in flow_schedule.next(n=max_runs, return_events=True):
 
@@ -633,19 +635,18 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
         else:
             idempotency_key = f"auto-scheduled:{event.start_time.in_tz('UTC')}"
 
-        run_id = await api.runs.create_flow_run(
-            flow_id=flow_id,
-            scheduled_start_time=event.start_time,
-            parameters=event.parameter_defaults,
-            labels=event.labels,
-            idempotency_key=idempotency_key,
+        schedule_coros.append(
+            api.runs.create_flow_run(
+                flow_id=flow_id,
+                scheduled_start_time=event.start_time,
+                parameters=event.parameter_defaults,
+                labels=event.labels,
+                idempotency_key=idempotency_key,
+            )
         )
 
-        logger.debug(
-            f"Flow run {run_id} of flow {flow_id} scheduled for {event.start_time}"
-        )
-
-        run_ids.append(run_id)
+    # schedule runs concurrently
+    run_ids.extend(await asyncio.gather(*schedule_coros))
 
     await models.FlowRun.where({"id": {"_in": run_ids}}).update(
         set={"auto_scheduled": True}

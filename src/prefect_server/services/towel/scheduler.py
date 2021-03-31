@@ -2,6 +2,7 @@ import asyncio
 
 from prefect import api, models
 from prefect.utilities.graphql import EnumValue
+
 from prefect_server.services.loop_service import LoopService
 
 
@@ -15,7 +16,7 @@ class Scheduler(LoopService):
     """
 
     loop_seconds_config_key = "services.scheduler.scheduler_loop_seconds"
-    loop_seconds_default = 300
+    loop_seconds_default = 150
 
     async def run_once(self) -> int:
         """
@@ -40,13 +41,8 @@ class Scheduler(LoopService):
                 selection_set={
                     "id",
                 },
-                order_by=[
-                    {
-                        "flow_runs_aggregate": {
-                            "max": {"scheduled_start_time": EnumValue("asc_nulls_last")}
-                        }
-                    }
-                ],
+                # deterministic sort for batching
+                order_by=[{"id": EnumValue("desc")}],
                 limit=500,
                 offset=500 * iterations,
             )
@@ -58,9 +54,15 @@ class Scheduler(LoopService):
 
             # concurrently schedule all runs
             all_run_ids = await asyncio.gather(
-                *[api.flows.schedule_flow_runs(flow.id) for flow in flows]
+                *[api.flows.schedule_flow_runs(flow.id) for flow in flows],
+                return_exceptions=True,
             )
-            runs_scheduled += sum(len(ids) for ids in all_run_ids)
+            runs_scheduled += sum(
+                len(ids)
+                for ids in all_run_ids
+                # only include lists to avoid errors
+                if isinstance(ids, list)
+            )
 
         self.logger.info(f"Scheduled {runs_scheduled} flow runs.")
         return runs_scheduled

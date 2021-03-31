@@ -21,7 +21,9 @@
 
 # Prefect Server
 
-Please note: this repo is for Prefect Server development. If you want to run Prefect Server, install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
+Please note: this repo is for Prefect Server development. If you want to run Prefect Server, the best first step is to install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
+
+If you want to install Prefect Server on Kubernetes, take a look at the [Server Helm Chart](./helm/prefect-server).
 
 If you would like to work on the Prefect UI or open a UI-specific issue, please visit [the Prefect UI repository](https://github.com/PrefectHQ/ui).
 
@@ -56,7 +58,6 @@ These services are intended to be run within [Docker](https://www.docker.com/) a
 
    ```
    pip install -e .
-   npm install
    cd services/apollo && npm install
    ```
 
@@ -77,6 +78,8 @@ In order to run the system:
    ```bash
    prefect-server dev infrastructure
    ```
+
+   _If when starting the infrastructure, you receive an error message stating_ `infrastructure_hasura_1 exited with code 137`, _it is likely a memory issue with Docker. Bumping Docker Memory to 8GB should solve this._
 
 1. Run the database migrations and apply Hasura metadata:
 

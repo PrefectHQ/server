@@ -35,7 +35,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.towel.image.name }}:{{ .Values.towel.image.tag |  default .Values.prefectVersionTag }}"
+          image: "{{ .Values.towel.image.name }}:{{ .Values.towel.image.tag |  default .Values.serverVersionTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.towel.image.pullPolicy  }}
           command:
             - python 

@@ -14,6 +14,14 @@
   NOTE: It may take a few minutes for the LoadBalancer IP to be available. 
         You can watch the status of by running: kubectl get --namespace {{ .Release.Namespace }} svc -w {{ $ui }}
 
+{{- else if .Values.ui.ingress.enabled -}}
+
+#1 The UI has been exposed using ingress and is available at the following hosts:
+
+{{- range .Values.ui.ingress.hosts }}
+  http{{ if $.Values.ui.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ui.ingress.path }}
+{{- end }}
+
 {{- else -}}
 
 #1 The UI has been deployed as a non-default service type '{{ .Values.ui.service.type }}' and may not be immediately accessible.
@@ -34,7 +42,15 @@
   ) \
   && echo "API available at: http://$API_HOST:{{ .Values.apollo.service.port }}/graphql"
 
-{{- else }}
+{{- else if .Values.apollo.ingress.enabled -}}
+
+#2 The Apollo GraphQL API has been exposed using ingress and is available at the following hosts:
+
+{{- range .Values.apollo.ingress.hosts }}
+  http{{ if $.Values.apollo.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.apollo.ingress.path }}
+{{- end }}
+
+{{- else -}}
 
 #2 The API has been deployed as a non-default service type '{{ .Values.apollo.service.type }}' and may not be immediately accessible.
    Please contact your Kubernetes administrator for help getting access.
@@ -45,7 +61,7 @@
   - The API location you retrieved in #2 should match this url
   - The default can be changed in the helm deployment at 'ui.apolloApiUrl' if it is incorrect
   - The location can also be changed within the UI itself per user
-  - The API must be accessible from the the user's machine for the UI to work
+  - The API must be accessible from the user's machine for the UI to work
 
 {{- if not .Values.jobs.createTenant.enabled }}
 

@@ -1,10 +1,26 @@
 # prefect-server configuration
 
-# prefectVersionTag configures the default tag for prefect images
-# which are all tagged with the same name on release. To override
-# images for specific components, modify <component>.image.tag
-# NOTE: This notably excludes the hasura image
-prefectVersionTag:  "latest"
+# serverVersionTag configures the default tag for prefect server
+# images which are used for the apollo, graphql, and towel
+# services. If null, this value defaults to `appVersion` but is
+# provided here to allow override at chart install time. Each
+# service image tag can be overriden individually in their 
+# configurations but it is not recommended.
+# See https://github.com/helm/helm/issues/8194 for details
+# on why the `appVersion` cannot be set at install time.
+serverVersionTag: null
+
+# prefectVersionTag configures the default tag for Prefect Core based
+# services, including the agent and default tenant creation job.
+# This value is automatically pinned on chart release to the latest
+# core version.
+prefectVersionTag: "latest"
+
+# uiVersionTag configures the default tag for the Prefect UI service.
+# It is defined here for easy update using `sed` for automation.
+# This value is automatically pinned on chart release to the latest
+# ui version.
+uiVersionTag: "latest"
 
 # imagePullSecrets provides configuration to reference the k8s Secret
 # resources the Helm chart's pods can get credentials from to pull
@@ -12,7 +28,7 @@ prefectVersionTag:  "latest"
 imagePullSecrets: []
 
 # annotations to merge into all object configurations
-# NOTE: These will not apply to the postgresql subchart and must be 
+# NOTE: These will not apply to the postgresql subchart and must be
 # defined within `postgresql` as well if that is desired
 annotations: {}
 
@@ -186,6 +202,30 @@ apollo:
     type: LoadBalancer
     port: 4200
 
+  ingress:
+    enabled: false
+
+    # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
+    # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
+    # ingressClassName: nginx
+
+    annotations: {}
+    labels: {}
+
+    ## Hosts must be provided if Ingress is enabled.
+    hosts: []
+      # - prefecthq-apollo.domain.com
+
+    ## Path to use for ingress rules
+    path: /
+
+    ## TLS configuration for Prefect Ingress
+    ## Secret must be manually created in the namespace
+    tls: []
+    # - secretName: prefecthq-apollo-general-tls
+    #   hosts:
+    #   - prefecthq-apollo.example.com
+
   labels: {}
   annotations: {}
   replicas: 1
@@ -202,7 +242,7 @@ ui:
 
   image:
     name: prefecthq/ui
-    tag: null
+    tag: null  # See `uiVersionTag` instead
     pullPolicy: Always
     pullSecrets: []
 
@@ -217,6 +257,30 @@ ui:
     # to expose the ui service to users and the UI.
     type: LoadBalancer
     port: 8080
+
+  ingress:
+    enabled: false
+
+    # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
+    # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
+    # ingressClassName: nginx
+
+    annotations: {}
+    labels: {}
+
+    ## Hosts must be provided if Ingress is enabled.
+    hosts: []
+      # - prefecthq-ui.domain.com
+
+    ## Path to use for ingress rules
+    path: /
+
+    ## TLS configuration for Prefect Ingress
+    ## Secret must be manually created in the namespace
+    tls: []
+    # - secretName: prefecthq-ui-general-tls
+    #   hosts:
+    #   - prefecthq-ui.example.com
 
   labels: {}
   annotations: {}
@@ -279,7 +343,7 @@ agent:
   affinity: {}
 
   # resources defines the computational resources for the Prefect Agent
-  resources: 
+  resources:
     limits:
       cpu: 100m
       memory: 128Mi
@@ -294,7 +358,7 @@ agent:
       requests:
         memory: ""
         cpu: ""
-    
+
     # imagePullPolicy configures the image pull policy for the flow job
     imagePullPolicy: ""
 

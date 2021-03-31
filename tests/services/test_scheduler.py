@@ -1,12 +1,13 @@
 import pytest
-
 from prefect import api
 from prefect import models as m
+
 from prefect_server.services.towel.scheduler import Scheduler
 
 
 @pytest.fixture(autouse=True)
-async def clear_scheduled_runs(flow_id):
+async def setup(flow_id):
+    await api.flows.set_schedule_active(flow_id=flow_id)
     await m.FlowRun.where({"flow_id": {"_eq": flow_id}}).delete()
 
 
