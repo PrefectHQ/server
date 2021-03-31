@@ -299,7 +299,12 @@ async def create_flow(
         # from kicking in
         try:
             await api.flows.set_schedule_active(flow_id=flow_id)
-        except ValueError:
+        except Exception:
+            logger.error(
+                "Failed to set schedule to active while creating flow "
+                "(flow_id={flow_id}).",
+                exc_info=True,
+            )
             pass
 
     return flow_id
