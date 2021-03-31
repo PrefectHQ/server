@@ -14,4 +14,8 @@ ENV_VAR_PREFIX = "PREFECT_SERVER"
 config = load_configuration(
     path=DEFAULT_CONFIG, user_config_path=USER_CONFIG, env_var_prefix=ENV_VAR_PREFIX
 )
-register_plugin("backend_config", config)
+
+
+@register_plugin("get_backend_config")
+def get_backend_config(): 
+    return config

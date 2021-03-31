@@ -2,6 +2,8 @@ import asyncio
 import pytest
 
 from prefect_server.services.loop_service import LoopService
+from prefect_server.utilities.tests import set_temporary_config
+
 
 COUNTER = 0
 
@@ -13,6 +15,13 @@ class LoopServiceTest(LoopService):
         global COUNTER
         COUNTER += 1
         print(COUNTER)
+
+
+async def test_loop_service_uses_config_key():
+    with set_temporary_config("services.loopservicetest.loop_seconds", 10):
+        ls = LoopServiceTest()
+
+    assert ls.loop_seconds == 10
 
 
 @pytest.fixture(autouse=True)

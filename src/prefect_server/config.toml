@@ -73,11 +73,14 @@ format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
     disable_access_logs = false
 
     [services.scheduler]
-    # run scheduler every 5 minutes
-    scheduler_loop_seconds = 300
+    loop_seconds = 300
 
     [services.lazarus]
     resurrection_attempt_limit = 3
+
+    [services.zombiekiller]
+    loop_seconds = 120
+    
 
 
 # UI Colors corresponding to run states

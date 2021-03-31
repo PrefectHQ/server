@@ -14,8 +14,6 @@ class Scheduler(LoopService):
         - the schedule is active
         - the flow is not archived
     """
-
-    loop_seconds_config_key = "services.scheduler.scheduler_loop_seconds"
     loop_seconds_default = 150
 
     async def run_once(self) -> int:

@@ -17,8 +17,10 @@ class LoopService:
     define the `run_once` coroutine to describe the behavior of the service on each loop.
     """
 
-    # if set, and no `loop_seconds` is provided, the service will attempt to load
-    # `loop_seconds` from this config key
+    # If no `loop_seconds` is provided, the service will attempt to load
+    # `loop_seconds` from this config key. If no value is found,
+    # `loop_seconds_default` is used.
+    # Defaults to `services.{cls_name}.loop_seconds`
     loop_seconds_config_key = None
 
     # if no loop_seconds_config_key is provided, this will be the default
@@ -29,22 +31,25 @@ class LoopService:
 
     def __init__(self, loop_seconds: Union[float, int] = None):
         if loop_seconds is None:
-            if self.loop_seconds_config_key:
 
-                # split the key on '.' and recurse
-                split_keys = self.loop_seconds_config_key.split(".")
+            # Check this service name or the given config key
+            config_key = (
+                self.loop_seconds_config_key
+                or f"services.{type(self).__name__.lower()}.loop_seconds"
+            )
 
-                # Load the current backend config
-                cfg = prefect.plugins.backend_config
-                for key in split_keys[:-1]:
-                    cfg = cfg.get(key, {})
+            # Load the current backend config
+            cfg = prefect.plugins.get_backend_config()
 
-                loop_seconds = cfg.get(split_keys[-1])
-            else:
-                loop_seconds = self.loop_seconds_default
+            # split the key on '.' and recurse to the correct level
+            split_keys = config_key.split(".")
+            for key in split_keys[:-1]:
+                cfg = cfg.get(key, {})
 
-        if loop_seconds == 0:
-            raise ValueError("`loop_seconds` must be greater than 0.")
+            loop_seconds = cfg.get(split_keys[-1])
+
+        # Use the default if we failed to get
+        loop_seconds = loop_seconds or self.loop_seconds_default
 
         self.loop_seconds = float(loop_seconds)
         self.name = type(self).__name__
