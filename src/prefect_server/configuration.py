@@ -17,5 +17,5 @@ config = load_configuration(
 
 
 @register_plugin("get_backend_config")
-def get_backend_config(): 
+def get_backend_config():
     return config

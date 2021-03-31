@@ -21,7 +21,6 @@ LAZARUS_EXCLUDE = [
 
 
 class Lazarus(LoopService):
-    
     async def run_once(self) -> None:
         """
         The Lazarus process revives any flow runs that are submitted or running but have no tasks in
