@@ -305,7 +305,6 @@ async def create_flow(
                 "(flow_id={flow_id}).",
                 exc_info=True,
             )
-            pass
 
     return flow_id
 
