@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 import datetime
 import uuid
 
@@ -513,6 +515,36 @@ class TestCreateFlow:
         persisted_flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
         # confirm the keys in the serialized flow match the form we'd expect
         assert persisted_flow.serialized_flow == flow.serialize()
+
+    async def test_create_flow_cleans_up_if_task_creation_fails(
+        self, project_id, flow, monkeypatch
+    ):
+        patched_insert_raises_error = MagicMock(side_effect=Exception())
+        monkeypatch.setattr(
+            "prefect.models.Task.insert_many", patched_insert_raises_error
+        )
+        patched_delete = MagicMock()
+        monkeypatch.setattr("prefect_server.api.flows.delete_flow", patched_delete)
+        with pytest.raises(Exception):
+            flow_id = await api.flows.create_flow(
+                project_id=project_id, serialized_flow=flow.serialize()
+            )
+            assert patched_delete.called
+
+    async def test_create_flow_cleans_up_if_edge_creation_fails(
+        self, project_id, flow, monkeypatch
+    ):
+        patched_insert_raises_error = MagicMock(side_effect=Exception())
+        monkeypatch.setattr(
+            "prefect.models.Edge.insert_many", patched_insert_raises_error
+        )
+        patched_delete = MagicMock()
+        monkeypatch.setattr("prefect_server.api.flows.delete_flow", patched_delete)
+        with pytest.raises(Exception):
+            flow_id = await api.flows.create_flow(
+                project_id=project_id, serialized_flow=flow.serialize()
+            )
+            assert patched_delete.called
 
 
 class TestCreateFlowVersions:
