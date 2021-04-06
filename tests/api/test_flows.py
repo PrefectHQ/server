@@ -516,35 +516,21 @@ class TestCreateFlow:
         # confirm the keys in the serialized flow match the form we'd expect
         assert persisted_flow.serialized_flow == flow.serialize()
 
-    async def test_create_flow_cleans_up_if_task_creation_fails(
-        self, project_id, flow, monkeypatch
+    @pytest.mark.parametrize("model_name", ["Task", "Edge"])
+    async def test_create_flow_cleans_up_if_task_or_edge_creation_fails(
+        self, project_id, flow, monkeypatch, model_name
     ):
         patched_insert_raises_error = MagicMock(side_effect=Exception())
         monkeypatch.setattr(
-            "prefect.models.Task.insert_many", patched_insert_raises_error
+            f"prefect.models.{model_name}.insert_many", patched_insert_raises_error
         )
-        patched_delete = MagicMock()
-        monkeypatch.setattr("prefect_server.api.flows.delete_flow", patched_delete)
+        flow.name = "my special flow"
+        assert await models.Flow.where({"name": {"_eq": flow.name}}).count() == 0
         with pytest.raises(Exception):
             flow_id = await api.flows.create_flow(
                 project_id=project_id, serialized_flow=flow.serialize()
             )
-            assert patched_delete.called
-
-    async def test_create_flow_cleans_up_if_edge_creation_fails(
-        self, project_id, flow, monkeypatch
-    ):
-        patched_insert_raises_error = MagicMock(side_effect=Exception())
-        monkeypatch.setattr(
-            "prefect.models.Edge.insert_many", patched_insert_raises_error
-        )
-        patched_delete = MagicMock()
-        monkeypatch.setattr("prefect_server.api.flows.delete_flow", patched_delete)
-        with pytest.raises(Exception):
-            flow_id = await api.flows.create_flow(
-                project_id=project_id, serialized_flow=flow.serialize()
-            )
-            assert patched_delete.called
+            assert await models.Flow.where({"name": {"_eq": flow.name}}).count() == 0
 
 
 class TestCreateFlowVersions:
