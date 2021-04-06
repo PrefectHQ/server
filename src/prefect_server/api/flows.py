@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, validator
 from prefect_server import config
 from prefect_server.utilities import logging
 from prefect_server.utilities.collections import chunked_iterable
+from prefect_server.utilities.exceptions import APIError
 
 logger = logging.get_logger("api.flows")
 schedule_schema = ScheduleSchema()
@@ -314,8 +315,9 @@ async def create_flow(
             )
 
     except Exception as exception:
+        logger.error(exception)
         await api.flows.delete_flow(flow_id=flow_id)
-        raise exception
+        raise Exception('Failed to register Flow') from exception
 
     # schedule runs
     if set_schedule_active:
