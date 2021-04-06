@@ -1,5 +1,26 @@
 # Changelog
 
+## April 6, 2021 <Badge text="beta" type="success" />
+
+Released on April 6, 2021.
+
+### Features
+
+- Helm: Add ingress support for `ui` and `apollo` components - [#229](https://github.com/PrefectHQ/server/pull/229)
+
+### Enhancements
+
+- Add delete_flow_group mutation - [#228](https://github.com/PrefectHQ/server/pull/228)
+- Batch task and edge insertion during flow creation - [#238](https://github.com/PrefectHQ/server/pull/238)
+
+### Fixes
+
+- Log `set_schedule_active` failure while creating a flow - [#236](https://github.com/PrefectHQ/server/pull/236)
+
+### Contributors
+
+- [Augustinas Šimelionis](https://github.com/aaugustinas)
+
 ## March 20, 2021 <Badge text="beta" type="success" />
 
 Released on March 20, 2021.

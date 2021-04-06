@@ -1,4 +1,0 @@
-feature:
-  - "Helm: Add ingress support for `ui` and `apollo` components - [#229](https://github.com/PrefectHQ/server/pull/229)"
-contributor:
-  - "[Augustinas Šimelionis](https://github.com/aaugustinas)"
