@@ -317,7 +317,7 @@ async def create_flow(
     except Exception as exception:
         logger.error(exception)
         await api.flows.delete_flow(flow_id=flow_id)
-        raise Exception('Failed to register Flow') from exception
+        raise Exception("Failed to register Flow") from exception
 
     # schedule runs
     if set_schedule_active:
