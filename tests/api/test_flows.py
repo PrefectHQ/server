@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 import datetime
 import uuid
 
@@ -513,6 +515,22 @@ class TestCreateFlow:
         persisted_flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
         # confirm the keys in the serialized flow match the form we'd expect
         assert persisted_flow.serialized_flow == flow.serialize()
+
+    @pytest.mark.parametrize("model_name", ["Task", "Edge"])
+    async def test_create_flow_cleans_up_if_task_or_edge_creation_fails(
+        self, project_id, flow, monkeypatch, model_name
+    ):
+        patched_insert_raises_error = MagicMock(side_effect=Exception())
+        monkeypatch.setattr(
+            f"prefect.models.{model_name}.insert_many", patched_insert_raises_error
+        )
+        flow.name = "my special flow"
+        assert await models.Flow.where({"name": {"_eq": flow.name}}).count() == 0
+        with pytest.raises(Exception):
+            flow_id = await api.flows.create_flow(
+                project_id=project_id, serialized_flow=flow.serialize()
+            )
+            assert await models.Flow.where({"name": {"_eq": flow.name}}).count() == 0
 
 
 class TestCreateFlowVersions:

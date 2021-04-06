@@ -15,6 +15,8 @@ from pydantic import BaseModel, Field, validator
 
 from prefect_server import config
 from prefect_server.utilities import logging
+from prefect_server.utilities.collections import chunked_iterable
+from prefect_server.utilities.exceptions import APIError
 
 logger = logging.get_logger("api.flows")
 schedule_schema = ScheduleSchema()
@@ -244,6 +246,10 @@ async def create_flow(
         set_schedule_active = False
 
     # precompute task ids to make edges easy to add to database
+
+    # create the flow without tasks or edges initially
+    # then insert tasks and edges in batches, so we don't exceed Postgres limits
+    # https://doxygen.postgresql.org/fe-exec_8c_source.html line 1409
     flow_id = await models.Flow(
         tenant_id=tenant_id,
         project_id=project_id,
@@ -261,37 +267,57 @@ async def create_flow(
         description=description,
         schedule=serialized_flow.get("schedule"),
         is_schedule_active=False,
-        tasks=[
-            models.Task(
-                id=t.id,
-                tenant_id=tenant_id,
-                name=t.name,
-                slug=t.slug,
-                type=t.type,
-                max_retries=t.max_retries,
-                tags=t.tags,
-                retry_delay=t.retry_delay,
-                trigger=t.trigger,
-                mapped=t.mapped,
-                auto_generated=t.auto_generated,
-                cache_key=t.cache_key,
-                is_reference_task=t.is_reference_task,
-                is_root_task=t.is_root_task,
-                is_terminal_task=t.is_terminal_task,
-            )
-            for t in flow.tasks
-        ],
-        edges=[
-            models.Edge(
-                tenant_id=tenant_id,
-                upstream_task_id=task_lookup[e.upstream_task].id,
-                downstream_task_id=task_lookup[e.downstream_task].id,
-                key=e.key,
-                mapped=e.mapped,
-            )
-            for e in flow.edges
-        ],
+        tasks=[],
+        edges=[],
     ).insert()
+
+    try:
+        batch_insertion_size = 2500
+
+        for tasks_chunk in chunked_iterable(flow.tasks, batch_insertion_size):
+            await models.Task.insert_many(
+                [
+                    models.Task(
+                        id=t.id,
+                        flow_id=flow_id,
+                        tenant_id=tenant_id,
+                        name=t.name,
+                        slug=t.slug,
+                        type=t.type,
+                        max_retries=t.max_retries,
+                        tags=t.tags,
+                        retry_delay=t.retry_delay,
+                        trigger=t.trigger,
+                        mapped=t.mapped,
+                        auto_generated=t.auto_generated,
+                        cache_key=t.cache_key,
+                        is_reference_task=t.is_reference_task,
+                        is_root_task=t.is_root_task,
+                        is_terminal_task=t.is_terminal_task,
+                    )
+                    for t in tasks_chunk
+                ]
+            )
+
+        for edges_chunk in chunked_iterable(flow.edges, batch_insertion_size):
+            await models.Edge.insert_many(
+                [
+                    models.Edge(
+                        tenant_id=tenant_id,
+                        flow_id=flow_id,
+                        upstream_task_id=task_lookup[e.upstream_task].id,
+                        downstream_task_id=task_lookup[e.downstream_task].id,
+                        key=e.key,
+                        mapped=e.mapped,
+                    )
+                    for e in edges_chunk
+                ]
+            )
+
+    except Exception as exc:
+        logger.error("`create_flow` failed during insertion", exc_info=True)
+        await api.flows.delete_flow(flow_id=flow_id)
+        raise APIError() from exc
 
     # schedule runs
     if set_schedule_active:
