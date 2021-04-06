@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, validator
 
 from prefect_server import config
 from prefect_server.utilities import logging
-from prefect_server.utilities.utils import get_chunk
+from prefect_server.utilities.collections import chunked_iterable
 
 logger = logging.get_logger("api.flows")
 schedule_schema = ScheduleSchema()
@@ -273,7 +273,7 @@ async def create_flow(
     try:
         batch_insertion_size = 2500
 
-        for tasks_chunk in get_chunk(flow.tasks, batch_insertion_size):
+        for tasks_chunk in chunked_iterable(flow.tasks, batch_insertion_size):
             await models.Task.insert_many(
                 [
                     models.Task(
@@ -298,7 +298,7 @@ async def create_flow(
                 ]
             )
 
-        for edges_chunk in get_chunk(flow.edges, batch_insertion_size):
+        for edges_chunk in chunked_iterable(flow.edges, batch_insertion_size):
             await models.Edge.insert_many(
                 [
                     models.Edge(
@@ -314,7 +314,7 @@ async def create_flow(
             )
 
     except Exception as exception:
-        await delete_flow(flow_id=flow_id)
+        await api.flows.delete_flow(flow_id=flow_id)
         raise exception
 
     # schedule runs
