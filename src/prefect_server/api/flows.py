@@ -119,7 +119,8 @@ class FlowSchema(Model):
 @register_api("flows.create_flow")
 async def create_flow(
     serialized_flow: dict,
-    project_id: str,
+    project_id: str = None,
+    tenant_id: str = None,
     version_group_id: str = None,
     set_schedule_active: bool = True,
     description: str = None,
@@ -129,7 +130,8 @@ async def create_flow(
     Add a flow to the database.
 
     Args:
-        - project_id (str): A project id
+        - project_id (str): A project id to place the flow in
+        - tenant_id (str): The tenant to place the flow in
         - serialized_flow (dict): A dictionary of information used to represent a flow
         - version_group_id (str): A version group to add the Flow to
         - set_schedule_active (bool): Whether to set the flow's schedule to active
@@ -158,11 +160,14 @@ async def create_flow(
             f"Prefect {core_version}."
         )
 
-    # load project
-    project = await models.Project.where(id=project_id).first({"tenant_id"})
-    if not project:
-        raise ValueError("Invalid project.")
-    tenant_id = project.tenant_id  # type: ignore
+    # Ensure the given project exists
+    if project_id:
+        project = await models.Project.where(id=project_id).first({"tenant_id"})
+        if not project:
+            raise ValueError("Invalid project.")
+        # Infer the tenant id if possible
+        if not tenant_id:
+            tenant_id = project.tenant_id  # type: ignore
 
     # set up task detail info
     task_lookup = {t.slug: t for t in flow.tasks}
