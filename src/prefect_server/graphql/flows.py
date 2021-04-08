@@ -37,7 +37,7 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
     if not version_group_id:
         flow = await models.Flow.where(
             {
-                "project_id": {"_eq": project_id},
+                "project_id": {"_eq": project_id} if project_id else {"_isnull": True},
                 "name": {"_eq": serialized_flow.get("name")},
             }
         ).first(

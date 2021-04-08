@@ -169,6 +169,10 @@ async def create_flow(
         if not tenant_id:
             tenant_id = project.tenant_id  # type: ignore
 
+    # Ensure we've been given a tenant
+    if not tenant_id:
+        raise ValueError("Invalid tenant_id.")
+
     # set up task detail info
     task_lookup = {t.slug: t for t in flow.tasks}
     tasks_with_upstreams = {e.downstream_task for e in flow.edges}
