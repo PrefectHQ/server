@@ -1,0 +1,3 @@
+
+enhancement:
+  - "Allow flows to be created with no project - [#240](https://github.com/PrefectHQ/server/pull/240)"
