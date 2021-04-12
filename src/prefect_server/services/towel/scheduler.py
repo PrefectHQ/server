@@ -16,7 +16,7 @@ class Scheduler(LoopService):
     """
 
     loop_seconds_config_key = "services.scheduler.scheduler_loop_seconds"
-    loop_seconds = 150
+    loop_seconds_default = 150
 
     async def run_once(self) -> int:
         """

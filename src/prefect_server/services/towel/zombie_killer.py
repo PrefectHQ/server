@@ -13,7 +13,7 @@ from prefect_server.services.loop_service import LoopService
 
 
 class ZombieKiller(LoopService):
-    loop_seconds = 120
+    loop_seconds_default = 120
 
     async def get_flow_runs_where_clause(
         self, heartbeat_cutoff: datetime.datetime

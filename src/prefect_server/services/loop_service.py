@@ -18,7 +18,7 @@ class LoopService:
     """
 
     # The number of seconds the loop should repeat on when in operation
-    loop_seconds = 600
+    loop_seconds_default = 600
 
     # The number of seconds the loop should repeat on when testing
     loop_seconds_debug = 1
@@ -28,18 +28,23 @@ class LoopService:
     is_running = True
 
     def __init__(self):
-        loop_seconds = (
-            self.loop_seconds_debug
-            if os.environ.get(self.debug_environment_key) is not None
-            else self.loop_seconds
-        )
-
-        if loop_seconds == 0:
-            raise ValueError("`loop_seconds` must be greater than 0.")
-
-        self.loop_seconds = float(loop_seconds)
+        self.loop_seconds = self.loop_seconds_default
         self.name = type(self).__name__
         self.logger = utilities.logging.get_logger(self.name)
+
+    @property
+    def loop_seconds(self):
+        return (
+            self.loop_seconds_debug
+            if os.environ.get(self.debug_environment_key) is not None
+            else self._loop_seconds
+        )
+
+    @loop_seconds.setter
+    def loop_seconds(self, value):
+        if value == 0:
+            raise ValueError("`loop_seconds` must be greater than 0.")
+        self._loop_seconds = float(value)
 
     async def run(self) -> None:
         """

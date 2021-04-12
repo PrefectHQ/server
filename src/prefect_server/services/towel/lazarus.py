@@ -22,7 +22,7 @@ LAZARUS_EXCLUDE = [
 
 class Lazarus(LoopService):
 
-    loop_seconds = 600
+    loop_seconds_default = 600
 
     async def run_once(self) -> None:
         """

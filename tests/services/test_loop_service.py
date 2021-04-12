@@ -7,8 +7,8 @@ COUNTER = 0
 
 
 class LoopServiceTest(LoopService):
-    loop_seconds = 0.1
-    debug_environment_key = "a key that does not exist to ignore test mode"
+    loop_seconds_default = 0.1
+    debug_environment_key = "a key that does not exist, ignore debug mode here"
 
     async def run_once(self):
         global COUNTER
@@ -45,11 +45,33 @@ async def test_stop_a_running_loop_service():
     assert COUNTER == 3
 
 
-async def test_loop_service_with_run_time_longer_than_loop_interval(caplog):
-    class LongLoopService(LoopService):
-        loop_seconds = 0.1
-        debug_environment_key = "a key that does not exist to ignore test mode"
+async def test_loop_service_respects_debug_variable():
+    class LoopServiceDebugTest(LoopService):
+        # Note here we do not override the debug key
 
+        def run_once(self) -> None:
+            pass
+
+    ls = LoopServiceDebugTest()
+    assert ls.loop_seconds == 1
+
+
+async def test_loop_service_respects_overridden_seconds():
+    ls = LoopServiceTest()
+    assert ls.loop_seconds == 0.1
+
+    ls.loop_seconds = 100
+    assert ls.loop_seconds == float(100)
+
+
+async def test_loop_service_does_not_allow_zero_seconds():
+    ls = LoopServiceTest()
+    with pytest.raises(ValueError):
+        ls.loop_seconds = 0
+
+
+async def test_loop_service_with_run_time_longer_than_loop_interval(caplog):
+    class LongLoopService(LoopServiceTest):
         async def run_once(self):
             # sleep for longer than the loop seconds
             await asyncio.sleep(0.2)
