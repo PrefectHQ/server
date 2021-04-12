@@ -7,7 +7,8 @@ COUNTER = 0
 
 
 class LoopServiceTest(LoopService):
-    loop_seconds_default = 0.1
+    loop_seconds = 0.1
+    debug_environment_key = "a key that does not exist to ignore test mode"
 
     async def run_once(self):
         global COUNTER
@@ -44,22 +45,10 @@ async def test_stop_a_running_loop_service():
     assert COUNTER == 3
 
 
-async def test_overriding_loop_seconds_default():
-    ls = LoopServiceTest(loop_seconds=1)
-
-    # start running service in background
-    task = asyncio.create_task(ls.run())
-    await asyncio.sleep(0.3)
-    ls.stop()
-    await task
-
-    # the counter was incremented 1 time
-    assert COUNTER == 1
-
-
 async def test_loop_service_with_run_time_longer_than_loop_interval(caplog):
     class LongLoopService(LoopService):
-        loop_seconds_default = 0.1
+        loop_seconds = 0.1
+        debug_environment_key = "a key that does not exist to ignore test mode"
 
         async def run_once(self):
             # sleep for longer than the loop seconds
