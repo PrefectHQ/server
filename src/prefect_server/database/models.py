@@ -2,10 +2,10 @@ import datetime
 from typing import Any, Dict, List
 
 import pendulum
-import pydantic
-
 import prefect
+import pydantic
 from prefect.utilities import plugins
+
 from prefect_server.database.orm import HasuraModel, UUIDString
 
 models = plugins.MODELS
@@ -209,24 +209,6 @@ class FlowRunState(HasuraModel):
     # relationships
     flow_run: FlowRun = None
 
-    @staticmethod
-    def fields_from_state(state: prefect.engine.state.State, timestamp=None):
-        """
-        Returns a dict that contains fields that could be inferred from a state object
-        """
-        if timestamp is None:
-            timestamp = pendulum.now("utc")
-
-        # update all state columns
-        return dict(
-            state=type(state).__name__,
-            timestamp=timestamp,
-            message=state.message,
-            result=state.result,
-            start_time=getattr(state, "start_time", None),
-            serialized_state=state.serialize(),
-        )
-
 
 @plugins.register_model("TaskRunState")
 class TaskRunState(HasuraModel):
@@ -247,24 +229,6 @@ class TaskRunState(HasuraModel):
 
     # relationships
     task_run: TaskRun = None
-
-    @staticmethod
-    def fields_from_state(state: prefect.engine.state.State, timestamp=None):
-        """
-        Returns a dict that contains fields that could be inferred from a state object
-        """
-        if timestamp is None:
-            timestamp = pendulum.now("utc")
-
-        # update all state columns
-        return dict(
-            state=type(state).__name__,
-            timestamp=timestamp,
-            message=state.message,
-            result=state.result,
-            start_time=getattr(state, "start_time", None),
-            serialized_state=state.serialize(),
-        )
 
 
 @plugins.register_model("Log")
