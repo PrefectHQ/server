@@ -8,7 +8,6 @@ COUNTER = 0
 
 class LoopServiceTest(LoopService):
     loop_seconds_default = 0.1
-    debug_environment_key = "a key that does not exist, ignore debug mode here"
 
     async def run_once(self):
         global COUNTER
@@ -45,10 +44,10 @@ async def test_stop_a_running_loop_service():
     assert COUNTER == 3
 
 
-async def test_loop_service_respects_debug_variable():
-    class LoopServiceDebugTest(LoopService):
-        # Note here we do not override the debug key
+async def test_loop_service_respects_debug_variable(monkeypatch):
+    monkeypatch.setenv("PREFECT__LOOP_SERVICE__DEBUG_MODE", True)
 
+    class LoopServiceDebugTest(LoopService):
         def run_once(self) -> None:
             pass
 

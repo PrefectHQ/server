@@ -22,7 +22,7 @@ class LoopService:
 
     # The number of seconds the loop should repeat on when testing
     loop_seconds_debug = 1
-    debug_environment_key = "PYTEST_CURRENT_TEST"
+    debug_environment_key = "PREFECT__LOOP_SERVICE__DEBUG_MODE"
 
     # shutdown flag for gracefully exiting the infinite loop
     is_running = True
