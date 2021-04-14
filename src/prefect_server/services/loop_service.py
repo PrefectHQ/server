@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 from datetime import timedelta
 from typing import Union
@@ -16,34 +17,34 @@ class LoopService:
     define the `run_once` coroutine to describe the behavior of the service on each loop.
     """
 
-    # if set, and no `loop_seconds` is provided, the service will attempt to load
-    # `loop_seconds` from this config key
-    loop_seconds_config_key = None
-
-    # if no loop_seconds_config_key is provided, this will be the default
+    # The number of seconds the loop should repeat on when in operation
     loop_seconds_default = 600
+
+    # The number of seconds the loop should repeat on when testing
+    loop_seconds_debug = 1
+    debug_environment_key = "PREFECT__LOOP_SERVICE__DEBUG_MODE"
 
     # shutdown flag for gracefully exiting the infinite loop
     is_running = True
 
-    def __init__(self, loop_seconds: Union[float, int] = None):
-        if loop_seconds is None:
-            if self.loop_seconds_config_key:
-
-                # split the key on '.' and recurse
-                split_keys = self.loop_seconds_config_key.split(".")
-                cfg = config
-                for key in split_keys[:-1]:
-                    cfg = cfg.get(key, {})
-                loop_seconds = cfg.get(split_keys[-1])
-            else:
-                loop_seconds = self.loop_seconds_default
-        if loop_seconds == 0:
-            raise ValueError("`loop_seconds` must be greater than 0.")
-
-        self.loop_seconds = float(loop_seconds)
+    def __init__(self):
+        self.loop_seconds = self.loop_seconds_default
         self.name = type(self).__name__
         self.logger = utilities.logging.get_logger(self.name)
+
+    @property
+    def loop_seconds(self):
+        return (
+            self.loop_seconds_debug
+            if os.environ.get(self.debug_environment_key) is not None
+            else self._loop_seconds
+        )
+
+    @loop_seconds.setter
+    def loop_seconds(self, value):
+        if value == 0:
+            raise ValueError("`loop_seconds` must be greater than 0.")
+        self._loop_seconds = float(value)
 
     async def run(self) -> None:
         """

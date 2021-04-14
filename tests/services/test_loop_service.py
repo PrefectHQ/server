@@ -44,23 +44,33 @@ async def test_stop_a_running_loop_service():
     assert COUNTER == 3
 
 
-async def test_overriding_loop_seconds_default():
-    ls = LoopServiceTest(loop_seconds=1)
+async def test_loop_service_respects_debug_variable(monkeypatch):
+    monkeypatch.setenv("PREFECT__LOOP_SERVICE__DEBUG_MODE", True)
 
-    # start running service in background
-    task = asyncio.create_task(ls.run())
-    await asyncio.sleep(0.3)
-    ls.stop()
-    await task
+    class LoopServiceDebugTest(LoopService):
+        def run_once(self) -> None:
+            pass
 
-    # the counter was incremented 1 time
-    assert COUNTER == 1
+    ls = LoopServiceDebugTest()
+    assert ls.loop_seconds == 1
+
+
+async def test_loop_service_respects_overridden_seconds():
+    ls = LoopServiceTest()
+    assert ls.loop_seconds == 0.1
+
+    ls.loop_seconds = 100
+    assert ls.loop_seconds == float(100)
+
+
+async def test_loop_service_does_not_allow_zero_seconds():
+    ls = LoopServiceTest()
+    with pytest.raises(ValueError):
+        ls.loop_seconds = 0
 
 
 async def test_loop_service_with_run_time_longer_than_loop_interval(caplog):
-    class LongLoopService(LoopService):
-        loop_seconds_default = 0.1
-
+    class LongLoopService(LoopServiceTest):
         async def run_once(self):
             # sleep for longer than the loop seconds
             await asyncio.sleep(0.2)
