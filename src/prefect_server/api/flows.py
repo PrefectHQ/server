@@ -15,7 +15,6 @@ from pydantic import BaseModel, Field, validator
 
 from prefect_server import config
 from prefect_server.utilities import logging
-from prefect_server.utilities import context
 from prefect_server.utilities.collections import chunked_iterable
 from prefect_server.utilities.exceptions import APIError
 
@@ -172,10 +171,7 @@ async def create_flow(
 
     # Ensure we've been given a tenant
     if not tenant_id:
-        tenant_id = context.get_context().get("tenant_id")
-
-    if not tenant_id:
-        raise ValueError("Invalid tenant_id")
+        raise ValueError("Invalid tenant_id.")
 
     # set up task detail info
     task_lookup = {t.slug: t for t in flow.tasks}
