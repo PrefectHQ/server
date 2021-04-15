@@ -101,14 +101,8 @@ jobs:
       - *install_prefect_server
       - prep_tests
       - run:
-          name: Install coverage dependencies
-          command: pip install codecov pytest-cov
-      - run:
           name: Run Server tests
-          command: pytest -v -m "not (service_test or integration_test or migration_test)" --cov=./
-      - run:
-          name: Upload coverage report
-          command: codecov --token=$CODECOV_TOKEN
+          command: pytest -v -m "not (service_test or integration_test or migration_test)"
 
   run_database_migration_tests:
     executor: docker-prefect-server
