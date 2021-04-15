@@ -3,7 +3,6 @@ import uuid
 import pendulum
 import pytest
 from box import Box
-
 from prefect import api, models
 from prefect.engine.state import (
     Cancelled,
@@ -123,7 +122,7 @@ class TestFlowRunStates:
             {"version", "state", "serialized_state"}
         )
 
-        assert query.version == 3
+        assert query.version == 2
         assert query.state == "Running"
         assert query.serialized_state["type"] == "Running"
 

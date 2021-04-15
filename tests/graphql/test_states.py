@@ -2,7 +2,6 @@ import os
 import uuid
 
 import pytest
-
 from prefect import api, models
 from prefect.engine.result import Result
 from prefect.engine.results import PrefectResult
@@ -37,7 +36,7 @@ class TestSetFlowRunStates:
         assert result.data.set_flow_run_states.states[0].message is None
 
         fr = await models.FlowRun.where(id=flow_run_id).first({"state", "version"})
-        assert fr.version == 3
+        assert fr.version == 2
         assert fr.state == "Running"
 
     async def test_set_flow_run_state_with_version(self, run_query, flow_run_id):
@@ -61,7 +60,7 @@ class TestSetFlowRunStates:
         assert result.data.set_flow_run_states.states[0].message is None
 
         fr = await models.FlowRun.where(id=flow_run_id).first({"state", "version"})
-        assert fr.version == 3
+        assert fr.version == 2
         assert fr.state == "Running"
 
     async def test_set_multiple_flow_run_states(
@@ -88,19 +87,19 @@ class TestSetFlowRunStates:
         fr1 = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[0].id
         ).first({"state", "version"})
-        assert fr1.version == 3
+        assert fr1.version == 2
         assert fr1.state == "Running"
 
         fr2 = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[1].id
         ).first({"state", "version"})
-        assert fr2.version == 4
+        assert fr2.version == 3
         assert fr2.state == "Success"
 
         fr3 = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[2].id
         ).first({"state", "version"})
-        assert fr3.version == 5
+        assert fr3.version == 4
         assert fr3.state == "Retrying"
 
     async def test_set_multiple_flow_run_states_with_one_failed(
@@ -147,7 +146,7 @@ class TestSetFlowRunStates:
         fr = await models.FlowRun.where(
             id=result.data.set_flow_run_states.states[0].id
         ).first({"state", "version"})
-        assert fr.version == 3
+        assert fr.version == 2
         assert fr.state == "Success"
 
     async def test_set_flow_run_states_rejects_states_with_large_payloads(
@@ -416,9 +415,9 @@ class TestCancelFlowRun:
     @pytest.mark.parametrize(
         "state,res_state,version",
         [
-            (Running(), "Cancelling", 4),
-            (Success(), "Success", 3),
-            (Submitted(), "Cancelled", 4),
+            (Running(), "Cancelling", 3),
+            (Success(), "Success", 2),
+            (Submitted(), "Cancelled", 3),
         ],
     )
     async def test_cancel_flow_run(

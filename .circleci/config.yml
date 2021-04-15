@@ -133,12 +133,16 @@ jobs:
           name: Start Server services
           command: prefect-server dev services
           background: true
+          env:
+            - PREFECT__LOOP_SERVICE__DEBUG_MODE: true
       - run:
           name: Wait 10 seconds for services to start...
           command: sleep 10
       - run:
           name: Run Server service tests
           command: pytest -v -m service_test
+          env:
+            - PREFECT__LOOP_SERVICE__DEBUG_MODE: true
 
   run_integration_tests:
     executor: docker-prefect-server
@@ -158,12 +162,16 @@ jobs:
           name: Start Server services
           command: prefect-server dev services
           background: true
+          env:
+            - PREFECT__LOOP_SERVICE__DEBUG_MODE: true
       - run:
           name: Wait 10 seconds for services to start...
           command: sleep 10
       - run:
           name: Run Server integration tests
           command: pytest -v -m integration_test
+          env:
+            - PREFECT__LOOP_SERVICE__DEBUG_MODE: true
 
 orbs:
   docker: circleci/docker@1.0.0
