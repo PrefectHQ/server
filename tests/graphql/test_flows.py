@@ -38,6 +38,20 @@ class TestCreateFlow:
         )
         assert flow.project_id == project_id
 
+    async def test_create_flow_without_project(self, run_query, tenant_id):
+        serialized_flow = prefect.Flow(
+            name="test", tasks=[prefect.Task(), prefect.Task()]
+        ).serialize(build=False)
+
+        result = await run_query(
+            query=self.create_flow_mutation,
+            variables=dict(input=dict(serialized_flow=serialized_flow)),
+        )
+        flow = await models.Flow.where(id=result.data.create_flow.id).first(
+            {"project_id"}
+        )
+        assert flow.project_id is None
+
     async def test_create_compressed_flow(self, run_query, project_id):
         serialized_flow = compress(prefect.Flow(name="test").serialize(build=False))
         result = await run_query(

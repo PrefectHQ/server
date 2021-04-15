@@ -169,6 +169,10 @@ async def create_flow(
         if not tenant_id:
             tenant_id = project.tenant_id  # type: ignore
 
+    if not tenant_id:
+        tenant = await models.Tenant.where().first({"id"})
+        tenant_id = tenant.id
+
     # Ensure we've been given a tenant
     if not tenant_id:
         raise ValueError("Invalid tenant_id.")
