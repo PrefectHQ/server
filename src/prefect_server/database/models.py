@@ -60,6 +60,7 @@ class Flow(HasuraModel):
     name: str = None
     description: str = None
     serialized_flow: Dict[str, Any] = None
+    serialized_hash: str = None
     environment: Dict[str, Any] = None
     run_config: Dict[str, Any] = None
     storage: Dict[str, Any] = None
