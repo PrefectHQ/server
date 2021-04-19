@@ -1,0 +1,3 @@
+
+enhancement:
+  - "Include serialized_hash in the flow table for lookups - [#245](https://github.com/PrefectHQ/server/pull/245)"
