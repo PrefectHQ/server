@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 import pendulum
 from packaging import version as module_version
 from prefect import api, models
+from prefect.serialization.flow import FlowSchema as CoreFlowSchema
 from prefect.serialization.schedule import ScheduleSchema
 from prefect.utilities.graphql import EnumValue, with_args
 from prefect.utilities.plugins import register_api
@@ -147,6 +148,12 @@ async def create_flow(
     """
     flow = FlowSchema(**serialized_flow)
 
+    # Generate a hash of the serialized flow
+    # must match the implementation of `Flow.serialized_hash()`
+    serialized_hash = hashlib.sha256(
+        json.dumps(serialized_flow, sort_keys=True).encode()
+    ).hexdigest()
+
     # core versions before 0.6.1 were used only for internal purposes-- this is our cutoff
     core_version = flow.__version__
     if core_version and module_version.parse(core_version) < module_version.parse(
@@ -255,6 +262,7 @@ async def create_flow(
         project_id=project_id,
         name=flow.name,
         serialized_flow=serialized_flow,
+        serialized_hash=serialized_hash,
         environment=flow.environment,
         run_config=flow.run_config,
         core_version=flow.__version__,
