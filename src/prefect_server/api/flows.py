@@ -8,7 +8,6 @@ from typing import Any, Dict, List
 import pendulum
 from packaging import version as module_version
 from prefect import api, models
-from prefect.serialization.flow import FlowSchema as CoreFlowSchema
 from prefect.serialization.schedule import ScheduleSchema
 from prefect.utilities.graphql import EnumValue, with_args
 from prefect.utilities.plugins import register_api
