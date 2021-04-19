@@ -48,10 +48,18 @@ class TestFlowModels:
 
 class TestCreateFlow:
     async def test_create_flow(self, project_id, flow):
+        serialized_flow = flow.serialize()
+        serialized_hash = flow.serialized_hash()
+
         flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
+            project_id=project_id, serialized_flow=serialized_flow
         )
-        assert await models.Flow.where(id=flow_id).first()
+        db_flow = await models.Flow.where(id=flow_id).first(
+            {"serialized_flow", "serialized_hash"}
+        )
+
+        assert db_flow.serialized_hash == serialized_hash
+        assert db_flow.serialized_flow == serialized_flow
 
     async def test_create_flow_with_no_schedule_sets_schedule_inactive(
         self, project_id, flow
