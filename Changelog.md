@@ -10,7 +10,7 @@ Released on April 26, 2021.
 
 ### Database Migrations
 
-- Add unique constraint for flow run idempotency - [#291](https://github.com/PrefectHQ/server/pull/291)
+- Add unique constraint for flow run idempotency - [#219](https://github.com/PrefectHQ/server/pull/219)
 
 ## April 6, 2021 <Badge text="beta" type="success" />
 
@@ -470,4 +470,3 @@ Released on August 21, 2020.
 ### Deprecations
 
 - None
-
