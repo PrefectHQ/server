@@ -1,8 +1,8 @@
 # Changelog
 
-## April 26, 2021 <Badge text="beta" type="success" />
+## April 27, 2021 <Badge text="beta" type="success" />
 
-Released on April 26, 2021.
+Released on April 27, 2021.
 
 ### Enhancements
 
