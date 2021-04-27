@@ -1,5 +1,17 @@
 # Changelog
 
+## April 27, 2021 <Badge text="beta" type="success" />
+
+Released on April 27, 2021.
+
+### Enhancements
+
+- Simplify `LoopService.loop_seconds` handling and add debug mode to speedup tests - [#242](https://github.com/PrefectHQ/server/pull/242)
+
+### Database Migrations
+
+- Add unique constraint for flow run idempotency - [#219](https://github.com/PrefectHQ/server/pull/219)
+
 ## April 6, 2021 <Badge text="beta" type="success" />
 
 Released on April 6, 2021.
@@ -458,4 +470,3 @@ Released on August 21, 2020.
 ### Deprecations
 
 - None
-

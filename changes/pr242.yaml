@@ -1,3 +1,0 @@
-
-enhancement:
-  - "Simplify `LoopService.loop_seconds` handling and add debug mode to speedup tests - [#242](https://github.com/PrefectHQ/server/pull/242)"
