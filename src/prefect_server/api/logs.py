@@ -9,9 +9,10 @@ from prefect.utilities.plugins import register_api
 
 
 @register_api("logs.create_logs")
-async def create_logs(logs: List[Dict[str, Any]]) -> str:
+async def create_logs(logs: List[Dict[str, Any]], **kwargs) -> str:
     """
     Inserts log record(s) into the database.
+
     Args:
         - logs (list): a list of log records represented as dictionaries, containing the following keys:
             `tenant_id` and `flow_run_id` and optionally containing task_run_id, timestamp, message, name, level and info.

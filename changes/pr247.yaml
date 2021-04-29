@@ -1,0 +1,2 @@
+enhancement:
+  - "Introduce **kwargs to `create_logs` for Cloud compatibility - [#247](https://github.com/PrefectHQ/server/pull/247)"
