@@ -124,7 +124,8 @@ class Lazarus(LoopService):
                                 ),
                                 level="INFO",
                             )
-                        ]
+                        ],
+                        defer_db_write=False,
                     )
 
                     run_count += 1
@@ -159,7 +160,8 @@ class Lazarus(LoopService):
                             message=message,
                             level="ERROR",
                         )
-                    ]
+                    ],
+                    defer_db_write=False,
                 )
 
         if run_count:

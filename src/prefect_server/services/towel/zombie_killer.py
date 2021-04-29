@@ -78,7 +78,8 @@ class ZombieKiller(LoopService):
                             message=message,
                             level="ERROR",
                         )
-                    ]
+                    ],
+                    defer_db_write=False,
                 )
 
                 zombies += 1
@@ -196,7 +197,8 @@ class ZombieKiller(LoopService):
                             message=message,
                             level="ERROR",
                         )
-                    ]
+                    ],
+                    defer_db_write=False,
                 )
 
                 zombies += 1
