@@ -45,7 +45,9 @@ class TestCreateFlow:
 
         result = await run_query(
             query=self.create_flow_mutation,
-            variables=dict(input=dict(serialized_flow=serialized_flow)),
+            variables=dict(
+                input=dict(serialized_flow=serialized_flow, tenant_id=tenant_id)
+            ),
         )
         flow = await models.Flow.where(id=result.data.create_flow.id).first(
             {"project_id"}

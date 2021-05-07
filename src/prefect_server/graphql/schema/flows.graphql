@@ -80,6 +80,8 @@ input create_flow_input {
   serialized_flow: JSON!
   "The ID of the project to associate with this flow"
   project_id: UUID
+  "The tenant ID to create this flow in; required if a project id is not provided"
+  tenant_id: UUID
   "An optional string specifying the version group - if provided, this flow will be added to the given version group; when not provided the flow will be versioned by name / project."
   version_group_id: String
   "A boolean specifying whether to begin scheduling runs for this flow immediately"
@@ -95,6 +97,8 @@ input create_flow_from_compressed_string_input {
   serialized_flow: String!
   "The ID of the project to associate with this flow"
   project_id: UUID
+  "The tenant ID to create this flow in; required if a project id is not provided"
+  tenant_id: UUID
   "An optional string specifying the version group - if provided, this flow will be added to the given version group; when not provided the flow will be versioned by name / project."
   version_group_id: String
   "A boolean specifying whether to begin scheduling runs for this flow immediately"

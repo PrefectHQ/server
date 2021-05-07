@@ -28,7 +28,7 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
     set_schedule_active = input.get("set_schedule_active", True)
     description = input.get("description", None)
     idempotency_key = input.get("idempotency_key", None)
-    tenant_id = context.get_context().get("tenant_id", None)
+    tenant_id = input.get("tenant_id", None)
 
     # if no version_group_id is supplied, see if a flow with the same name exists in this
     # project
