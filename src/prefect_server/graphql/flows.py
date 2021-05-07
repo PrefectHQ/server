@@ -4,6 +4,7 @@ from graphql import GraphQLResolveInfo
 
 from prefect import api, models
 from prefect.utilities.graphql import EnumValue, decompress
+from prefect_server.utilities import context
 from prefect_server.utilities.graphql import mutation
 
 
@@ -22,14 +23,12 @@ async def resolve_create_flow_from_compressed_string(
 @mutation.field("create_flow")
 async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -> dict:
     serialized_flow = input["serialized_flow"]
-    project_id = input["project_id"]
+    project_id = input.get("project_id", None)
     version_group_id = input.get("version_group_id", None)
     set_schedule_active = input.get("set_schedule_active", True)
     description = input.get("description", None)
     idempotency_key = input.get("idempotency_key", None)
-
-    if project_id is None:
-        raise ValueError("Invalid project ID")
+    tenant_id = input.get("tenant_id", None)
 
     # if no version_group_id is supplied, see if a flow with the same name exists in this
     # project
@@ -37,7 +36,8 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
     if not version_group_id:
         flow = await models.Flow.where(
             {
-                "project_id": {"_eq": project_id},
+                "tenant_id": {"_eq": tenant_id},
+                "project_id": {"_eq": project_id} if project_id else {"_is_null": True},
                 "name": {"_eq": serialized_flow.get("name")},
             }
         ).first(
@@ -56,6 +56,7 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
 
     flow_id = await api.flows.create_flow(
         project_id=project_id,
+        tenant_id=tenant_id,
         serialized_flow=serialized_flow,
         version_group_id=version_group_id,
         set_schedule_active=set_schedule_active,
