@@ -60,7 +60,7 @@ class TestCreateFlow:
         assert await models.Flow.where(id=flow_id).first()
 
     async def test_create_flow_without_project_requires_tenant_id(self, flow):
-        with pytest.raises(ValueError, match="Invalid tenant_id"):
+        with pytest.raises(ValueError, match="Missing tenant_id"):
             await prefect.api.flows.create_flow(serialized_flow=flow.serialize())
 
     async def test_create_flow_with_no_schedule_sets_schedule_inactive(
