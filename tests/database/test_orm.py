@@ -155,7 +155,7 @@ class TestORM:
         assert uuid.UUID(id)
 
     async def test_nested_insert_array(self, flow_id):
-        """ insert nested objects as an array"""
+        """insert nested objects as an array"""
         flow_run_id = await models.FlowRun(
             flow_id=flow_id,
             labels=[],
@@ -173,7 +173,7 @@ class TestORM:
         )
 
     async def test_nested_insert_array_dicts(self, flow_id):
-        """ insert nested objects as an array"""
+        """insert nested objects as an array"""
         flow_run_id = await models.FlowRun(
             flow_id=flow_id,
             labels=[],
