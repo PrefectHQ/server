@@ -272,7 +272,7 @@ async def create_flow(
     ).insert()
 
     try:
-        batch_insertion_size = 2500
+        batch_insertion_size = 1000
 
         for tasks_chunk in chunked_iterable(flow.tasks, batch_insertion_size):
             await models.Task.insert_many(
