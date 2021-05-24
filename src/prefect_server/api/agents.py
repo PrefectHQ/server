@@ -5,6 +5,10 @@ import pendulum
 from prefect import models
 from prefect.utilities.plugins import register_api
 from prefect_server.utilities import context
+from prefect_server.utilities.logging import get_logger
+
+
+logger = get_logger("agents")
 
 
 @register_api("agents.register_agent")
@@ -168,3 +172,37 @@ async def update_agent_config(
 
     result = await models.AgentConfig.where(id=agent_config_id).update(set=update)
     return bool(result.affected_rows)  # type: ignore
+
+
+@register_api("agents.get_running_flow_count")
+async def is_agent_at_concurrency_limit(agent_id: str, limit: int) -> bool:
+    """
+    Check if the number of running flows with an agent id meets or exceeds a given limit
+
+    Args:
+        - agent_id (str): the id of the agent to lookup associated flows
+        - limit (int): The concurrency limit
+
+    Returns:
+        - bool: If the agent has reached the given concurrency limit
+    """
+    count = (
+        await models.FlowRun.where(
+            {
+                "_or": [
+                    {"state": {"_eq": "Running"}},
+                    {"state": {"_eq": "Submitted"}},
+                ],
+                "agent_id": {"_eq": agent_id},
+            }
+        ).count(
+            # Limit the count to the concurrency limit to speedup query; add one so we
+            # can check if the metric has been exceeded
+            limit=(limit + 1),
+        ),
+    )
+
+    if count > limit:
+        logger.warning(f"Agent {agent_id} has surpassed concurrency limit of {limit}")
+
+    return count >= limit
