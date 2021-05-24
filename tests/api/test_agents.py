@@ -1,5 +1,6 @@
 import pendulum
 import pytest
+import uuid
 
 from prefect import api, models
 from prefect_server import config
@@ -149,3 +150,55 @@ class TestDeleteAgent:
             await api.agents.delete_agent(agent_id=None)
         # confirm the agent still exists
         assert await models.Agent.where(id=agent_id).first() is not None
+
+
+class TestAgentConcurrencyLimit:
+    async def test_is_agent_at_limit_no_flow_runs(self, agent_id):
+        result = await api.agents.is_agent_at_concurrency_limit(
+            agent_id=agent_id, limit=1
+        )
+        assert result is False
+
+    async def test_is_agent_at_limit_unknown_agent_id(self):
+        result = await api.agents.is_agent_at_concurrency_limit(
+            agent_id=uuid.uuid4(), limit=1
+        )
+        assert result is False
+
+    async def test_is_agent_at_limit_counts_only_submitted_and_running(
+        self, agent_id, flow_id
+    ):
+        for state in ["Running", "Submitted", "Scheduled", "Failed"]:
+            flow_run_id = await api.runs.create_flow_run(flow_id=flow_id)
+            await models.FlowRun.where(id=flow_run_id).update(
+                {"agent_id": agent_id, "state": state}
+            )
+        await models.FlowRun.where(id=flow_run_id).update(
+            {"agent_id": agent_id, "state": state}
+        )
+        assert (
+            await api.agents.is_agent_at_concurrency_limit(agent_id=agent_id, limit=3)
+            is False
+        )
+        assert (
+            await api.agents.is_agent_at_concurrency_limit(agent_id=agent_id, limit=2)
+            is True
+        )
+
+    @pytest.mark.parametrize("exceeded", [True, False])
+    async def test_is_agent_at_limit_when_at_or_exceeded(
+        self, agent_id, flow_id, exceeded, caplog
+    ):
+        LIMIT = 3
+        for _ in range(LIMIT + 1 if exceeded else LIMIT):
+            flow_run_id = await api.runs.create_flow_run(flow_id=flow_id)
+            await models.FlowRun.where(id=flow_run_id).update(
+                {"agent_id": agent_id, "state": "Running"}
+            )
+
+        result = await api.agents.is_agent_at_concurrency_limit(
+            agent_id=agent_id, limit=LIMIT
+        )
+        assert result is True
+        # Log on exceeded
+        assert ("surpassed concurrency limit" in caplog.text) is exceeded

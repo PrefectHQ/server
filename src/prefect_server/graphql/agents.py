@@ -3,7 +3,7 @@ from typing import Any
 from graphql import GraphQLResolveInfo
 
 from prefect import api
-from prefect_server.utilities.graphql import mutation
+from prefect_server.utilities.graphql import mutation, query
 
 
 @mutation.field("register_agent")
@@ -60,5 +60,17 @@ async def resolve_update_agent_config(
             agent_config_id=agent_config_id,
             name=input.get("name"),
             settings=input.get("settings"),
+        )
+    }
+
+
+@query.field("is_agent_at_concurrency_limit")
+async def resolve_is_agent_at_concurrency_limit(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    return {
+        "at_limit": await api.agents.is_agent_at_concurrency_limit(
+            agent_id=input["agent_id"],
+            limit=input["limit"],
         )
     }

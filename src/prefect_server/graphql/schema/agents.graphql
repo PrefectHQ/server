@@ -1,3 +1,7 @@
+extend type Query {
+  is_agent_at_concurrency_limit(input: is_agent_at_concurrency_limit_input!): is_agent_at_concurrency_limit_payload
+}
+
 extend type Mutation {
   # ------------------------------------------------------
   # agents
@@ -23,6 +27,11 @@ extend type Mutation {
 # ------------------------------------------------------
 # agent inputs
 # ------------------------------------------------------
+
+input is_agent_at_concurrency_limit_input {
+  agent_id: UUID!
+  limit: Int!
+}
 
 input register_agent_input {
   "the tenant"
@@ -75,4 +84,8 @@ type agent_id_payload {
 
 type agent_config_id_payload {
   id: UUID
+}
+
+type is_agent_at_concurrency_limit_payload {
+  at_limit: Boolean
 }
