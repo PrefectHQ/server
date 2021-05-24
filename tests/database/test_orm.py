@@ -360,6 +360,19 @@ class TestModelQuery:
             == 2
         )
 
+    async def test_count_limit(
+        self,
+        project_ids,
+    ):
+        assert (
+            await models.Project.where(
+                {
+                    "name": {"_neq": "p2"},
+                }
+            ).count(limit=1)
+            == 1
+        )
+
     async def test_update_set(
         self,
         project_ids,

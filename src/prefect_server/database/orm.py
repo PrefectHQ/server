@@ -535,10 +535,7 @@ class ModelQuery:
         if result:
             return result[0]
 
-    async def count(
-        self,
-        distinct_on: List[str] = None,
-    ) -> int:
+    async def count(self, distinct_on: List[str] = None, limit: int = None) -> int:
         """
         Counts the number of objects corresponding to the query's where clause.
 
@@ -548,6 +545,7 @@ class ModelQuery:
 
         Args:
             - distinct_on (List[str]): a Hasura `distinct_on` clause
+            - limit (int): An optional limit to apply to the count for optimization
 
         Returns:
             - int: the count of matching items
@@ -556,6 +554,8 @@ class ModelQuery:
         arguments = {"where": self.where}
         if distinct_on is not None:
             arguments["distinct_on"] = distinct_on
+        if limit is not None:
+            arguments["limit"] = limit
 
         agg_type = self.model.__root_fields__.get(
             "select_aggregate", f"{self.model.__hasura_type__}_aggregate"
