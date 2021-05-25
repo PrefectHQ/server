@@ -1,5 +1,13 @@
 # Changelog
 
+## May 25, 2021 <Badge text="beta" type="success" />
+
+Released on May 25, 2021.
+
+### Enhancements
+
+- Introduce **kwargs to `create_logs` for Cloud compatibility - [#247](https://github.com/PrefectHQ/server/pull/247)
+
 ## April 27, 2021 <Badge text="beta" type="success" />
 
 Released on April 27, 2021.
