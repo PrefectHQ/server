@@ -252,8 +252,6 @@ you can change the host in the user configuration file `~/.prefect/config.toml`.
 ```
 [server]
   host = "http://<EXTERNAL-IP>"
-  [server.ui]
-    apollo_url="http://<EXTERNAL-IP>:4200/graphql"
 ```
 Run `kubectl get services --namespace <namespace>` to obtain the Apollo API external ip address.
 To review the configuration file run `prefect config`.
