@@ -135,7 +135,7 @@ class Lazarus(LoopService):
                     # and we don't need to interrupt execution on its account. If it was
                     # anything else, raise an error.
                     if "Update failed" in str(exc):
-                        self.logger.error(exc)
+                        self.logger.error(exc, exc_info=True)
                     else:
                         raise
             else:

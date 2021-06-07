@@ -631,7 +631,7 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
         try:
             flow_schedule = schedule_schema.load(flow_schedule)
         except Exception as exc:
-            logger.error(exc)
+            logger.error(exc, exc_info=True)
             logger.critical(
                 f"Failed to deserialize schedule for flow {flow_id}: {flow_schedule}"
             )
