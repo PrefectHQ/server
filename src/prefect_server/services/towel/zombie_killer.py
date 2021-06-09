@@ -204,7 +204,7 @@ class ZombieKiller(LoopService):
                 zombies += 1
 
             except ValueError as exc:
-                self.logger.error(exc)
+                self.logger.error(exc, exc_info=True)
 
         if zombies:
             self.logger.info(f"Addressed {zombies} zombie task runs.")
