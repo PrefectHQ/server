@@ -15,7 +15,7 @@ from prefect.engine.state import (
     Success,
 )
 from prefect.environments import LocalEnvironment
-from prefect.environments.storage import Local
+from prefect.storage import Local
 from prefect_server.utilities.tests import set_temporary_config
 
 # we attach this dictionary to a module so that

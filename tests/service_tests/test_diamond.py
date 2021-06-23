@@ -19,7 +19,7 @@ class TestDiamond:
         """
         flow = prefect.Flow(
             "diamond",
-            storage=prefect.environments.storage.Local(directory=tmpdir),
+            storage=prefect.storage.Local(directory=tmpdir),
             environment=prefect.environments.LocalEnvironment(),
         )
 
@@ -181,7 +181,7 @@ class TestDiamondFailOnce:
 
         flow = prefect.Flow(
             "diamond fail once",
-            storage=prefect.environments.storage.Local(directory=tmpdir),
+            storage=prefect.storage.Local(directory=tmpdir),
             environment=prefect.environments.LocalEnvironment(),
         )
 
