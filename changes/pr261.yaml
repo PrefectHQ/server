@@ -1,2 +1,2 @@
 enhancement:
-  - "Add the option to defer setting a flow run state to scheduled when creating a flow run - [#261](https://github.com/PrefectHQ/server/pull/261)"
+  - "Add the option to defer setting a flow run state to scheduled when creating a FlowRun - [#261](https://github.com/PrefectHQ/server/pull/261)"
