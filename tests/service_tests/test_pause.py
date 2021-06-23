@@ -27,7 +27,7 @@ class TestPause:
         """
         flow = prefect.Flow(
             "pause",
-            storage=prefect.environments.storage.Local(directory=tmpdir),
+            storage=prefect.storage.Local(directory=tmpdir),
             environment=prefect.environments.LocalEnvironment(),
         )
 
