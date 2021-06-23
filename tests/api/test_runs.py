@@ -330,6 +330,16 @@ class TestCreateRun:
         assert fr.state_start_time > dt
         assert fr.state_message == "Flow run scheduled."
 
+    async def test_new_run_does_not_have_scheduled_state_if_defer_set_scheduled_state_is_true(
+        self, simple_flow_id
+    ):
+        dt = pendulum.now()
+        flow_run_id = await api.runs.create_flow_run(
+            flow_id=simple_flow_id, defer_set_scheduled_state=True
+        )
+        fr = await models.FlowRun.where(id=flow_run_id).first({"state"})
+        assert fr.state is None
+
     async def test_new_run_has_correct_state_start_time(self, simple_flow_id):
         dt = pendulum.datetime(2020, 1, 1)
         flow_run_id = await api.runs.create_flow_run(
