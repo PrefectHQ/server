@@ -1,5 +1,14 @@
 # Changelog
 
+## July 06, 2021 <Badge text="beta" type="success" />
+
+Released on July 6, 2021.
+
+### Enhancements
+
+- Add traceback info to some unexpected logs for debugging - [#259](https://github.com/PrefectHQ/server/pull/259)
+- Add the option to defer setting a flow run state to scheduled when creating a FlowRun - [#261](https://github.com/PrefectHQ/server/pull/261)
+
 ## May 25, 2021 <Badge text="beta" type="success" />
 
 Released on May 25, 2021.

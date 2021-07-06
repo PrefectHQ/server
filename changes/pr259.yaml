@@ -1,2 +1,0 @@
-enhancement:
-  - "Add traceback info to some unexpected logs for debugging - [#259](https://github.com/PrefectHQ/server/pull/259)"
