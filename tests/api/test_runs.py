@@ -291,6 +291,23 @@ class TestCreateRun:
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"parameters"})
         assert flow_run.parameters == dict(x=2)
 
+    async def test_create_run_uses_default_flow_parameters(self, project_id):
+        flow_id = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=prefect.Flow(
+                name="test", tasks=[prefect.Parameter("x", default=4, required=True)]
+            ).serialize(),
+        )
+
+        flow = await models.Flow.where(id=flow_id).first({"parameters"})
+
+        assert flow.parameters[0]["default"] == 4
+
+        flow_run_id = await api.runs.create_flow_run(flow_id=flow_id)
+
+        flow_run = await models.FlowRun.where(id=flow_run_id).first({"parameters"})
+        assert flow_run.parameters == dict(x=4)
+
     async def test_create_run_passes_start_time_to_flow_run_record(
         self, simple_flow_id
     ):
