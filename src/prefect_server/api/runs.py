@@ -160,7 +160,8 @@ async def create_flow_run(
             run_config = flow.run_config
 
     # check parameters
-    run_parameters = flow.flow_group.default_parameters
+    run_parameters = { p["name"]: p["default"] for p in flow.parameters }
+    run_parameters.update((flow.flow_group.default_parameters or {}))
     run_parameters.update((parameters or {}))
     required_parameters = [p["name"] for p in flow.parameters if p["required"]]
     missing = set(required_parameters).difference(run_parameters)
