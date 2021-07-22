@@ -194,7 +194,8 @@ Add the flag `--set agent.enabled=true` to the `helm install` command to include
 
 The database can be deployed by this chart or be provided externally.
 We strongly recommend that you do not deploy a production database using this chart, the provided database is primarily for testing purposes.
-The provided database will **not** persist your data by default. PostgreSQL version 11+ is recommended.
+The provided database will **not** persist your data by default.
+When connecting to an external database, PostgreSQL 11+ is recommended.
 
 An external database will require some minimal setup for Hasura.
 The following needs to be run or the user should have permissions to execute it and Hasura will run it on startup:
