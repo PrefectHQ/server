@@ -51,7 +51,7 @@ postgresql:
   # existingSecret configures which secret should be referenced
   # for access to the database. If null and `useSubChart` is
   # enabled, the secret will be generated. If using an external
-  # postgres service, this value should be set to a name of the
+  # postgres service, this value should be set to the name of a
   # Kubernetes secret containing the key `postgresql-password`
   existingSecret: null
 
