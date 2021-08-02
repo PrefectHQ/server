@@ -1,0 +1,5 @@
+fix:
+  - "Fix Apollo URL environment variable - [#268](https://github.com/PrefectHQ/server/pull/268)"
+
+contributor:
+  - "[Ruben Aguilar](https://github.com/nebur1989)"
