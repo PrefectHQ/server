@@ -40,7 +40,7 @@ spec:
           command: 
             - "/intercept.sh"
           env:
-            - name: PREFECT_SERVER__APOLLO_URL
+            - name: PREFECT_SERVER__UI__APOLLO_URL
               value: {{ .Values.ui.apolloApiUrl }}
           ports:
             - name: http
