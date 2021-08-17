@@ -278,7 +278,6 @@ async def create_flow(
             await models.Task.insert_many(
                 [
                     models.Task(
-                        id=t.id,
                         flow_id=flow_id,
                         tenant_id=tenant_id,
                         name=t.name,
