@@ -38,7 +38,7 @@ commands:
           command: |
             apt-get update
             # official binaries for nodejs
-            curl -sL https://deb.nodesource.com/setup_11.x | bash -
+            curl -sL https://deb.nodesource.com/setup_14.x | bash -
             apt-get install -y sudo nodejs netcat
   prep_tests:
     description: "Run Prefect Server database migrations"
