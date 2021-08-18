@@ -14,6 +14,8 @@ core_version_cutoff = "0.6.1"
 # the max number of runs returned by get_runs_in_queue
 queued_runs_returned_limit = 25
 
+# the amount of task and edges to insert in one batch
+insert_many_batch_size = 50
 
 # path for user configuration file
 user_config_path = "~/.prefect_server/config.toml"
