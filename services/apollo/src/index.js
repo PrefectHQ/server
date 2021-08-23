@@ -100,7 +100,7 @@ async function runServer() {
       }
     }
   })
-  server.applyMiddleware({ app, path: '/', bodyParserConfig: { limit: '1mb' } })
+  server.applyMiddleware({ app, path: '/', bodyParserConfig: { limit: '5mb' } })
   app.listen({
     host: APOLLO_API_BIND_ADDRESS,
     port: APOLLO_API_PORT,

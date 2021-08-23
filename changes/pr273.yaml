@@ -1,0 +1,2 @@
+enhancement:
+  - "Increase Apollo payload size limit to 5mb - [#273](https://github.com/PrefectHQ/server/pull/273)"
