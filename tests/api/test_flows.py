@@ -186,58 +186,6 @@ class TestCreateFlow:
         result = await models.Flow.where(id=flow_id).first({"tasks": {"cache_key"}})
         assert "test-key" in {t.cache_key for t in result.tasks}
 
-    async def test_create_flow_tracks_mapped_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Flow.where(id=flow_id).first({"tasks": {"mapped"}})
-        assert True in {t.mapped for t in result.tasks}
-
-    async def test_create_flow_tracks_root_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_root_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"t1", "t4", "x", "y"}
-
-    async def test_create_flow_tracks_terminal_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_terminal_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"x", "t2", "t3"}
-
-    async def test_create_flow_tracks_reference_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_reference_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"x", "t2", "t3"}
-
-    async def test_create_flow_tracks_updated_reference_tasks(self, project_id, flow):
-        t3 = flow.get_tasks(name="t3")[0]
-        t4 = flow.get_tasks(name="t4")[0]
-        flow.set_reference_tasks([t3, t4])
-
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_reference_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"t3", "t4"}
-
     async def test_flows_can_be_safely_created_twice(self, project_id, flow):
         """
         Because object ids are not the same as database ids, the same flow can be uploaded twice

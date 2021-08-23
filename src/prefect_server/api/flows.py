@@ -165,18 +165,11 @@ async def create_flow(
     tenant_id = project.tenant_id  # type: ignore
 
     # set up task detail info
-    task_lookup = {t.slug: t for t in flow.tasks}
     tasks_with_upstreams = {e.downstream_task for e in flow.edges}
     tasks_with_downstreams = {e.upstream_task for e in flow.edges}
     reference_tasks = set(flow.reference_tasks) or {
         t.slug for t in flow.tasks if t.slug not in tasks_with_downstreams
     }
-
-    for t in flow.tasks:
-        t.mapped = any(e.mapped for e in flow.edges if e.downstream_task == t.slug)
-        t.is_reference_task = t.slug in reference_tasks
-        t.is_root_task = t.slug not in tasks_with_upstreams
-        t.is_terminal_task = t.slug not in tasks_with_downstreams
 
     # set up versioning
     version_group_id = version_group_id or str(uuid.uuid4())
@@ -272,47 +265,12 @@ async def create_flow(
     ).insert()
 
     try:
-        batch_insertion_size = config.insert_many_batch_size
-
-        for tasks_chunk in chunked_iterable(flow.tasks, batch_insertion_size):
-            await models.Task.insert_many(
-                [
-                    models.Task(
-                        id=t.id,
-                        flow_id=flow_id,
-                        tenant_id=tenant_id,
-                        name=t.name,
-                        slug=t.slug,
-                        type=t.type,
-                        max_retries=t.max_retries,
-                        tags=t.tags,
-                        retry_delay=t.retry_delay,
-                        trigger=t.trigger,
-                        mapped=t.mapped,
-                        auto_generated=t.auto_generated,
-                        cache_key=t.cache_key,
-                        is_reference_task=t.is_reference_task,
-                        is_root_task=t.is_root_task,
-                        is_terminal_task=t.is_terminal_task,
-                    )
-                    for t in tasks_chunk
-                ]
-            )
-
-        for edges_chunk in chunked_iterable(flow.edges, batch_insertion_size):
-            await models.Edge.insert_many(
-                [
-                    models.Edge(
-                        tenant_id=tenant_id,
-                        flow_id=flow_id,
-                        upstream_task_id=task_lookup[e.upstream_task].id,
-                        downstream_task_id=task_lookup[e.downstream_task].id,
-                        key=e.key,
-                        mapped=e.mapped,
-                    )
-                    for e in edges_chunk
-                ]
-            )
+        await api.flows.register_tasks(
+            flow_id=flow_id, tenant_id=tenant_id, tasks=flow.tasks
+        )
+        await api.flows.register_edges(
+            flow_id=flow_id, tenant_id=tenant_id, edges=flow.edges
+        )
 
     except Exception as exc:
         logger.error("`create_flow` failed during insertion", exc_info=True)
@@ -333,6 +291,57 @@ async def create_flow(
             )
 
     return flow_id
+
+
+@register_api("flows.register_tasks")
+async def register_tasks(flow_id: str, tenant_id: str, tasks: List[TaskSchema]) -> None:
+    batch_insertion_size = config.insert_many_batch_size
+
+    for tasks_chunk in chunked_iterable(tasks, batch_insertion_size):
+        await models.Task.insert_many(
+            [
+                models.Task(
+                    id=t.id,
+                    flow_id=flow_id,
+                    tenant_id=tenant_id,
+                    name=t.name,
+                    slug=t.slug,
+                    type=t.type,
+                    max_retries=t.max_retries,
+                    tags=t.tags,
+                    retry_delay=t.retry_delay,
+                    trigger=t.trigger,
+                    auto_generated=t.auto_generated,
+                    cache_key=t.cache_key,
+                )
+                for t in tasks_chunk
+            ]
+        )
+
+
+@register_api("flows.register_edges")
+async def register_edges(flow_id: str, tenant_id: str, edges: List[EdgeSchema]) -> None:
+    batch_insertion_size = config.insert_many_batch_size
+    flow = await models.Flow.where(id=flow_id).first(
+        {"tasks": {"slug": True, "id": True}}
+    )
+
+    task_lookup = {t.slug: t.id for t in flow.tasks}
+
+    for edges_chunk in chunked_iterable(edges, batch_insertion_size):
+        await models.Edge.insert_many(
+            [
+                models.Edge(
+                    tenant_id=tenant_id,
+                    flow_id=flow_id,
+                    upstream_task_id=task_lookup[e.upstream_task],
+                    downstream_task_id=task_lookup[e.downstream_task],
+                    key=e.key,
+                    mapped=e.mapped,
+                )
+                for e in edges_chunk
+            ]
+        )
 
 
 @register_api("flows.delete_flow")
