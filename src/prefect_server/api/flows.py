@@ -324,7 +324,9 @@ async def register_tasks(
 
 
 @register_api("flows.register_edges")
-async def register_edges(flow_id: str, tenant_id: str, edges: List[EdgeSchema]) -> None:
+async def register_edges(
+    flow_id: str, tenant_id: str, edges: List[Union[EdgeSchema, dict]]
+) -> None:
     batch_insertion_size = config.insert_many_batch_size
     flow = await models.Flow.where(id=flow_id).first(
         {"tasks": {"slug": True, "id": True}}
@@ -332,6 +334,7 @@ async def register_edges(flow_id: str, tenant_id: str, edges: List[EdgeSchema]) 
 
     task_lookup = {t.slug: t.id for t in flow.tasks}
 
+    edges = parse_obj_as(List[EdgeSchema], edges)
     for edges_chunk in chunked_iterable(edges, batch_insertion_size):
         await models.Edge.insert_many(
             [
@@ -344,7 +347,8 @@ async def register_edges(flow_id: str, tenant_id: str, edges: List[EdgeSchema]) 
                     mapped=e.mapped,
                 )
                 for e in edges_chunk
-            ]
+            ],
+            on_conflict=dict(constraint="edge_flow_id_task_ids_key", update_columns=[]),
         )
 
 
