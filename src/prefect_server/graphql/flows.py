@@ -81,6 +81,22 @@ async def resolve_create_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -
     return {"id": flow_id}
 
 
+@mutation.field("register_tasks")
+async def resolve_register_tasks(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    serialized_tasks = input["serialized_tasks"]
+    flow_id = input["flow_id"]
+
+    if flow_id is None:
+        raise ValueError("Invalid flow ID")
+
+    await api.flows.register_tasks(
+        flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+    )
+    return {"success": True}
+
+
 @mutation.field("delete_flow")
 async def resolve_delete_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -> dict:
     return {"success": await api.flows.delete_flow(flow_id=input["flow_id"])}

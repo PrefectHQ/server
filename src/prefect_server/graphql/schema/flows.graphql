@@ -6,6 +6,9 @@ extend type Mutation {
   "Create a new flow from a serialized JSON representation."
   create_flow(input: create_flow_input!): flow_id_payload
 
+  "Register tasks to a flow from a serialized JSON representation."
+  register_tasks(input: register_tasks_input!): success_payload
+
   "Create a new flow from a compressed JSON representation. Used by Prefect Core."
   create_flow_from_compressed_string(
     input: create_flow_from_compressed_string_input!
@@ -88,6 +91,13 @@ input create_flow_input {
   description: String
   "An optional idempotency key for this flow to prevent multiple sequential creations within the version group"
   idempotency_key: String
+}
+
+input register_tasks_input {
+  "The serialized representation of tasks"
+  serialized_tasks: JSON!
+  "The ID of the flow to register tasks with"
+  flow_id: UUID!
 }
 
 input create_flow_from_compressed_string_input {

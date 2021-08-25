@@ -22,6 +22,14 @@ class TestCreateFlow:
         }
     """
 
+    register_tasks_mutation = """
+        mutation($input: register_tasks_input!) {
+            register_tasks(input: $input) {
+                success
+            }
+        }
+    """
+
     async def test_create_flow(self, run_query, project_id):
         serialized_flow = prefect.Flow(
             name="test", tasks=[prefect.Task(), prefect.Task()]
@@ -37,6 +45,42 @@ class TestCreateFlow:
             {"project_id"}
         )
         assert flow.project_id == project_id
+
+    async def test_create_flow_and_register_tasks_separately(
+        self, run_query, project_id
+    ):
+        serialized_flow = prefect.Flow(
+            name="test", tasks=[prefect.Task(), prefect.Task()]
+        ).serialize(build=False)
+
+        tasks = serialized_flow.pop("tasks")
+        flow_result = await run_query(
+            query=self.create_flow_mutation,
+            variables=dict(
+                input=dict(serialized_flow=serialized_flow, project_id=project_id)
+            ),
+        )
+
+        flow = await models.Flow.where(id=flow_result.data.create_flow.id).first(
+            {"tasks": {"name"}}
+        )
+        assert flow.tasks == []
+
+        tasks_result = await run_query(
+            query=self.register_tasks_mutation,
+            variables=dict(
+                input=dict(
+                    serialized_tasks=tasks, flow_id=flow_result.data.create_flow.id
+                )
+            ),
+        )
+
+        assert tasks_result.data.register_tasks.success is True
+
+        flow = await models.Flow.where(id=flow_result.data.create_flow.id).first(
+            {"tasks": {"name"}}
+        )
+        assert [t.name for t in flow.tasks] == ["Task", "Task"]
 
     async def test_create_compressed_flow(self, run_query, project_id):
         serialized_flow = compress(prefect.Flow(name="test").serialize(build=False))

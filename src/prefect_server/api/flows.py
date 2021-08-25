@@ -3,7 +3,7 @@ import datetime
 import hashlib
 import json
 import uuid
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 import pendulum
 from packaging import version as module_version
@@ -11,7 +11,7 @@ from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
 from prefect.utilities.graphql import EnumValue, with_args
 from prefect.utilities.plugins import register_api
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, parse_obj_as, validator
 
 from prefect_server import config
 from prefect_server.utilities import logging
@@ -294,9 +294,12 @@ async def create_flow(
 
 
 @register_api("flows.register_tasks")
-async def register_tasks(flow_id: str, tenant_id: str, tasks: List[TaskSchema]) -> None:
+async def register_tasks(
+    flow_id: str, tenant_id: str, tasks: List[Union[TaskSchema, dict]]
+) -> None:
     batch_insertion_size = config.insert_many_batch_size
 
+    tasks = parse_obj_as(List[TaskSchema], tasks)
     for tasks_chunk in chunked_iterable(tasks, batch_insertion_size):
         await models.Task.insert_many(
             [
