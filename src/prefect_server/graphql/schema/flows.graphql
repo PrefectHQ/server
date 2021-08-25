@@ -9,6 +9,9 @@ extend type Mutation {
   "Register tasks to a flow from a serialized JSON representation."
   register_tasks(input: register_tasks_input!): success_payload
 
+  "Register edges to a flow from a serialized JSON representation."
+  register_edges(input: register_edges_input!): success_payload
+
   "Create a new flow from a compressed JSON representation. Used by Prefect Core."
   create_flow_from_compressed_string(
     input: create_flow_from_compressed_string_input!
@@ -97,6 +100,13 @@ input register_tasks_input {
   "The serialized representation of tasks"
   serialized_tasks: JSON!
   "The ID of the flow to register tasks with"
+  flow_id: UUID!
+}
+
+input register_edges_input {
+  "The serialized representation of edges"
+  serialized_edges: JSON!
+  "The ID of the flow to register edges with"
   flow_id: UUID!
 }
 

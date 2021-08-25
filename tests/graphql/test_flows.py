@@ -30,6 +30,14 @@ class TestCreateFlow:
         }
     """
 
+    register_edges_mutation = """
+        mutation($input: register_edges_input!) {
+            register_edges(input: $input) {
+                success
+            }
+        }
+    """
+
     async def test_create_flow(self, run_query, project_id):
         serialized_flow = prefect.Flow(
             name="test", tasks=[prefect.Task(), prefect.Task()]
@@ -81,6 +89,84 @@ class TestCreateFlow:
             {"tasks": {"name"}}
         )
         assert [t.name for t in flow.tasks] == ["Task", "Task"]
+
+    async def test_create_flow_and_register_edges_separately(
+        self, run_query, project_id
+    ):
+        with prefect.Flow(name="test") as flow:
+            prefect.Task().set_upstream(prefect.Task())
+            prefect.Task().set_upstream(prefect.Task())
+
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_edges = serialized_flow.pop("edges")
+
+        flow_result = await run_query(
+            query=self.create_flow_mutation,
+            variables=dict(
+                input=dict(serialized_flow=serialized_flow, project_id=project_id)
+            ),
+        )
+
+        flow = await models.Flow.where(id=flow_result.data.create_flow.id).first(
+            {"tasks": {"name"}, "edges_aggregate": {"aggregate": {"count"}}},
+            apply_schema=False,
+        )
+        assert flow.tasks == []
+        assert flow.edges_aggregate.aggregate.count == 0
+
+        # need to register tasks first
+        await api.flows.register_tasks(
+            flow_id=flow_result.data.create_flow.id,
+            tasks=serialized_tasks,
+            tenant_id=None,
+        )
+        edges_result = await run_query(
+            query=self.register_edges_mutation,
+            variables=dict(
+                input=dict(
+                    serialized_edges=serialized_edges,
+                    flow_id=flow_result.data.create_flow.id,
+                )
+            ),
+        )
+
+        assert edges_result.data.register_edges.success is True
+
+        flow = await models.Flow.where(id=flow_result.data.create_flow.id).first(
+            {"tasks": {"name"}, "edges_aggregate": {"aggregate": {"count"}}},
+            apply_schema=False,
+        )
+        assert [t.name for t in flow.tasks] == ["Task", "Task"] * 2
+        assert flow.edges_aggregate.aggregate.count == 2
+
+    async def test_register_edges_provides_helpful_error(self, run_query, project_id):
+        with prefect.Flow(name="test") as flow:
+            prefect.Task().set_upstream(prefect.Task())
+            prefect.Task().set_upstream(prefect.Task())
+
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_edges = serialized_flow.pop("edges")
+
+        flow_result = await run_query(
+            query=self.create_flow_mutation,
+            variables=dict(
+                input=dict(serialized_flow=serialized_flow, project_id=project_id)
+            ),
+        )
+
+        edges_result = await run_query(
+            query=self.register_edges_mutation,
+            variables=dict(
+                input=dict(
+                    serialized_edges=serialized_edges,
+                    flow_id=flow_result.data.create_flow.id,
+                )
+            ),
+        )
+
+        assert "reference tasks that do not exist" in edges_result.errors[0].message
 
     async def test_create_compressed_flow(self, run_query, project_id):
         serialized_flow = compress(prefect.Flow(name="test").serialize(build=False))

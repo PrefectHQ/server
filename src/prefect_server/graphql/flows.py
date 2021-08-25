@@ -97,6 +97,22 @@ async def resolve_register_tasks(
     return {"success": True}
 
 
+@mutation.field("register_edges")
+async def resolve_register_edges(
+    obj: Any, info: GraphQLResolveInfo, input: dict
+) -> dict:
+    serialized_edges = input["serialized_edges"]
+    flow_id = input["flow_id"]
+
+    if flow_id is None:
+        raise ValueError("Invalid flow ID")
+
+    await api.flows.register_edges(
+        flow_id=flow_id, tenant_id=None, edges=serialized_edges
+    )
+    return {"success": True}
+
+
 @mutation.field("delete_flow")
 async def resolve_delete_flow(obj: Any, info: GraphQLResolveInfo, input: dict) -> dict:
     return {"success": await api.flows.delete_flow(flow_id=input["flow_id"])}

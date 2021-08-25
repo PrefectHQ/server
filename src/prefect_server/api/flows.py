@@ -335,21 +335,29 @@ async def register_edges(
     task_lookup = {t.slug: t.id for t in flow.tasks}
 
     edges = parse_obj_as(List[EdgeSchema], edges)
-    for edges_chunk in chunked_iterable(edges, batch_insertion_size):
-        await models.Edge.insert_many(
-            [
-                models.Edge(
-                    tenant_id=tenant_id,
-                    flow_id=flow_id,
-                    upstream_task_id=task_lookup[e.upstream_task],
-                    downstream_task_id=task_lookup[e.downstream_task],
-                    key=e.key,
-                    mapped=e.mapped,
-                )
-                for e in edges_chunk
-            ],
-            on_conflict=dict(constraint="edge_flow_id_task_ids_key", update_columns=[]),
-        )
+
+    try:
+        for edges_chunk in chunked_iterable(edges, batch_insertion_size):
+            await models.Edge.insert_many(
+                [
+                    models.Edge(
+                        tenant_id=tenant_id,
+                        flow_id=flow_id,
+                        upstream_task_id=task_lookup[e.upstream_task],
+                        downstream_task_id=task_lookup[e.downstream_task],
+                        key=e.key,
+                        mapped=e.mapped,
+                    )
+                    for e in edges_chunk
+                ],
+                on_conflict=dict(
+                    constraint="edge_flow_id_task_ids_key", update_columns=[]
+                ),
+            )
+    except KeyError:
+        raise ValueError(
+            "Edges could not be registered - some edges reference tasks that do not exist within this flow."
+        ) from None
 
 
 @register_api("flows.delete_flow")
