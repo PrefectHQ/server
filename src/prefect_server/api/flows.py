@@ -318,7 +318,8 @@ async def register_tasks(
                     cache_key=t.cache_key,
                 )
                 for t in tasks_chunk
-            ]
+            ],
+            on_conflict=dict(constraint="task_flow_id_slug_key", update_columns=[]),
         )
 
 

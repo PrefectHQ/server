@@ -154,6 +154,47 @@ class TestCreateFlow:
         )
         assert result.tasks_aggregate.aggregate.count == len(flow.tasks)
 
+    async def test_register_tasks_registers_tasks(self, project_id, flow):
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_flow.pop("edges")
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=serialized_flow
+        )
+
+        result = await models.Flow.where(id=flow_id).first(
+            {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.tasks_aggregate.aggregate.count == 0
+
+        await api.flows.register_tasks(
+            flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+        )
+        result = await models.Flow.where(id=flow_id).first(
+            {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.tasks_aggregate.aggregate.count == len(flow.tasks)
+
+    async def test_register_tasks_is_idempotent(self, project_id, flow):
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_flow.pop("edges")
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=serialized_flow
+        )
+
+        for _ in range(3):
+            await api.flows.register_tasks(
+                flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+            )
+
+        result = await models.Flow.where(id=flow_id).first(
+            {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.tasks_aggregate.aggregate.count == len(flow.tasks)
+
     async def test_create_flow_saves_task_triggers(self, project_id, flow):
         flow_id = await api.flows.create_flow(
             project_id=project_id, serialized_flow=flow.serialize()
