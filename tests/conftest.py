@@ -22,7 +22,7 @@ def pytest_collection_modifyitems(session, config, items):
 
 # redefine the event loop to support module-scoped fixtures
 # https://github.com/pytest-dev/pytest-asyncio/issues/68
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop

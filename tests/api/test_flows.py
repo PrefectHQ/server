@@ -154,6 +154,96 @@ class TestCreateFlow:
         )
         assert result.tasks_aggregate.aggregate.count == len(flow.tasks)
 
+    async def test_register_tasks_registers_tasks(self, project_id, flow):
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_flow.pop("edges")
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=serialized_flow
+        )
+
+        result = await models.Flow.where(id=flow_id).first(
+            {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.tasks_aggregate.aggregate.count == 0
+
+        await api.flows.register_tasks(
+            flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+        )
+        result = await models.Flow.where(id=flow_id).first(
+            {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.tasks_aggregate.aggregate.count == len(flow.tasks)
+
+    async def test_register_tasks_is_idempotent(self, project_id, flow):
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_flow.pop("edges")
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=serialized_flow
+        )
+
+        for _ in range(3):
+            await api.flows.register_tasks(
+                flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+            )
+
+        result = await models.Flow.where(id=flow_id).first(
+            {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.tasks_aggregate.aggregate.count == len(flow.tasks)
+
+    async def test_register_edges_registers_edges(self, project_id, flow):
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_edges = serialized_flow.pop("edges")
+        assert len(serialized_edges) >= 1  # ensure the test is meaningful
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=serialized_flow
+        )
+
+        result = await models.Flow.where(id=flow_id).first(
+            {"edges_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.edges_aggregate.aggregate.count == 0
+
+        await api.flows.register_tasks(
+            flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+        )
+        await api.flows.register_edges(
+            flow_id=flow_id, tenant_id=None, edges=serialized_edges
+        )
+        result = await models.Flow.where(id=flow_id).first(
+            {"edges_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.edges_aggregate.aggregate.count == len(flow.edges)
+
+    async def test_register_edges_is_idempotent(self, project_id, flow):
+        serialized_flow = flow.serialize()
+        serialized_tasks = serialized_flow.pop("tasks")
+        serialized_edges = serialized_flow.pop("edges")
+        assert len(serialized_edges) >= 1  # ensure the test is meaningful
+
+        flow_id = await api.flows.create_flow(
+            project_id=project_id, serialized_flow=serialized_flow
+        )
+
+        for _ in range(3):
+            await api.flows.register_tasks(
+                flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+            )
+            await api.flows.register_edges(
+                flow_id=flow_id, tenant_id=None, edges=serialized_edges
+            )
+
+        result = await models.Flow.where(id=flow_id).first(
+            {"edges_aggregate": {"aggregate": {"count"}}}, apply_schema=False
+        )
+        assert result.edges_aggregate.aggregate.count == len(flow.edges)
+
     async def test_create_flow_saves_task_triggers(self, project_id, flow):
         flow_id = await api.flows.create_flow(
             project_id=project_id, serialized_flow=flow.serialize()
@@ -185,58 +275,6 @@ class TestCreateFlow:
 
         result = await models.Flow.where(id=flow_id).first({"tasks": {"cache_key"}})
         assert "test-key" in {t.cache_key for t in result.tasks}
-
-    async def test_create_flow_tracks_mapped_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Flow.where(id=flow_id).first({"tasks": {"mapped"}})
-        assert True in {t.mapped for t in result.tasks}
-
-    async def test_create_flow_tracks_root_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_root_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"t1", "t4", "x", "y"}
-
-    async def test_create_flow_tracks_terminal_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_terminal_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"x", "t2", "t3"}
-
-    async def test_create_flow_tracks_reference_tasks(self, project_id, flow):
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_reference_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"x", "t2", "t3"}
-
-    async def test_create_flow_tracks_updated_reference_tasks(self, project_id, flow):
-        t3 = flow.get_tasks(name="t3")[0]
-        t4 = flow.get_tasks(name="t4")[0]
-        flow.set_reference_tasks([t3, t4])
-
-        flow_id = await api.flows.create_flow(
-            project_id=project_id, serialized_flow=flow.serialize()
-        )
-
-        result = await models.Task.where(
-            {"flow_id": {"_eq": flow_id}, "is_reference_task": {"_eq": True}}
-        ).get({"name"})
-        assert set([t.name for t in result]) == {"t3", "t4"}
 
     async def test_flows_can_be_safely_created_twice(self, project_id, flow):
         """
