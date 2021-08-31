@@ -644,11 +644,9 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = 10) -> List[str]:
         return run_ids
     else:
         # attempt to pull the schedule from the flow group if possible
-        if flow.flow_group.schedule:
-            flow_schedule = flow.flow_group.schedule
         # if not possible, pull the schedule from the flow
-        else:
-            flow_schedule = flow.schedule
+        flow_schedule = flow.flow_group.schedule or flow.schedule
+
         try:
             flow_schedule = schedule_schema.load(flow_schedule)
         except Exception as exc:
