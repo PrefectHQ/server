@@ -1,0 +1,5 @@
+enhancement:
+  - "Make maximum number of scheduled runs per flow configurable - [Issue #280](https://github.com/PrefectHQ/server/issues/280)"
+
+contributor:
+  - "[Bouke Krom](https://github.com/bouke-sf)"

@@ -595,7 +595,7 @@ async def set_schedule_inactive(flow_id: str) -> bool:
 
 
 @register_api("flows.schedule_flow_runs")
-async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
+async def schedule_flow_runs(flow_id: str, max_runs: int = 10) -> List[str]:
     """
     Schedule the next `max_runs` runs for this flow. Runs will not be scheduled
     if they are earlier than latest currently-scheduled run that has auto_scheduled = True.
@@ -609,10 +609,6 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
     Returns:
         - List[str]: the ids of the new runs
     """
-
-    if max_runs is None:
-        max_runs = 10
-
     if flow_id is None:
         raise ValueError("Invalid flow id.")
 
@@ -648,11 +644,9 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
         return run_ids
     else:
         # attempt to pull the schedule from the flow group if possible
-        if flow.flow_group.schedule:
-            flow_schedule = flow.flow_group.schedule
         # if not possible, pull the schedule from the flow
-        else:
-            flow_schedule = flow.schedule
+        flow_schedule = flow.flow_group.schedule or flow.schedule
+
         try:
             flow_schedule = schedule_schema.load(flow_schedule)
         except Exception as exc:

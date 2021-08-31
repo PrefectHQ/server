@@ -77,6 +77,9 @@ format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
     [services.lazarus]
     resurrection_attempt_limit = 3
 
+    [services.towel]
+    max_scheduled_runs_per_flow = 10
+
 
 # UI Colors corresponding to run states
 [state_colors]
