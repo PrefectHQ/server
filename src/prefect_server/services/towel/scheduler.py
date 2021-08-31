@@ -3,6 +3,7 @@ import asyncio
 from prefect import api, models
 from prefect.utilities.graphql import EnumValue
 
+from prefect_server import config
 from prefect_server.services.loop_service import LoopService
 
 
@@ -53,7 +54,13 @@ class Scheduler(LoopService):
 
             # concurrently schedule all runs
             all_run_ids = await asyncio.gather(
-                *[api.flows.schedule_flow_runs(flow.id) for flow in flows],
+                *[
+                    api.flows.schedule_flow_runs(
+                        flow.id,
+                        max_runs=config.services.towel.max_scheduled_runs_per_flow,
+                    )
+                    for flow in flows
+                ],
                 return_exceptions=True,
             )
             runs_scheduled += sum(
