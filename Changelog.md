@@ -10,9 +10,14 @@ Released on September 2, 2021.
 - Increase Apollo payload size limit to 5mb - [#273](https://github.com/PrefectHQ/server/pull/273)
 - Separate out task and edge registration to better handle large flow registrations - [#277](https://github.com/PrefectHQ/server/pull/277)
 
+### Fixes
+
+- Update Helm chart RoleBinding API version - [#276](https://github.com/PrefectHQ/server/pull/276)
+
 ### Contributors
 
 - [Bouke Krom](https://github.com/bouke-sf)
+- [Guy Maliar](https://github.com/gmaliar)
 
 ## July 06, 2021 <Badge text="beta" type="success" />
 
