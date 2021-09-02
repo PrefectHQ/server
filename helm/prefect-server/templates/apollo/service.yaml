@@ -14,6 +14,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+  {{- with .Values.apollo.service.publicIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
   selector:
     {{- include "prefect-server.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: apollo
