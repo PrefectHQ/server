@@ -1,5 +1,19 @@
 # Changelog
 
+## Sep 2, 2021 <Badge text="beta" type="success" />
+
+Released on September 2, 2021.
+
+### Enhancements
+
+- Make maximum number of scheduled runs per flow configurable - [#280](https://github.com/PrefectHQ/server/issues/280)
+- Increase Apollo payload size limit to 5mb - [#273](https://github.com/PrefectHQ/server/pull/273)
+- Separate out task and edge registration to better handle large flow registrations - [#277](https://github.com/PrefectHQ/server/pull/277)
+
+### Contributors
+
+- [Bouke Krom](https://github.com/bouke-sf)
+
 ## July 06, 2021 <Badge text="beta" type="success" />
 
 Released on July 6, 2021.
