@@ -1,0 +1,37 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+apiVersion: v2
+appVersion: 2021.09.02
+dependencies:
+- - condition: postgresql.useSubChart
+  name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: ~9.3.2
+description: Prefect Server application bundle
+home: https://github.com/PrefectHQ
+maintainers:
+- - email: michael@prefect.io
+  name: madkinsz
+name: prefect-server
+sources:
+- - https://github.com/PrefectHQ/server
+type: application
+version: 2021.09.02
+
+...
+files:
+  prefect-server-2021.09.02.tgz: sha256:6eb1e0b0ec7df4d5cb780cbb5d86a1dd3289c3f384597311940fbe5ce79fc865
+-----BEGIN PGP SIGNATURE-----
+
+wsDcBAEBCgAQBQJhMRc+CRBVk5BUfRr3uwAAAOAMAEOj2faxnR0ToBu9MQ3lKzZq
+81bW2IhaElNTPpMoI4mPBX9Outl92AzkBriLnGkhvw6ys6CanX0vUa3PQbloSzaH
+61KTkTuce/JTS13qTmFp53WEff8rT2EC70y7BCHDCJi3rIZCYDii0IgB4GvgZNpE
+bLRFVJ8BXasYK7JPCq/J7D+u7w7YRGM7ViWAJGee5Cet2cJ9afa+e0N4209HPzDL
++VSzWyITmhvCglWw9MmP6XGdZiIgJlNIWCB8v8D2xoYbob43P+4l/xKGw+1QJnsU
+qwSf3SJjIVo+Vagxc1BxSDZ4T4FNRza7tCdhm6kUlpKYBDduYssHtBWA6/nm7NpP
+RB/ziYbehErqESoSwpWKBb50JKPVdRjhuDiln/E53EnDWSYGRJOLhsaSH3R/SyN2
+Di3QWzTsRtMtC9tdNn359m3WptENVj6qRKuqdkXDPRUEnWaQymQxVI3O1x4dfFR8
+eNDj/FJES4YBESq6SUwK7NL8NAboItDE2RAdLSw0Eg==
+=B+hF
+-----END PGP SIGNATURE-----
