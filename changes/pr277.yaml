@@ -1,2 +1,0 @@
-enhancement:
-  - "Separate out task and edge registration to better handle large flow registrations - [#277](https://github.com/PrefectHQ/server/pull/277)"
