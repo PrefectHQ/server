@@ -57,6 +57,7 @@ class LoopService:
             start_time = pendulum.now("UTC")
 
             try:
+                self.logger.debug(f"Calling {self.name}")
                 await self.run_once()
 
             # if an error is raised, log and continue
