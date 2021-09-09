@@ -444,6 +444,7 @@ async def get_runs_in_queue(
     before: datetime = None,
     labels: Iterable[str] = None,
     agent_id: str = None,
+    limit: int = None,
 ) -> List[str]:
 
     if tenant_id is None:
@@ -453,6 +454,7 @@ async def get_runs_in_queue(
         before = pendulum.now("UTC")
 
     labels = labels or []
+    flow_run_limit = limit if limit else config.queued_runs_returned_limit
 
     flow_runs = await models.FlowRun.where(
         {
@@ -482,14 +484,14 @@ async def get_runs_in_queue(
         },
         order_by=[{"state_start_time": EnumValue("asc")}],
         # get extra in case labeled runs don't show up at the top
-        limit=config.queued_runs_returned_limit * 3,
+        limit=flow_run_limit * 3,
     )
 
     counter = 0
     final_flow_runs = []
 
     for flow_run in flow_runs:
-        if counter == config.queued_runs_returned_limit:
+        if counter == flow_run_limit:
             continue
 
         run_labels = flow_run.labels
