@@ -134,6 +134,7 @@ hasura:
     tag: v1.3.3
     pullPolicy: IfNotPresent
     pullSecrets: []
+    # - name: "secret_name"
 
   service:
     # type defines the service type and defaults to ClusterIP
@@ -163,6 +164,7 @@ graphql:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   service:
     type: ClusterIP
@@ -194,7 +196,8 @@ apollo:
     tag: null
     pullPolicy: Always
     pullSecrets: []
-      # - name: "secret_for_apollo_image"
+    # - name: "secret_name"
+
   options:
     telemetryEnabled: true
 
@@ -247,6 +250,7 @@ ui:
     tag: null  # See `uiVersionTag` instead
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   # apolloApiUrl defines the default gateway to the Apollo
   # GraphQL server. This location must be accessible by the
@@ -303,6 +307,7 @@ towel:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   labels: {}
   annotations: {}
@@ -333,6 +338,7 @@ agent:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   labels: {}
   annotations: {}
@@ -367,7 +373,7 @@ agent:
     # imagePullSecrets defines image pull secrets for the flow job
     # NOTE: These secrets are not merged with the global imagePullSecrets
     imagePullSecrets: []
-      # - "secret_for_flow_image"
+    # - "secret_name"
 
 serviceAccount:
   # create specifies whether a service account should be created to be
@@ -398,6 +404,7 @@ jobs:
       tag: null
       pullPolicy: Always
       pullSecrets: []
+      # - name: "secret_name"
 
     labels: {}
     annotations: {}
