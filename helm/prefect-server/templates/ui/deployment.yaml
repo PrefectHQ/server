@@ -23,7 +23,13 @@ spec:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: ui
     spec:
-      imagePullSecrets: {{ concat .Values.ui.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
+    {{- if .Values.ui.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.ui.image.pullSecrets | nindent 8 }}
+    {{- else if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+    {{- end }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.ui.podSecurityContext }}
       securityContext:

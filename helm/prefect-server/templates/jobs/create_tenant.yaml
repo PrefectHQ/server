@@ -15,7 +15,13 @@ spec:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: create-tenant-job
     spec:
-      imagePullSecrets: {{ concat .Values.jobs.createTenant.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
+    {{- if .Values.jobs.createTenant.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.jobs.createTenant.image.pullSecrets | nindent 8 }}
+    {{- else if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+    {{- end }}
       {{- with .Values.jobs.createTenant.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

@@ -26,6 +26,7 @@ uiVersionTag: "latest"
 # resources the Helm chart's pods can get credentials from to pull
 # their images.
 imagePullSecrets: []
+  # - name: "secret_name"
 
 # annotations to merge into all object configurations
 # NOTE: These will not apply to the postgresql subchart and must be
@@ -193,6 +194,7 @@ apollo:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+      # - name: "secret_for_apollo_image"
   options:
     telemetryEnabled: true
 
@@ -365,6 +367,7 @@ agent:
     # imagePullSecrets defines image pull secrets for the flow job
     # NOTE: These secrets are not merged with the global imagePullSecrets
     imagePullSecrets: []
+      # - "secret_for_flow_image"
 
 serviceAccount:
   # create specifies whether a service account should be created to be
