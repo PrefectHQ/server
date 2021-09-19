@@ -71,6 +71,7 @@ format = "[%(asctime)s] %(levelname)s - %(name)s | %(message)s"
     debug = false
     path = "/graphql/"
     disable_access_logs = false
+    timeout_keep_alive = 5
 
     [services.lazarus]
     resurrection_attempt_limit = 3

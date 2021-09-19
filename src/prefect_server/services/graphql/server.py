@@ -72,4 +72,5 @@ if __name__ == "__main__":
         port=prefect_server.config.services.graphql.port,
         log_level=_get_uvicorn_log_level(),
         access_log=not prefect_server.configuration.config.services.graphql.disable_access_logs,
+        timeout_keep_alive=prefect_server.config.services.graphql.timeout_keep_alive,
     )
