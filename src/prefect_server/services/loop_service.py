@@ -61,7 +61,7 @@ class LoopService:
 
             # if an error is raised, log and continue
             except Exception as exc:
-                self.logger.error(f"Unexpected error: {repr(exc)}")
+                self.logger.error(f"Unexpected error: {repr(exc)}", exc_info=True)
 
             # next run is every "loop seconds" after each previous run started
             # note this might be in the past, leading to tight loops

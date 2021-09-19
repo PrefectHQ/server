@@ -124,7 +124,8 @@ class Lazarus(LoopService):
                                 ),
                                 level="INFO",
                             )
-                        ]
+                        ],
+                        defer_db_write=False,
                     )
 
                     run_count += 1
@@ -134,7 +135,7 @@ class Lazarus(LoopService):
                     # and we don't need to interrupt execution on its account. If it was
                     # anything else, raise an error.
                     if "Update failed" in str(exc):
-                        self.logger.error(exc)
+                        self.logger.error(exc, exc_info=True)
                     else:
                         raise
             else:
@@ -159,7 +160,8 @@ class Lazarus(LoopService):
                             message=message,
                             level="ERROR",
                         )
-                    ]
+                    ],
+                    defer_db_write=False,
                 )
 
         if run_count:

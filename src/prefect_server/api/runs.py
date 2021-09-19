@@ -65,6 +65,7 @@ async def create_flow_run(
     labels: List[str] = None,
     run_config: dict = None,
     idempotency_key: str = None,
+    defer_set_scheduled_state: bool = False,
 ) -> Any:
     """
     Creates a new flow run for an existing flow.
@@ -82,6 +83,8 @@ async def create_flow_run(
         - run-config (dict, optional): A run-config override for this flow run.
         - idempotency_key (str, optional): An optional idempotency key to prevent duplicate run creation.
             idempotency keys are unique to each flow, but can be repeated across different flows.
+        - defer_set_scheduled_state (bool, optional): If True, don't set the flow run state to scheduled
+            immediately after creation.
 
     """
 
@@ -192,18 +195,19 @@ async def create_flow_run(
     # we take no action
     if run.id == insert_result.returning.id:
 
-        # apply the flow run's initial state via `set_flow_run_state`
-        await api.states.set_flow_run_state(
-            flow_run_id=run.id,
-            state=Scheduled(
-                message="Flow run scheduled.", start_time=scheduled_start_time
-            ),
-        )
+        if not defer_set_scheduled_state:
+            # apply the flow run's initial state via `set_flow_run_state`
+            await api.states.set_flow_run_state(
+                flow_run_id=run.id,
+                state=Scheduled(
+                    message="Flow run scheduled.", start_time=scheduled_start_time
+                ),
+            )
 
-        logger.debug(
-            f"Flow run {insert_result.returning.id} of flow {flow_id or flow.id} "
-            f"scheduled for {scheduled_start_time}"
-        )
+            logger.debug(
+                f"Flow run {insert_result.returning.id} of flow {flow_id or flow.id} "
+                f"scheduled for {scheduled_start_time}"
+            )
 
     # return the database id
     return insert_result.returning.id

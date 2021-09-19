@@ -78,7 +78,8 @@ class ZombieKiller(LoopService):
                             message=message,
                             level="ERROR",
                         )
-                    ]
+                    ],
+                    defer_db_write=False,
                 )
 
                 zombies += 1
@@ -196,13 +197,14 @@ class ZombieKiller(LoopService):
                             message=message,
                             level="ERROR",
                         )
-                    ]
+                    ],
+                    defer_db_write=False,
                 )
 
                 zombies += 1
 
             except ValueError as exc:
-                self.logger.error(exc)
+                self.logger.error(exc, exc_info=True)
 
         if zombies:
             self.logger.info(f"Addressed {zombies} zombie task runs.")

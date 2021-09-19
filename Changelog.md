@@ -1,5 +1,53 @@
 # Changelog
 
+## Sep 2, 2021 <Badge text="beta" type="success" />
+
+Released on September 2, 2021.
+
+### Enhancements
+
+- Make maximum number of scheduled runs per flow configurable - [#280](https://github.com/PrefectHQ/server/issues/280)
+- Increase Apollo payload size limit to 5mb - [#273](https://github.com/PrefectHQ/server/pull/273)
+- Separate out task and edge registration to better handle large flow registrations - [#277](https://github.com/PrefectHQ/server/pull/277)
+
+### Fixes
+
+- Update Helm chart RoleBinding API version - [#276](https://github.com/PrefectHQ/server/pull/276)
+
+### Contributors
+
+- [Bouke Krom](https://github.com/bouke-sf)
+- [Guy Maliar](https://github.com/gmaliar)
+
+## July 06, 2021 <Badge text="beta" type="success" />
+
+Released on July 6, 2021.
+
+### Enhancements
+
+- Add traceback info to some unexpected logs for debugging - [#259](https://github.com/PrefectHQ/server/pull/259)
+- Add the option to defer setting a flow run state to scheduled when creating a FlowRun - [#261](https://github.com/PrefectHQ/server/pull/261)
+
+## May 25, 2021 <Badge text="beta" type="success" />
+
+Released on May 25, 2021.
+
+### Enhancements
+
+- Introduce **kwargs to `create_logs` for Cloud compatibility - [#247](https://github.com/PrefectHQ/server/pull/247)
+
+## April 27, 2021 <Badge text="beta" type="success" />
+
+Released on April 27, 2021.
+
+### Enhancements
+
+- Simplify `LoopService.loop_seconds` handling and add debug mode to speedup tests - [#242](https://github.com/PrefectHQ/server/pull/242)
+
+### Database Migrations
+
+- Add unique constraint for flow run idempotency - [#219](https://github.com/PrefectHQ/server/pull/219)
+
 ## April 6, 2021 <Badge text="beta" type="success" />
 
 Released on April 6, 2021.
@@ -458,4 +506,3 @@ Released on August 21, 2020.
 ### Deprecations
 
 - None
-

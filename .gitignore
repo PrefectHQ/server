@@ -25,6 +25,7 @@ wheels/
 .installed.cfg
 *.egg
 pip-wheel-metadata/
+.idea
 
 # Helm packaging
 helm/prefect-server/charts

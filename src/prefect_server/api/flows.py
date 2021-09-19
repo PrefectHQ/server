@@ -3,7 +3,7 @@ import datetime
 import hashlib
 import json
 import uuid
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 import pendulum
 from packaging import version as module_version
@@ -11,7 +11,7 @@ from prefect import api, models
 from prefect.serialization.schedule import ScheduleSchema
 from prefect.utilities.graphql import EnumValue, with_args
 from prefect.utilities.plugins import register_api
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, parse_obj_as, validator
 
 from prefect_server import config
 from prefect_server.utilities import logging
@@ -165,18 +165,11 @@ async def create_flow(
     tenant_id = project.tenant_id  # type: ignore
 
     # set up task detail info
-    task_lookup = {t.slug: t for t in flow.tasks}
     tasks_with_upstreams = {e.downstream_task for e in flow.edges}
     tasks_with_downstreams = {e.upstream_task for e in flow.edges}
     reference_tasks = set(flow.reference_tasks) or {
         t.slug for t in flow.tasks if t.slug not in tasks_with_downstreams
     }
-
-    for t in flow.tasks:
-        t.mapped = any(e.mapped for e in flow.edges if e.downstream_task == t.slug)
-        t.is_reference_task = t.slug in reference_tasks
-        t.is_root_task = t.slug not in tasks_with_upstreams
-        t.is_terminal_task = t.slug not in tasks_with_downstreams
 
     # set up versioning
     version_group_id = version_group_id or str(uuid.uuid4())
@@ -272,47 +265,12 @@ async def create_flow(
     ).insert()
 
     try:
-        batch_insertion_size = 2500
-
-        for tasks_chunk in chunked_iterable(flow.tasks, batch_insertion_size):
-            await models.Task.insert_many(
-                [
-                    models.Task(
-                        id=t.id,
-                        flow_id=flow_id,
-                        tenant_id=tenant_id,
-                        name=t.name,
-                        slug=t.slug,
-                        type=t.type,
-                        max_retries=t.max_retries,
-                        tags=t.tags,
-                        retry_delay=t.retry_delay,
-                        trigger=t.trigger,
-                        mapped=t.mapped,
-                        auto_generated=t.auto_generated,
-                        cache_key=t.cache_key,
-                        is_reference_task=t.is_reference_task,
-                        is_root_task=t.is_root_task,
-                        is_terminal_task=t.is_terminal_task,
-                    )
-                    for t in tasks_chunk
-                ]
-            )
-
-        for edges_chunk in chunked_iterable(flow.edges, batch_insertion_size):
-            await models.Edge.insert_many(
-                [
-                    models.Edge(
-                        tenant_id=tenant_id,
-                        flow_id=flow_id,
-                        upstream_task_id=task_lookup[e.upstream_task].id,
-                        downstream_task_id=task_lookup[e.downstream_task].id,
-                        key=e.key,
-                        mapped=e.mapped,
-                    )
-                    for e in edges_chunk
-                ]
-            )
+        await api.flows.register_tasks(
+            flow_id=flow_id, tenant_id=tenant_id, tasks=flow.tasks
+        )
+        await api.flows.register_edges(
+            flow_id=flow_id, tenant_id=tenant_id, edges=flow.edges
+        )
 
     except Exception as exc:
         logger.error("`create_flow` failed during insertion", exc_info=True)
@@ -333,6 +291,73 @@ async def create_flow(
             )
 
     return flow_id
+
+
+@register_api("flows.register_tasks")
+async def register_tasks(
+    flow_id: str, tenant_id: str, tasks: List[Union[TaskSchema, dict]]
+) -> None:
+    batch_insertion_size = config.insert_many_batch_size
+
+    tasks = parse_obj_as(List[TaskSchema], tasks)
+    for tasks_chunk in chunked_iterable(tasks, batch_insertion_size):
+        await models.Task.insert_many(
+            [
+                models.Task(
+                    id=t.id,
+                    flow_id=flow_id,
+                    tenant_id=tenant_id,
+                    name=t.name,
+                    slug=t.slug,
+                    type=t.type,
+                    max_retries=t.max_retries,
+                    tags=t.tags,
+                    retry_delay=t.retry_delay,
+                    trigger=t.trigger,
+                    auto_generated=t.auto_generated,
+                    cache_key=t.cache_key,
+                )
+                for t in tasks_chunk
+            ],
+            on_conflict=dict(constraint="task_flow_id_slug_key", update_columns=[]),
+        )
+
+
+@register_api("flows.register_edges")
+async def register_edges(
+    flow_id: str, tenant_id: str, edges: List[Union[EdgeSchema, dict]]
+) -> None:
+    batch_insertion_size = config.insert_many_batch_size
+    flow = await models.Flow.where(id=flow_id).first(
+        {"tasks": {"slug": True, "id": True}}
+    )
+
+    task_lookup = {t.slug: t.id for t in flow.tasks}
+
+    edges = parse_obj_as(List[EdgeSchema], edges)
+
+    try:
+        for edges_chunk in chunked_iterable(edges, batch_insertion_size):
+            await models.Edge.insert_many(
+                [
+                    models.Edge(
+                        tenant_id=tenant_id,
+                        flow_id=flow_id,
+                        upstream_task_id=task_lookup[e.upstream_task],
+                        downstream_task_id=task_lookup[e.downstream_task],
+                        key=e.key,
+                        mapped=e.mapped,
+                    )
+                    for e in edges_chunk
+                ],
+                on_conflict=dict(
+                    constraint="edge_flow_id_task_ids_key", update_columns=[]
+                ),
+            )
+    except KeyError:
+        raise ValueError(
+            "Edges could not be registered - some edges reference tasks that do not exist within this flow."
+        ) from None
 
 
 @register_api("flows.delete_flow")
@@ -570,7 +595,7 @@ async def set_schedule_inactive(flow_id: str) -> bool:
 
 
 @register_api("flows.schedule_flow_runs")
-async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
+async def schedule_flow_runs(flow_id: str, max_runs: int = 10) -> List[str]:
     """
     Schedule the next `max_runs` runs for this flow. Runs will not be scheduled
     if they are earlier than latest currently-scheduled run that has auto_scheduled = True.
@@ -584,10 +609,6 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
     Returns:
         - List[str]: the ids of the new runs
     """
-
-    if max_runs is None:
-        max_runs = 10
-
     if flow_id is None:
         raise ValueError("Invalid flow id.")
 
@@ -623,15 +644,13 @@ async def schedule_flow_runs(flow_id: str, max_runs: int = None) -> List[str]:
         return run_ids
     else:
         # attempt to pull the schedule from the flow group if possible
-        if flow.flow_group.schedule:
-            flow_schedule = flow.flow_group.schedule
         # if not possible, pull the schedule from the flow
-        else:
-            flow_schedule = flow.schedule
+        flow_schedule = flow.flow_group.schedule or flow.schedule
+
         try:
             flow_schedule = schedule_schema.load(flow_schedule)
         except Exception as exc:
-            logger.error(exc)
+            logger.error(exc, exc_info=True)
             logger.critical(
                 f"Failed to deserialize schedule for flow {flow_id}: {flow_schedule}"
             )

@@ -29,7 +29,7 @@ install_requires = [
 dev_requires = [
     "black",
     "asynctest >= 0.13, < 0.14",
-    "pytest >= 5.0, < 6.0",
+    "pytest >= 5.0, < 7.0",
     "pytest-asyncio",
     "pytest-cov",
     "pytest-env",
