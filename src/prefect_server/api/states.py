@@ -18,7 +18,7 @@ logger = get_logger("api")
 
 state_schema = prefect.serialization.state.StateSchema()
 
-submitted_state_lock = TimedUniqueValueStore(duration=30.0)
+submitted_state_lock = TimedUniqueValueStore(duration=30)
 
 
 @register_api("states.set_flow_run_state")
