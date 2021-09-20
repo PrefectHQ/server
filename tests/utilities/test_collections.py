@@ -1,4 +1,6 @@
-from prefect_server.utilities.collections import chunked_iterable
+import time
+
+from prefect_server.utilities.collections import chunked_iterable, TimedUniqueValueStore
 
 
 def test_chunked_iterable_of_list():
@@ -10,3 +12,22 @@ def test_chunked_iterable_of_list():
 def test_chunked_iterable_of_empty_iterable():
     chunks = [chunk for chunk in chunked_iterable([], 4)]
     assert len(chunks) == 0
+
+
+class TestTimedUniqueValueStore:
+
+    def test_add_and_expire(self):
+        store = TimedUniqueValueStore()
+        added = store.add_and_expire("value1", duration=2)
+        assert added
+        assert store.exists("value1")
+        time.sleep(3)
+        assert not store.exists("value1")
+
+    def test_add_and_expire_unique(self):
+        store = TimedUniqueValueStore()
+        added = store.add_and_expire("value1", duration=2)
+        assert added
+        assert store.exists("value1")
+        added = store.add_and_expire("value1", duration=3)
+        assert not added
