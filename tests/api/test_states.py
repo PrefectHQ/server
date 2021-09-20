@@ -166,10 +166,11 @@ class TestFlowRunStates:
         assert flow_run.heartbeat is None
 
     async def test_state_submitted_lock_on_same_flow_run_id(self, flow_run_id):
-        await api.states.set_flow_run_state(
-            flow_run_id=flow_run_id, state=Submitted()
-        )
-        with pytest.raises(ValueError, match="State update failed: this run has already been submitted."):
+        await api.states.set_flow_run_state(flow_run_id=flow_run_id, state=Submitted())
+        with pytest.raises(
+            ValueError,
+            match="State update failed: this run has already been submitted.",
+        ):
             await api.states.set_flow_run_state(
                 flow_run_id=flow_run_id, state=Submitted()
             )

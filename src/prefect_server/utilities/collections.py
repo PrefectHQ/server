@@ -29,6 +29,7 @@ class TimedUniqueValueStore:
     Args:
         - duration (float): the number of seconds to store a value before removing it
     """
+
     def __init__(self, duration: float = 10):
         self.values = set()
         self.lock = threading.Lock()

@@ -15,7 +15,6 @@ def test_chunked_iterable_of_empty_iterable():
 
 
 class TestTimedUniqueValueStore:
-
     def test_add_and_expire(self):
         store = TimedUniqueValueStore()
         added = store.add_and_expire("value1", duration=2)
