@@ -22,59 +22,63 @@ def chunked_iterable(iterable: Iterable, size: int):
         yield chunk
 
 
-class TimedUniqueValueStore:
+class ExpiringSet:
     """
-    Stores unique values for a specific amount of time.
+    Stores values in a set for a specific amount of time.
 
     Args:
-        - duration (float, int): the number of seconds to store a value before removing it
+        - duration_seconds (float, int): the number of seconds to put a value in the set before removing it
     """
 
-    def __init__(self, duration: Union[float, int] = 10):
+    def __init__(self, duration_seconds: Union[float, int] = 10):
         self.values = set()
         self.lock = threading.Lock()
-        self.duration = duration
+        self.duration_seconds = duration_seconds
 
-    def add_and_expire(self, value: Hashable, duration: Optional[float, int] = None) -> bool:
+    def add(
+        self, value: Hashable, duration_seconds: Optional[Union[float, int]] = None
+    ) -> bool:
         """
-        Add a unique value to store and kick off a timer to remove it
+        Add a value to set and kick off a timer to remove it
 
         Args:
-            - value (Hashable): value to store, must be hashable and
+            - value (Hashable): value to add, must be hashable and
                 able to be stored in a set
-            - duration (float, int, optional): the number of seconds to store a value
+            - duration_seconds (float, int, optional): the number of seconds to add a value for
                 before removing it. Defaults to self.duration if not provided
         Returns:
-            - bool: `True` if the value did not already exist in the store
+            - bool: `True` if the value did not already exist in the set
                 and is successfully added, otherwise `False`
         """
-        if duration is None:
-            duration = self.duration
+        if duration_seconds is None:
+            duration_seconds = self.duration_seconds
 
         with self.lock:
             if value in self.values:
                 return False
             else:
                 self.values.add(value)
-                threading.Timer(duration, self.remove, kwargs={"value": value}).start()
+                threading.Timer(
+                    duration_seconds, self.remove, kwargs={"value": value}
+                ).start()
                 return True
 
     def remove(self, value: Hashable):
         """
-        Remove a value from the store
+        Remove a value from the set
 
         Args:
-            - value (Hashable): value to remove from store
+            - value (Hashable): value to remove from set
         """
         with self.lock:
             self.values.discard(value)
 
     def exists(self, value: Hashable):
         """
-        Check if a value exists in the store
+        Check if a value exists in the set
 
         Args:
-            - value (Hashable): value to remove from store
+            - value (Hashable): value to remove from set
         """
         with self.lock:
             return value in self.values

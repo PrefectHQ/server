@@ -11,14 +11,14 @@ from prefect import api, models
 from prefect.engine.state import Cancelled, Cancelling, State
 from prefect.utilities.plugins import register_api
 from prefect_server.utilities import events
-from prefect_server.utilities.collections import TimedUniqueValueStore
+from prefect_server.utilities.collections import ExpiringSet
 from prefect_server.utilities.logging import get_logger
 
 logger = get_logger("api")
 
 state_schema = prefect.serialization.state.StateSchema()
 
-submitted_state_lock = TimedUniqueValueStore(duration=30)
+submitted_state_lock = ExpiringSet(duration_seconds=30)
 
 
 @register_api("states.set_flow_run_state")
@@ -57,7 +57,7 @@ async def set_flow_run_state(
 
     if state.is_submitted():
         lock_name = f"{flow_run.id}-submitted-lock"
-        submitted_lock = submitted_state_lock.add_and_expire(lock_name)
+        submitted_lock = submitted_state_lock.add(lock_name)
         if submitted_lock is False:
             raise ValueError(
                 "State update failed: this run has already been submitted."
