@@ -107,8 +107,8 @@ async function runServer() {
     family: 'IPv4'
   })
   if ('KEEPALIVE_TIMEOUT' in process.env) {
-    listener.keepAliveTimeout = process.env.KEEPALIVE_TIMEOUT * 1000;
-    listener.headersTimeout = (process.env.KEEPALIVE_TIMEOUT + 5) * 1000;
+    listener.keepAliveTimeout = process.env.KEEPALIVE_TIMEOUT * 1000
+    listener.headersTimeout = (process.env.KEEPALIVE_TIMEOUT + 5) * 1000
   }
   console.log(
     `Server ready at http://${APOLLO_API_BIND_ADDRESS}:${APOLLO_API_PORT} 🚀 (version: ${PREFECT_SERVER_VERSION})`
