@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 
 import pytest
@@ -175,6 +176,36 @@ class TestSetFlowRunStates:
             ),
         )
         assert "State payload is too large" in result.errors[0].message
+
+    async def test_set_flow_run_states_submitted_lock_on_same_flow_run_id(
+        self, run_query, flow_run_id
+    ):
+        result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    states=[
+                        dict(flow_run_id=flow_run_id, state=Submitted().serialize())
+                    ]
+                )
+            ),
+        )
+        bad_result = await run_query(
+            query=self.mutation,
+            variables=dict(
+                input=dict(
+                    states=[
+                        dict(flow_run_id=flow_run_id, state=Submitted().serialize())
+                    ]
+                )
+            ),
+        )
+
+        assert result.data.set_flow_run_states.states[0].status == "SUCCESS"
+        assert (
+            "State update failed: this run has already been submitted."
+            in bad_result.errors[0].message
+        )
 
 
 # ---------------------------------------------------------------
