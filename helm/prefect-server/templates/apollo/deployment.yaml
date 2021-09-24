@@ -53,6 +53,9 @@ spec:
             - name: GRAPHQL_SERVICE_PORT
               value: "4201"
             {{- (include "prefect-server.envConfig" .) | nindent 12 }}
+            {{- with .Values.apollo.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 4200

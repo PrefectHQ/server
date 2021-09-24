@@ -50,6 +50,9 @@ spec:
             - name: PREFECT_SERVER__HASURA__HOST
               value: {{ include "prefect-server.hasura-hostname" . }}
             {{- (include "prefect-server.envConfig" .) | nindent 12 }}
+            {{- with .Values.graphql.init.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- with .Values.graphql.init.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -77,6 +80,9 @@ spec:
             - name: PREFECT_SERVER__HASURA__HOST
               value: {{ include "prefect-server.hasura-hostname" . }}
             {{- (include "prefect-server.envConfig" .) | nindent 12 }}
+            {{- with .Values.graphql.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 4201
