@@ -1,0 +1,2 @@
+enhancement:
+  - "Add default flow parameters to flow runs to have consistent flow run parameter history - [#298](https://github.com/PrefectHQ/server/pull/298)"
