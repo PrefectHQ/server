@@ -26,6 +26,7 @@ uiVersionTag: "latest"
 # resources the Helm chart's pods can get credentials from to pull
 # their images.
 imagePullSecrets: []
+  # - name: "secret_name"
 
 # annotations to merge into all object configurations
 # NOTE: These will not apply to the postgresql subchart and must be
@@ -133,6 +134,7 @@ hasura:
     tag: v1.3.3
     pullPolicy: IfNotPresent
     pullSecrets: []
+    # - name: "secret_name"
 
   service:
     # type defines the service type and defaults to ClusterIP
@@ -163,6 +165,7 @@ graphql:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   service:
     type: ClusterIP
@@ -196,6 +199,8 @@ apollo:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
+
   options:
     telemetryEnabled: true
 
@@ -249,6 +254,7 @@ ui:
     tag: null  # See `uiVersionTag` instead
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   # apolloApiUrl defines the default gateway to the Apollo
   # GraphQL server. This location must be accessible by the
@@ -306,6 +312,7 @@ towel:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   labels: {}
   annotations: {}
@@ -337,6 +344,7 @@ agent:
     tag: null
     pullPolicy: Always
     pullSecrets: []
+    # - name: "secret_name"
 
   labels: {}
   annotations: {}
@@ -372,6 +380,7 @@ agent:
     # imagePullSecrets defines image pull secrets for the flow job
     # NOTE: These secrets are not merged with the global imagePullSecrets
     imagePullSecrets: []
+    # - "secret_name"
 
 serviceAccount:
   # create specifies whether a service account should be created to be
@@ -402,6 +411,7 @@ jobs:
       tag: null
       pullPolicy: Always
       pullSecrets: []
+      # - name: "secret_name"
 
     labels: {}
     annotations: {}

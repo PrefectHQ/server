@@ -106,11 +106,15 @@ async function runServer() {
     path: '/',
     bodyParserConfig: { limit: APOLLO_API_BODY_LIMIT }
   })
-  app.listen({
+  const listener = app.listen({
     host: APOLLO_API_BIND_ADDRESS,
     port: APOLLO_API_PORT,
     family: 'IPv4'
   })
+  if ('APOLLO_KEEPALIVE_TIMEOUT' in process.env) {
+    listener.keepAliveTimeout = process.env.APOLLO_KEEPALIVE_TIMEOUT * 1000
+    listener.headersTimeout = (process.env.APOLLO_KEEPALIVE_TIMEOUT + 5) * 1000
+  }
   console.log(
     `Server ready at http://${APOLLO_API_BIND_ADDRESS}:${APOLLO_API_PORT} 🚀 (version: ${PREFECT_SERVER_VERSION})`
   )

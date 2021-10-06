@@ -24,7 +24,13 @@ spec:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: agent
     spec:
-      imagePullSecrets: {{ concat .Values.agent.image.pullSecrets .Values.imagePullSecrets | uniq | toJson }}
+    {{- if .Values.agent.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.agent.image.pullSecrets | nindent 8 }}
+    {{- else if .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+    {{- end }}
       serviceAccountName: {{ include "prefect-server.serviceAccountName" . }}
       {{- with .Values.agent.podSecurityContext }}
       securityContext:
@@ -48,7 +54,7 @@ spec:
           - name: NAMESPACE
             value: {{ .Release.Namespace }}
           - name: IMAGE_PULL_SECRETS
-            value: {{ .Values.agent.job.imagePullSecrets | toJson | quote }}
+            value: {{ .Values.agent.job.imagePullSecrets | join "," | quote }}
           - name: PREFECT__CLOUD__AGENT__LABELS
             value: {{ .Values.agent.prefectLabels | toJson | quote }}
           - name: JOB_MEM_REQUEST

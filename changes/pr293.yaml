@@ -1,0 +1,5 @@
+feature:
+  - "Add handling a keepalive value to Apollo via env variable APOLLO_KEEPALIVE_TIMEOUT - [#293](https://github.com/PrefectHQ/server/pull/293)"
+
+contributor:
+  - "[Joe M.](https://github.com/joe1981al)"
