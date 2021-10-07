@@ -549,6 +549,11 @@ async def set_schedule_active(flow_id: str) -> bool:
         if not all([required_names <= c for c in clock_params]):
             raise ValueError("Can not schedule a flow that has required parameters.")
 
+    # if there is no referenceable schedule for this Flow, do not change the schedule
+    # to active to avoid confusion
+    if flow.schedule is None and getattr(flow.flow_group, "schedule", None) is None:
+        return False
+
     result = await models.Flow.where(id=flow_id).update(
         set={"is_schedule_active": True}
     )

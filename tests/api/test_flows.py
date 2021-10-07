@@ -1114,6 +1114,35 @@ class TestSetScheduleActive:
 
         assert await models.FlowRun.where({"flow_id": {"_eq": flow_id}}).count() == 10
 
+    async def test_set_schedule_active_with_no_schedule_on_flow_or_flow_group(
+        self, flow_id, flow_group_id
+    ):
+        await models.Flow.where(id=flow_id).update(
+            set={"is_schedule_active": False, "schedule": None}
+        )
+        await models.FlowGroup.where(id=flow_group_id).update(set={"schedule": None})
+
+        success = await api.flows.set_schedule_active(flow_id=flow_id)
+        assert success is False
+        flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
+        assert flow.is_schedule_active is False
+
+    async def test_set_schedule_active_with_no_schedule_on_flow(
+        self, flow_id, flow_group_id
+    ):
+        await models.Flow.where(id=flow_id).update(
+            set={"is_schedule_active": False, "schedule": None}
+        )
+        await api.flow_groups.set_flow_group_schedule(
+            flow_group_id=flow_group_id,
+            clocks=[{"type": "IntervalClock", "interval": 420000000}],
+        )
+
+        success = await api.flows.set_schedule_active(flow_id=flow_id)
+        assert success is True
+        flow = await models.Flow.where(id=flow_id).first({"is_schedule_active"})
+        assert flow.is_schedule_active is True
+
 
 class TestSetScheduleInactive:
     async def test_set_schedule_inactive(self, flow_id):
