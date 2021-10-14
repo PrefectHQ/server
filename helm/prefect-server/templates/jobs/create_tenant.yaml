@@ -39,7 +39,7 @@ spec:
             - "-c"
             - "prefect server create-tenant --name {{ .Values.jobs.createTenant.tenant.name }} --slug {{ .Values.jobs.createTenant.tenant.slug }} || [[ $(prefect server create-tenant --name {{ .Values.jobs.createTenant.tenant.name }} --slug {{ .Values.jobs.createTenant.tenant.slug }}  2>&1) =~ 'Uniqueness violation' ]]"
           env:
-            - name: PREFECT__CLOUD__GRAPHQL
+            - name: PREFECT__CLOUD__API
               value: {{ include "prefect-server.apollo-api-url" . }}
             - name: PREFECT__BACKEND
               value: server
