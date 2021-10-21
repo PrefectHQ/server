@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 const express = require('express')
 const APOLLO_API_PORT = process.env.APOLLO_API_PORT || '4200'
 const APOLLO_API_BIND_ADDRESS = process.env.APOLLO_API_BIND_ADDRESS || '0.0.0.0'
+const APOLLO_API_BODY_LIMIT = process.env.APOLLO_API_BODY_LIMIT || '5mb'
 
 const PREFECT_API_HEALTH_URL =
   process.env.PREFECT_API_HEALTH_URL || 'http://localhost:4201/health'
@@ -100,7 +101,11 @@ async function runServer() {
       }
     }
   })
-  server.applyMiddleware({ app, path: '/', bodyParserConfig: { limit: '5mb' } })
+  server.applyMiddleware({
+    app,
+    path: '/',
+    bodyParserConfig: { limit: APOLLO_API_BODY_LIMIT }
+  })
   const listener = app.listen({
     host: APOLLO_API_BIND_ADDRESS,
     port: APOLLO_API_PORT,

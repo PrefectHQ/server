@@ -48,6 +48,9 @@ spec:
           env:
             - name: PREFECT_SERVER__APOLLO_URL
               value: {{ .Values.ui.apolloApiUrl }}
+            {{- with .Values.ui.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 8080

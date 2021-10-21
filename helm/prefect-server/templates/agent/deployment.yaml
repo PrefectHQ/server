@@ -73,6 +73,9 @@ spec:
             value: server
           - name: PREFECT__CLOUD__AGENT__AGENT_ADDRESS
             value: http://0.0.0.0:8080
+          {{- with .Values.agent.env }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         livenessProbe:
           failureThreshold: 2
           httpGet:
