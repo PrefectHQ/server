@@ -9,7 +9,7 @@ install_requires = [
     "alembic >= 1.2, < 2.0",
     "ariadne >= 0.8.0, < 0.12.0",
     "asyncpg >= 0.20, < 0.22",
-    "click >= 6.7, <8.0",
+    "click >= 6.7, < 9.0",
     "coolname >= 1.1, < 2.0",
     "docker >= 3.4,< 5.0",
     "graphql-core < 3.1",
