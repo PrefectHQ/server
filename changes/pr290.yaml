@@ -1,5 +1,0 @@
-feature:
-  - "Add ability to set keep alive timeout for graphql server - [#290](https://github.com/PrefectHQ/server/pull/290)"
-
-contributor:
-  - "[Joe McDonald](https://github.com/joe1981al)"

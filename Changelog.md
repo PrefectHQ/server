@@ -1,5 +1,28 @@
 # Changelog
 
+## October 21, 2021 <Badge text="beta" type="success" />
+
+Released on October 21, 2021.
+
+### Features
+
+- Add ability to set keep alive timeout for graphql server - [#290](https://github.com/PrefectHQ/server/pull/290)
+- Add handling a keepalive value to Apollo via env variable APOLLO_KEEPALIVE_TIMEOUT - [#293](https://github.com/PrefectHQ/server/pull/293)
+
+### Enhancements
+
+- Add a submitted state lock to prevent the same flow from being run by multiple agents - [#291](https://github.com/PrefectHQ/server/pull/291)
+- Add default flow parameters to flow runs to have consistent flow run parameter history - [#298](https://github.com/PrefectHQ/server/pull/298)
+
+### Fixes
+
+- Fix setting `imagePullSecrets` in k8s jobs with Prefect flows in Prefect Server Helm chart - [#289](https://github.com/PrefectHQ/server/pull/289)
+
+### Contributors
+
+- [Joe M.](https://github.com/joe1981al)
+- [Joe McDonald](https://github.com/joe1981al)
+
 ## Sep 2, 2021 <Badge text="beta" type="success" />
 
 Released on September 2, 2021.
