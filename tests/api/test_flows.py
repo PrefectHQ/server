@@ -169,7 +169,7 @@ class TestCreateFlow:
         assert result.tasks_aggregate.aggregate.count == 0
 
         await api.flows.register_tasks(
-            flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+            flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
         )
         result = await models.Flow.where(id=flow_id).first(
             {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
@@ -187,7 +187,7 @@ class TestCreateFlow:
 
         for _ in range(3):
             await api.flows.register_tasks(
-                flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+                flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
             )
 
         result = await models.Flow.where(id=flow_id).first(
@@ -211,10 +211,10 @@ class TestCreateFlow:
         assert result.edges_aggregate.aggregate.count == 0
 
         await api.flows.register_tasks(
-            flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+            flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
         )
         await api.flows.register_edges(
-            flow_id=flow_id, tenant_id=None, edges=serialized_edges
+            flow_id=flow_id, tenant_id=None, serialized_edges=serialized_edges
         )
         result = await models.Flow.where(id=flow_id).first(
             {"edges_aggregate": {"aggregate": {"count"}}}, apply_schema=False
@@ -233,10 +233,10 @@ class TestCreateFlow:
 
         for _ in range(3):
             await api.flows.register_tasks(
-                flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+                flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
             )
             await api.flows.register_edges(
-                flow_id=flow_id, tenant_id=None, edges=serialized_edges
+                flow_id=flow_id, tenant_id=None, serialized_edges=serialized_edges
             )
 
         result = await models.Flow.where(id=flow_id).first(

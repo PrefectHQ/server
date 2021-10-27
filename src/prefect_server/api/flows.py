@@ -327,7 +327,8 @@ async def register_tasks(
     current_tasks = flow.serialized_flow.get("tasks") or []
     known_slugs = {t["slug"] for t in current_tasks}
     for new_task in serialized_tasks:
-        if new_task["slug"] in known_slugs:
+        slug = getattr(new_task, "slug", None) or new_task["slug"]
+        if slug in known_slugs:
             continue
         current_tasks.append(new_task)
     flow.serialized_flow["tasks"] = current_tasks
