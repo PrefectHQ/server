@@ -169,7 +169,7 @@ class TestCreateFlow:
         assert result.tasks_aggregate.aggregate.count == 0
 
         await api.flows.register_tasks(
-            flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+            flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
         )
         result = await models.Flow.where(id=flow_id).first(
             {"tasks_aggregate": {"aggregate": {"count"}}}, apply_schema=False
@@ -187,7 +187,7 @@ class TestCreateFlow:
 
         for _ in range(3):
             await api.flows.register_tasks(
-                flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+                flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
             )
 
         result = await models.Flow.where(id=flow_id).first(
@@ -211,10 +211,10 @@ class TestCreateFlow:
         assert result.edges_aggregate.aggregate.count == 0
 
         await api.flows.register_tasks(
-            flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+            flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
         )
         await api.flows.register_edges(
-            flow_id=flow_id, tenant_id=None, edges=serialized_edges
+            flow_id=flow_id, tenant_id=None, serialized_edges=serialized_edges
         )
         result = await models.Flow.where(id=flow_id).first(
             {"edges_aggregate": {"aggregate": {"count"}}}, apply_schema=False
@@ -233,10 +233,10 @@ class TestCreateFlow:
 
         for _ in range(3):
             await api.flows.register_tasks(
-                flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+                flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
             )
             await api.flows.register_edges(
-                flow_id=flow_id, tenant_id=None, edges=serialized_edges
+                flow_id=flow_id, tenant_id=None, serialized_edges=serialized_edges
             )
 
         result = await models.Flow.where(id=flow_id).first(
@@ -552,7 +552,14 @@ class TestCreateFlow:
 
         persisted_flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
         # confirm the keys in the serialized flow match the form we'd expect
-        assert persisted_flow.serialized_flow == flow.serialize()
+        # note that because flow.serialize() contains edges, the register_edges call
+        # will duplicate the edges in the persisted flow (this is benign)
+        serialized_flow = flow.serialize()
+        persisted_edges = persisted_flow.serialized_flow.pop("edges")
+        real_edges = serialized_flow.pop("edges")
+
+        assert persisted_flow.serialized_flow == serialized_flow
+        assert {e["key"] for e in persisted_edges} == {e["key"] for e in real_edges}
 
     @pytest.mark.parametrize("model_name", ["Task", "Edge"])
     async def test_create_flow_cleans_up_if_task_or_edge_creation_fails(

@@ -92,7 +92,7 @@ async def resolve_register_tasks(
         raise ValueError("Invalid flow ID")
 
     await api.flows.register_tasks(
-        flow_id=flow_id, tenant_id=None, tasks=serialized_tasks
+        flow_id=flow_id, tenant_id=None, serialized_tasks=serialized_tasks
     )
     return {"success": True}
 
@@ -108,7 +108,7 @@ async def resolve_register_edges(
         raise ValueError("Invalid flow ID")
 
     await api.flows.register_edges(
-        flow_id=flow_id, tenant_id=None, edges=serialized_edges
+        flow_id=flow_id, tenant_id=None, serialized_edges=serialized_edges
     )
     return {"success": True}
 

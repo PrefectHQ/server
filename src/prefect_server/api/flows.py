@@ -266,10 +266,10 @@ async def create_flow(
 
     try:
         await api.flows.register_tasks(
-            flow_id=flow_id, tenant_id=tenant_id, tasks=flow.tasks
+            flow_id=flow_id, tenant_id=tenant_id, serialized_tasks=flow.tasks
         )
         await api.flows.register_edges(
-            flow_id=flow_id, tenant_id=tenant_id, edges=flow.edges
+            flow_id=flow_id, tenant_id=tenant_id, serialized_edges=flow.edges
         )
 
     except Exception as exc:
@@ -295,11 +295,11 @@ async def create_flow(
 
 @register_api("flows.register_tasks")
 async def register_tasks(
-    flow_id: str, tenant_id: str, tasks: List[Union[TaskSchema, dict]]
+    flow_id: str, tenant_id: str, serialized_tasks: List[Union[TaskSchema, dict]]
 ) -> None:
     batch_insertion_size = config.insert_many_batch_size
 
-    tasks = parse_obj_as(List[TaskSchema], tasks)
+    tasks = parse_obj_as(List[TaskSchema], serialized_tasks)
     for tasks_chunk in chunked_iterable(tasks, batch_insertion_size):
         await models.Task.insert_many(
             [
@@ -322,10 +322,24 @@ async def register_tasks(
             on_conflict=dict(constraint="task_flow_id_slug_key", update_columns=[]),
         )
 
+    # add tasks to serialized flow
+    flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
+    current_tasks = flow.serialized_flow.get("tasks") or []
+    known_slugs = {t["slug"] for t in current_tasks}
+    for new_task in serialized_tasks:
+        slug = getattr(new_task, "slug", None) or new_task["slug"]
+        if slug in known_slugs:
+            continue
+        current_tasks.append(new_task)
+    flow.serialized_flow["tasks"] = current_tasks
+    await models.Flow.where(id=flow_id).update(
+        set={"serialized_flow": flow.serialized_flow}
+    )
+
 
 @register_api("flows.register_edges")
 async def register_edges(
-    flow_id: str, tenant_id: str, edges: List[Union[EdgeSchema, dict]]
+    flow_id: str, tenant_id: str, serialized_edges: List[Union[EdgeSchema, dict]]
 ) -> None:
     batch_insertion_size = config.insert_many_batch_size
     flow = await models.Flow.where(id=flow_id).first(
@@ -334,7 +348,7 @@ async def register_edges(
 
     task_lookup = {t.slug: t.id for t in flow.tasks}
 
-    edges = parse_obj_as(List[EdgeSchema], edges)
+    edges = parse_obj_as(List[EdgeSchema], serialized_edges)
 
     try:
         for edges_chunk in chunked_iterable(edges, batch_insertion_size):
@@ -358,6 +372,15 @@ async def register_edges(
         raise ValueError(
             "Edges could not be registered - some edges reference tasks that do not exist within this flow."
         ) from None
+
+    # add edges to serialized flow
+    flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
+    current_edges = flow.serialized_flow.get("edges") or []
+    new_edges = current_edges + serialized_edges
+    flow.serialized_flow["edges"] = new_edges
+    await models.Flow.where(id=flow_id).update(
+        set={"serialized_flow": flow.serialized_flow}
+    )
 
 
 @register_api("flows.delete_flow")

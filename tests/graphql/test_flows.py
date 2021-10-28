@@ -118,7 +118,7 @@ class TestCreateFlow:
         # need to register tasks first
         await api.flows.register_tasks(
             flow_id=flow_result.data.create_flow.id,
-            tasks=serialized_tasks,
+            serialized_tasks=serialized_tasks,
             tenant_id=None,
         )
         edges_result = await run_query(

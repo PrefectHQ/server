@@ -1,0 +1,2 @@
+fix:
+  - "Preserves structural representation of serialized flows - [#306](https://github.com/PrefectHQ/server/pull/306)"
