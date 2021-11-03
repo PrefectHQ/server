@@ -375,8 +375,16 @@ async def register_edges(
 
     # add edges to serialized flow
     flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
-    current_edges = flow.serialized_flow.get("edges") or []
-    new_edges = current_edges + serialized_edges
+
+    new_edges = flow.serialized_flow.get("edges") or []
+    for edge in serialized_edges:
+        # account for mysterious bad serialized data in edges
+        if isinstance(edge["upstream_task"], str):
+            edge["upstream_task"] = {"slug": edge["upstream_task"]}
+        if isinstance(edge["downstream_task"], str):
+            edge["downstream_task"] = {"slug": edge["downstream_task"]}
+        new_edges.append(edge)
+
     flow.serialized_flow["edges"] = new_edges
     await models.Flow.where(id=flow_id).update(
         set={"serialized_flow": flow.serialized_flow}
