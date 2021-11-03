@@ -373,27 +373,6 @@ async def register_edges(
             "Edges could not be registered - some edges reference tasks that do not exist within this flow."
         ) from None
 
-    # add edges to serialized flow
-    flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
-
-    new_edges = flow.serialized_flow.get("edges") or []
-    for edge in serialized_edges:
-
-        if isinstance(edge, EdgeSchema):
-            edge = edge.dict()
-
-        # account for mysterious bad serialized data in edges
-        if isinstance(edge["upstream_task"], str):
-            edge["upstream_task"] = {"slug": edge["upstream_task"]}
-        if isinstance(edge["downstream_task"], str):
-            edge["downstream_task"] = {"slug": edge["downstream_task"]}
-        new_edges.append(edge)
-
-    flow.serialized_flow["edges"] = new_edges
-    await models.Flow.where(id=flow_id).update(
-        set={"serialized_flow": flow.serialized_flow}
-    )
-
 
 @register_api("flows.delete_flow")
 async def delete_flow(flow_id: str) -> bool:
