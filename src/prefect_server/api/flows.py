@@ -378,6 +378,10 @@ async def register_edges(
 
     new_edges = flow.serialized_flow.get("edges") or []
     for edge in serialized_edges:
+
+        if isinstance(edge, EdgeSchema):
+            edge = edge.dict()
+
         # account for mysterious bad serialized data in edges
         if isinstance(edge["upstream_task"], str):
             edge["upstream_task"] = {"slug": edge["upstream_task"]}
