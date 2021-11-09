@@ -373,15 +373,6 @@ async def register_edges(
             "Edges could not be registered - some edges reference tasks that do not exist within this flow."
         ) from None
 
-    # add edges to serialized flow
-    flow = await models.Flow.where(id=flow_id).first({"serialized_flow"})
-    current_edges = flow.serialized_flow.get("edges") or []
-    new_edges = current_edges + serialized_edges
-    flow.serialized_flow["edges"] = new_edges
-    await models.Flow.where(id=flow_id).update(
-        set={"serialized_flow": flow.serialized_flow}
-    )
-
 
 @register_api("flows.delete_flow")
 async def delete_flow(flow_id: str) -> bool:
