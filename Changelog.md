@@ -1,5 +1,17 @@
 # Changelog
 
+## November 09, 2021 <Badge text="beta" type="success" />
+
+Released on November 9, 2021.
+
+### Fixes
+
+- Preserves structural representation of serialized flows - [#306](https://github.com/PrefectHQ/server/pull/306)
+
+### Security
+
+- Upgrade `apollo-server` to address GraphQL playground vulnerability. See [the advisory](https://github.com/apollographql/apollo-server/security/advisories/GHSA-qm7x-rc44-rrqw) for details.
+
 ## October 21, 2021 <Badge text="beta" type="success" />
 
 Released on October 21, 2021.
