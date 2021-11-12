@@ -352,7 +352,7 @@ agent:
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   nodeSelector: {}
   tolerations: []
   affinity: {}
