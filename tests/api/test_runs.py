@@ -273,6 +273,19 @@ class TestCreateRun:
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"parameters"})
         assert flow_run.parameters == dict(x=1)
 
+    async def test_create_run_with_bad_parameters_raises_error(self, project_id):
+        flow_id = await api.flows.create_flow(
+            project_id=project_id,
+            serialized_flow=prefect.Flow(
+                name="test", tasks=[prefect.Parameter("x"), prefect.Parameter("y")]
+            ).serialize(),
+        )
+
+        with pytest.raises(ValueError) as exc:
+            await api.runs.create_flow_run(flow_id=flow_id, parameters=dict(x=1,z=2))
+
+        assert "Unknown parameters" in str(exc.value)
+
     async def test_create_run_uses_default_flow_group_parameters(self, project_id):
         flow_id = await api.flows.create_flow(
             project_id=project_id,
