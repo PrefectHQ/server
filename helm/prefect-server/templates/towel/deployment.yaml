@@ -48,10 +48,7 @@ spec:
             - src/prefect_server/services/towel/__main__.py
           env:
             - name: PREFECT_SERVER__HASURA__HOST
-              value: {{ include "prefect-server.hasura-hostname" . }}
-            - name: PGPASSWORD
-              valueFrom:
-              {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
+              value: {{ include "prefect-server.hasura-hostname" . }}            
             {{- with .Values.towel.env }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
