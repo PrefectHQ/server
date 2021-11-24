@@ -164,18 +164,19 @@ async def create_flow_run(
         param["name"]: param["default"] for param in flow.parameters if param["default"]
     }
 
-    # check for supplied params not in run params
-    if parameters:
-        unknown_parameters = set(parameters.keys()).difference(
-            set(run_parameters.keys())
-        )
-        if unknown_parameters:
-            raise ValueError(
-                f"Unknown parameters supplied to Flow {flow.id}'s. Unknown parameters: {unknown_parameters}."
-            )
-
     run_parameters.update(flow.flow_group.default_parameters or {})
     run_parameters.update((parameters or {}))
+
+    # check for supplied params not in the flow's params
+    unknown_parameters = set(run_parameters.keys()).difference(
+        set(flow.parameters.keys())
+    )
+    if unknown_parameters:
+        raise ValueError(
+            f"Unknown parameters supplied to Flow {flow.id}'s. Unknown parameters: {unknown_parameters}."
+        )
+
+    # check for supplied params missing required params
     required_parameters = [p["name"] for p in flow.parameters if p["required"]]
     missing = set(required_parameters).difference(run_parameters)
     if missing:
