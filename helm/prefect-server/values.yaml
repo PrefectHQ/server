@@ -55,6 +55,8 @@ postgresql:
   # postgres service, this value should be explicitly set to
   # the name of a Kubernetes secret. This secret must be a
   # key-value pair containing the key `postgresql-password`.
+  # Note that you need to create this secret yourself before
+  # referencing the secret name under `existingSecret`.
   # The name of the Kubernetes secret is arbitrary.  e.g.:
   # kubectl create secret generic prefect-postgresql-pwd
   # --from-literal='postgresql-password=YOUR_POSTGRES_PWD'
