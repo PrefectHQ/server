@@ -52,8 +52,13 @@ postgresql:
   # existingSecret configures which secret should be referenced
   # for access to the database. If null and `useSubChart` is
   # enabled, the secret will be generated. If using an external
-  # postgres service, this value should be set to the name of a
-  # Kubernetes secret containing the key `postgresql-password`
+  # postgres service, this value should be explicitly set to
+  # the name of a Kubernetes secret. This secret must be a
+  # key-value pair containing the key `postgresql-password`.
+  # The name of the Kubernetes secret is arbitrary.  e.g.:
+  # kubectl create secret generic prefect-postgresql-pwd
+  # --from-literal='postgresql-password=YOUR_POSTGRES_PWD'
+  # Helm chart value: existingSecret: prefect-postgresql-pwd
   existingSecret: null
 
   # postgresqlPassword sets the password to be used if
