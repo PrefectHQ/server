@@ -54,7 +54,7 @@ postgresql:
   # enabled, the secret will be generated. If using an external
   # postgres service, this value should be set to the name of 
   # an existing Kubernetes secret. This secret must contain 
-  # a key-value pair where the key is postgresql-password 
+  # a key-value pair where the key is `postgresql-password `
   # and the value is your password. For more information, 
   # see the "Database" section of the README.
   existingSecret: null
