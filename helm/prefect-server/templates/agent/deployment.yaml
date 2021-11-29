@@ -47,7 +47,11 @@ spec:
         command:
           - bash
           - "-c"
+          {{- if .Values.agent.jobTemplate }}
+          - "prefect agent kubernetes start --job-template {{ .Values.agent.jobTemplate }}"
+          {{- else }}
           - "prefect agent kubernetes start"
+          {{- end }}
         env:
           - name: PREFECT__CLOUD__API
             value: {{ include "prefect-server.apollo-api-url" . }}
