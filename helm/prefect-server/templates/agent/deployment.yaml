@@ -47,8 +47,8 @@ spec:
         command:
           - bash
           - "-c"
-          {{- if .Values.agent.jobTemplate }}
-          - "prefect agent kubernetes start --job-template {{ .Values.agent.jobTemplate }}"
+          {{- if .Values.agent.jobTemplateFilePath }}
+          - "prefect agent kubernetes start --job-template {{ .Values.agent.jobTemplateFilePath }}"
           {{- else }}
           - "prefect agent kubernetes start"
           {{- end }}

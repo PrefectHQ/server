@@ -338,10 +338,10 @@ agent:
   # be associated with the agent
   prefectLabels: []
 
-  # jobTemplate defines which template to use for the agent's jobs. Defaults
+  # jobTemplateFilePath defines which template to use for the agent's jobs. Defaults
   # to an empty string, which will use the default template.
   # reference: https://docs.prefect.io/orchestration/agents/kubernetes.html#custom-job-template
-  jobTemplate: ""
+  jobTemplateFilePath: ""
 
   # image configures the container image for the agent deployment
   image:
