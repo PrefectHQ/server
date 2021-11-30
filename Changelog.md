@@ -12,7 +12,7 @@ Released on November 30, 2021.
 
 - Fix agent environment block construction - [#312](https://github.com/PrefectHQ/server/pull/312)
 - Allow annotations to be provided for service accounts - [#314](https://github.com/PrefectHQ/server/pull/314)
-- Allows custom flow run job template path to be provided to agents - [#322](https://github.com/PrefectHQ/server/pull/322)
+- Allow custom flow run job template path to be provided to agents - [#322](https://github.com/PrefectHQ/server/pull/322)
 
 ### Contributors
 
