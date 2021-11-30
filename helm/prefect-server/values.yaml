@@ -53,14 +53,20 @@ postgresql:
   # existingSecret configures which secret should be referenced
   # for access to the database. If null and `useSubChart` is
   # enabled, the secret will be generated. If using an external
-  # postgres service, this value should be set to the name of a
-  # Kubernetes secret containing the key `postgresql-password`
+  # postgres service, this value should be set to the name of 
+  # an existing Kubernetes secret. This secret must contain 
+  # a key-value pair where the key is `postgresql-password `
+  # and the value is your password. For more information, 
+  # see the "Database" section of the README.
   existingSecret: null
 
   # postgresqlPassword sets the password to be used if
   # `existingSecret` is not set. This is the password for
   # `postgresqlUsername` and will be set within the secret at
-  # the key `postgresql-password`
+  # the key `postgresql-password`. This argument is only relevant 
+  # when using the Postgres database included in the chart. 
+  # For an external postgres connection, you must create 
+  # and use `existingSecret` instead of `postgresqlPassword`.
   # postgresqlPassword: use-a-strong-password
 
   # servicePort configures the port that the database should be

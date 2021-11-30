@@ -15,14 +15,14 @@ install_requires = [
     "graphql-core < 3.1",
     "httpx >= 0.13.0, < 0.14.0",
     "json_log_formatter >= 0.3.0, < 0.4.0",
-    "packaging >= 20.0, < 20.4",
+    "packaging >= 20.0, < 22.0",
     "psycopg2-binary >= 2.7, < 3.0",
     "pydantic >= 1.7, < 1.8",
     "python-slugify >= 1.2,< 5.0",
     "pyyaml >= 3.13, < 6.0",
     "starlette >= 0.13, < 0.14",
     "toml >= 0.9.0, < 0.11",
-    "urllib3 < 1.26",
+    "urllib3 >= 1.26.0, < 1.27",
     "uvicorn >= 0.11.4, < 0.12",
 ]
 
