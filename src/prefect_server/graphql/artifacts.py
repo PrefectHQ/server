@@ -6,6 +6,7 @@ from typing import Any
 from graphql import GraphQLResolveInfo
 
 from prefect import api
+from prefect_server import config
 from prefect_server.utilities.graphql import mutation
 
 
@@ -17,8 +18,10 @@ async def resolve_create_task_run_artifact(
     data = input.get("data")
 
     data_size = sys.getsizeof(json.dumps(data))
-    if data_size > 1000000:  # 1 mb max
-        raise ValueError("Artifact data payload exceedes 1Mb limit.")
+    if data_size > config.artifacts_max_payload_bytes:
+        raise ValueError(
+            f"Artifact data payload exceeds {config.artifacts_max_payload_bytes} bytes limit."
+        )
 
     task_run_artifact_id = await api.artifacts.create_task_run_artifact(
         task_run_id=input.get("task_run_id"),

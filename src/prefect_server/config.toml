@@ -20,6 +20,9 @@ insert_many_batch_size = 200
 # path for user configuration file
 user_config_path = "~/.prefect_server/config.toml"
 
+# maximum amount of bytes artifact accepts, defaults to 1 mb.
+artifacts_max_payload_bytes = 1000000
+
 [api]
 url = 'http://localhost:4200'
 
