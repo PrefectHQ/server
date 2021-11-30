@@ -6,12 +6,12 @@ Released on November 30, 2021.
 
 ### Enhancements
 
-- Helm: Allow annotations to be provided for service accounts- [#314](https://github.com/PrefectHQ/server/pull/314)
-- Configure the maximum artifact payload - [#320](https://github.com/PrefectHQ/server/pull/320)
+- Allow configuration of the maximum artifact payload - [#320](https://github.com/PrefectHQ/server/pull/320)
 
-### Fixes
+### Helm
 
-- Fix agent env block construction in Helm chart - [#312](https://github.com/PrefectHQ/server/pull/312)
+- Fix agent environment block construction - [#312](https://github.com/PrefectHQ/server/pull/312)
+- Allow annotations to be provided for service accounts - [#314](https://github.com/PrefectHQ/server/pull/314)
 
 ### Contributors
 
