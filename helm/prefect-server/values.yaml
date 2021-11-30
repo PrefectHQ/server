@@ -4,7 +4,7 @@
 # images which are used for the apollo, graphql, and towel
 # services. If null, this value defaults to `appVersion` but is
 # provided here to allow override at chart install time. Each
-# service image tag can be overriden individually in their 
+# service image tag can be overriden individually in their
 # configurations but it is not recommended.
 # See https://github.com/helm/helm/issues/8194 for details
 # on why the `appVersion` cannot be set at install time.
@@ -25,7 +25,8 @@ uiVersionTag: "latest"
 # imagePullSecrets provides configuration to reference the k8s Secret
 # resources the Helm chart's pods can get credentials from to pull
 # their images.
-imagePullSecrets: []
+imagePullSecrets:
+  []
   # - name: "secret_name"
 
 # annotations to merge into all object configurations
@@ -127,11 +128,9 @@ prefectConfig:
   # telemetry:
   #   enabled: "true"
 
-
 # hasura configures the Prefect hasura deployment and service
 # which creates a graphql api from the postgres database
 hasura:
-
   # hasura.image configures the docker image used for hasura
   # and is the only image in the chart that is not hosted by
   # Prefect
@@ -161,11 +160,9 @@ hasura:
   tolerations: []
   affinity: {}
 
-
 # graphql configures the Prefect graphql deployment and service
 # which provides a python graphql server on starlette
 graphql:
-
   image:
     name: prefecthq/server
     tag: null
@@ -188,7 +185,6 @@ graphql:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-
 
   init:
     # init.resources configures resources for the initContainer
@@ -227,7 +223,8 @@ apollo:
     labels: {}
 
     ## Hosts must be provided if Ingress is enabled.
-    hosts: []
+    hosts:
+      []
       # - prefecthq-apollo.domain.com
 
     ## Path to use for ingress rules
@@ -254,10 +251,9 @@ apollo:
 
 # ui configures the Prefect ui deployment and service
 ui:
-
   image:
     name: prefecthq/ui
-    tag: null  # See `uiVersionTag` instead
+    tag: null # See `uiVersionTag` instead
     pullPolicy: Always
     pullSecrets: []
     # - name: "secret_name"
@@ -285,7 +281,8 @@ ui:
     labels: {}
 
     ## Hosts must be provided if Ingress is enabled.
-    hosts: []
+    hosts:
+      []
       # - prefecthq-ui.domain.com
 
     ## Path to use for ingress rules
@@ -332,17 +329,20 @@ towel:
   tolerations: []
   affinity: {}
 
-
 # agent configures an optional Prefect Kubernetes agent which will
 # schedule flows as jobs in the cluster
 agent:
-
   # enabled determines if the Prefect Kubernetes agent is deployed
   enabled: false
 
   # prefectLabels defines what scheduling labels (not K8s labels) should
   # be associated with the agent
   prefectLabels: []
+
+  # jobTemplateFilePath defines which template to use for the agent's jobs. Defaults
+  # to an empty string, which will use the default template.
+  # reference: https://docs.prefect.io/orchestration/agents/kubernetes.html#custom-job-template
+  jobTemplateFilePath: ""
 
   # image configures the container image for the agent deployment
   image:
@@ -400,10 +400,8 @@ serviceAccount:
   # prefect-server.nameField template
   name: null
 
-
 # jobs contain one-time job definitions
 jobs:
-
   # create a tenant so that Agent and UI are immediately usable after installation
   createTenant:
     enabled: false
