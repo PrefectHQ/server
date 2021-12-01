@@ -1,5 +1,25 @@
 # Changelog
 
+## 2021.11.30 <Badge text="beta" type="success" />
+
+Released on November 30, 2021.
+
+### Enhancements
+
+- Allow configuration of the maximum artifact payload - [#320](https://github.com/PrefectHQ/server/pull/320)
+
+### Helm
+
+- Fix agent environment block construction - [#312](https://github.com/PrefectHQ/server/pull/312)
+- Allow annotations to be provided for service accounts - [#314](https://github.com/PrefectHQ/server/pull/314)
+- Allow custom flow run job template path to be provided to agents - [#322](https://github.com/PrefectHQ/server/pull/322)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+- [Rob Williams](https://github.com/rwilliams-exs)
+- [Gabriel Gazola Milan](https://github.com/gabriel-milan)
+
 ## November 09, 2021 <Badge text="beta" type="success" />
 
 Released on November 9, 2021.
