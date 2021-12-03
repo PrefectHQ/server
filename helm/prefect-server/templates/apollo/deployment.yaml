@@ -22,6 +22,9 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: apollo
+      {{- with .Values.apollo.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- if .Values.apollo.image.pullSecrets }}
       imagePullSecrets:

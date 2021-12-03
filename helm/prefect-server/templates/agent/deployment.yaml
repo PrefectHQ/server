@@ -23,6 +23,9 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: agent
+      {{- with .Values.agent.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- if .Values.agent.image.pullSecrets }}
       imagePullSecrets:

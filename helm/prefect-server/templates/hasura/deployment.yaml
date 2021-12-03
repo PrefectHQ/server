@@ -22,6 +22,9 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: hasura
+      {{- with .Values.hasura.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- if .Values.hasura.image.pullSecrets }}
       imagePullSecrets:
