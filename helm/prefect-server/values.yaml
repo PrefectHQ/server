@@ -150,6 +150,7 @@ hasura:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
@@ -176,6 +177,7 @@ graphql:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
@@ -239,6 +241,7 @@ apollo:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
@@ -297,6 +300,7 @@ ui:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
@@ -319,6 +323,7 @@ towel:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
@@ -354,6 +359,7 @@ agent:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}

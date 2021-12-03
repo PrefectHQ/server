@@ -22,6 +22,9 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: towel
+      {{- with .Values.towel.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- if .Values.towel.image.pullSecrets }}
       imagePullSecrets:
