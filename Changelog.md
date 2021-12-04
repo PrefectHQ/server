@@ -1,5 +1,17 @@
 # Changelog
 
+## 2021.12.04 <Badge text="beta" type="success" />
+
+Released on December 4, 2021.
+
+### Enhancements
+
+- Allow users to disable/enable apollo playground - [#326](https://github.com/PrefectHQ/server/pull/326)
+
+### Contributors
+
+- [Ahmed Ezzat](https://github.com/bitthebyte)
+
 ## 2021.11.30 <Badge text="beta" type="success" />
 
 Released on November 30, 2021.
