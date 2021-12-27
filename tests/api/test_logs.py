@@ -94,7 +94,7 @@ async def test_create_logs_with_info(tenant_id, flow_run_id):
     async def test_create_logs_without_tenant_id_fails(self, flow_run_id):
         where_clause = {"flow_run_id": {"_eq": flow_run_id}}
         logs_count = await models.Log.where(where_clause).count()
-        with pytest.raises(ValueError, match="Not-NULL violation"):
+        with pytest.raises(ValueError, match="unexpected null"):
             await api.logs.create_logs([dict(flow_run_id=flow_run_id)])
         assert await models.Log.where(where_clause).count() == logs_count
 

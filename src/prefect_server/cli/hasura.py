@@ -33,7 +33,7 @@ def apply_hasura_metadata(endpoint=None, metadata_path=None, verbose=True):
 
     response = requests.post(
         endpoint,
-        json={"type": "replace_metadata", "args": metadata},
+        json={"type": "replace_metadata", "args": {"metadata": metadata}},
     )
     try:
         response.raise_for_status()
