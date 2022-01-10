@@ -10,12 +10,12 @@ const express = require('express')
 const APOLLO_API_PORT = process.env.APOLLO_API_PORT || '4200'
 const APOLLO_API_BIND_ADDRESS = process.env.APOLLO_API_BIND_ADDRESS || '0.0.0.0'
 const APOLLO_API_BODY_LIMIT = process.env.APOLLO_API_BODY_LIMIT || '5mb'
-const APOLLO_API_ENABLE_PLAYGROUND = process.env.APOLLO_API_ENABLE_PLAYGROUND == 'false' ? false : true
+const APOLLO_API_ENABLE_PLAYGROUND =
+  process.env.APOLLO_API_ENABLE_PLAYGROUND == 'false' ? false : true
 
-const PREFECT_API_HEALTH_URL =
-  process.env.PREFECT_API_HEALTH_URL || 'http://localhost:4201/health'
+const APOLLO_API_LOGGING =
+  process.env.APOLLO_API_LOGGING == 'false' ? false : true
 const PREFECT_SERVER_VERSION = process.env.PREFECT_SERVER_VERSION || 'UNKNOWN'
-
 const TELEMETRY_ENABLED_RAW =
   process.env.PREFECT_SERVER__TELEMETRY__ENABLED || 'false'
 // Convert from a TOML boolean to a JavaScript boolean
@@ -35,12 +35,41 @@ class PrefectApolloServer extends ApolloServer {
   }
 }
 
-function log(...items) {
-  console.log(...items)
+function logInfo(...items) {
+  // "console.log is synchronous" - https://stackoverflow.com/a/6856325
+  if (APOLLO_API_LOGGING == true) console.log(...items)
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+// check the graphql server to see if version matches the expected version from our environment
+async function checkUpstreamVersion() {
+  if (PREFECT_SERVER_VERSION == 'UNKNOWN') {
+    return false
+  }
+
+  var response = null
+  try {
+    response = await fetch(PREFECT_API_HEALTH_URL)
+  } catch (err) {
+    logInfo(`Error fetching GQL health: ${err}`)
+    return false
+  }
+  const data = await response.json()
+  if (data.version === PREFECT_SERVER_VERSION) {
+    return true
+  }
+
+  logInfo(
+    `Mismatched PREFECT_SERVER_VERSION: apollo=${PREFECT_SERVER_VERSION} graphql=${data.version}`
+  )
+  return false
 }
 
 async function buildSchema() {
-  log('Building schema...')
+  logInfo('Building schema...')
 
   // create remote Hasura schema
   const hasuraSchema = wrapSchema({
@@ -59,32 +88,8 @@ async function buildSchema() {
     subschemas: [{ schema: hasuraSchema }, { schema: prefectSchema }]
   })
 
-  log('Building schema complete!')
+  logInfo('Building schema complete!')
   return schema
-}
-
-// check the graphql server to see if version matches the expected version from our environment
-async function checkUpstreamVersion() {
-  if (PREFECT_SERVER_VERSION == 'UNKNOWN') {
-    return false
-  }
-
-  var response = null
-  try {
-    response = await fetch(PREFECT_API_HEALTH_URL)
-  } catch (err) {
-    log(`Error fetching GQL health: ${err}`)
-    return false
-  }
-  const data = await response.json()
-  if (data.version === PREFECT_SERVER_VERSION) {
-    return true
-  }
-
-  log(
-    `Mismatched PREFECT_SERVER_VERSION: apollo=${PREFECT_SERVER_VERSION} graphql=${data.version}`
-  )
-  return false
 }
 
 async function runServer() {
@@ -121,54 +126,48 @@ async function runServer() {
   )
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
 async function send_telemetry_event(event) {
-  if (TELEMETRY_ENABLED) {
-    try {
-      // TODO add timeout
-      const body = JSON.stringify({
-        source: 'prefect_server',
-        type: event,
-        payload: {
-          id: TELEMETRY_ID,
-          prefect_server_version: PREFECT_SERVER_VERSION,
-          api_version: '0.2.0'
-        }
-      })
-      log(`Sending telemetry to Prefect Technologies, Inc.: ${body}`)
+  try {
+    // TODO add timeout
+    const body = JSON.stringify({
+      source: 'prefect_server',
+      type: event,
+      payload: {
+        id: TELEMETRY_ID,
+        prefect_server_version: PREFECT_SERVER_VERSION,
+        api_version: '0.2.0'
+      }
+    })
+    logInfo(`Sending telemetry to Prefect Technologies, Inc.: ${body}`)
 
-      fetch('https://sens-o-matic.prefect.io/', {
-        method: 'post',
-        body,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Prefect-Event': 'prefect_server-0.2.0'
-        }
-      })
-    } catch (error) {
-      log(`Error sending telemetry event: ${error.message}`)
-    }
+    fetch('https://sens-o-matic.prefect.io/', {
+      method: 'post',
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Prefect-Event': 'prefect_server-0.2.0'
+      }
+    })
+  } catch (error) {
+    logInfo(`Error sending telemetry event: ${error.message}`)
   }
 }
 
 async function runServerForever() {
+  if (TELEMETRY_ENABLED) {
+    send_telemetry_event('startup')
+    setInterval(() => {
+      send_telemetry_event('heartbeat')
+    }, 600000) // send heartbeat every 10 minutes
+  }
+
   try {
     await runServer()
-    send_telemetry_event('startup')
-    if (TELEMETRY_ENABLED) {
-      setInterval(() => {
-        send_telemetry_event('heartbeat')
-      }, 600000) // send heartbeat every 10 minutes
-    }
   } catch (e) {
-    log(e)
-    log('Trying again in 3 seconds...')
+    logInfo(e, 'Trying again in 3 seconds...')
     await sleep(3000)
     await runServerForever()
-  }
+  } 
 }
 
 runServerForever()
