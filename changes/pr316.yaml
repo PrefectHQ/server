@@ -1,2 +1,0 @@
-fix:
-  - "Remove PGPASSWORD from towel helm chart. - [#316](https://github.com/PrefectHQ/server/pull/316)"
