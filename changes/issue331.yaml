@@ -1,5 +1,0 @@
-fix:
-  - "Fix default env values for helm chart - [#331](https://github.com/PrefectHQ/server/issues/331)"
-
-contributor:
-  - "[Oreon Lothamer](https://github.com/oreonl)"
