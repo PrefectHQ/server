@@ -155,7 +155,7 @@ hasura:
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -182,7 +182,7 @@ graphql:
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -191,7 +191,7 @@ graphql:
   init:
     # init.resources configures resources for the initContainer
     # which upgrades the database
-    env: {}
+    env: []
     resources: {}
 
 # apollo configures the Prefect apollo deployment and service
@@ -246,7 +246,7 @@ apollo:
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -305,7 +305,7 @@ ui:
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -328,7 +328,7 @@ towel:
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []

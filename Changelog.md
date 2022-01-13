@@ -1,5 +1,24 @@
 # Changelog
 
+## 2022.01.12 <Badge text="beta" type="success" />
+
+Released on January 12, 2022.
+
+### Enhancements
+
+- Upgrade Hasura to `v2.0.9` - [#328](https://github.com/PrefectHQ/server/pull/328)
+
+### Helm
+
+- Add `podAnnotations` - [#327](https://github.com/PrefectHQ/server/pull/327)
+- Fix default `env` values - [#331](https://github.com/PrefectHQ/server/issues/331)
+- Remove `PGPASSWORD` from towel service  - [#316](https://github.com/PrefectHQ/server/pull/316)
+
+### Contributors
+
+- [Lukáš Novotný](https://github.com/novotl)
+- [Oreon Lothamer](https://github.com/oreonl)
+
 ## 2021.12.04 <Badge text="beta" type="success" />
 
 Released on December 4, 2021.
