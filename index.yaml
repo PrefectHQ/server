@@ -2,6 +2,27 @@ apiVersion: v1
 entries:
   prefect-server:
   - apiVersion: v2
+    appVersion: 2022.01.25
+    created: "2022-01-25T17:42:51.987757946Z"
+    dependencies:
+    - condition: postgresql.useSubChart
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: ~9.3.2
+    description: Prefect Server application bundle
+    digest: c40adfb185f1e46050d35191f4d522bcce950274f26a01d24d3888913d638af9
+    home: https://github.com/PrefectHQ
+    maintainers:
+    - email: michael@prefect.io
+      name: madkinsz
+    name: prefect-server
+    sources:
+    - https://github.com/PrefectHQ/server
+    type: application
+    urls:
+    - https://prefecthq.github.io/server/charts/prefect-server-2022.01.25.tgz
+    version: 2022.01.25
+  - apiVersion: v2
     appVersion: 2022.01.12
     created: "2022-01-12T19:49:41.897187375Z"
     dependencies:
@@ -274,4 +295,4 @@ entries:
     urls:
     - https://prefecthq.github.io/server/charts/prefect-server-21.07.06.tgz
     version: 21.07.06
-generated: "2022-01-12T19:49:41.888986833Z"
+generated: "2022-01-25T17:42:51.983281046Z"
