@@ -1,5 +1,13 @@
 # Changelog
 
+## 2022.01.25 <Badge text="beta" type="success" />
+
+Released on January 25, 2022.
+
+### Enhancements
+
+- Upgrade version of Hasura GraphQL engine to v2.1.1 - [#337](https://github.com/PrefectHQ/server/pull/337)
+
 ## 2022.01.12 <Badge text="beta" type="success" />
 
 Released on January 12, 2022.
