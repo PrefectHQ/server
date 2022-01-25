@@ -1,0 +1,3 @@
+enhancement:
+  "Upgrade version of Hasura GraphQL engine to v2.1.1 - [#337](https://github.com/PrefectHQ/server/pull/337)"
+
