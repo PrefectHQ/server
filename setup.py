@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 import versioneer
 
 install_requires = [
-    "prefect >= 0.13.0",
+    "prefect >= 0.15.3",
     "alembic >= 1.2, < 2.0",
     "ariadne >= 0.8.0, < 0.12.0",
     "asyncpg >= 0.20, < 0.22",
@@ -22,7 +22,7 @@ install_requires = [
     "pyyaml >= 3.13, < 6.0",
     "starlette >= 0.13, < 0.14",
     "toml >= 0.9.0, < 0.11",
-    "urllib3 >= 1.26.0, < 1.27",
+    "urllib3 > 1.26.0",
     "uvicorn >= 0.11.4, < 0.12",
 ]
 
