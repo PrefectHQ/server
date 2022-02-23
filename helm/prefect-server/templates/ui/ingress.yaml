@@ -2,10 +2,10 @@
 {{- $serviceName := include "prefect-server.nameField" (merge (dict "component" "ui") .) -}}
 {{- $servicePort := .Values.ui.service.port -}}
 {{- $ingressPath := .Values.ui.ingress.path -}}
-{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" }}
-apiVersion: networking.k8s.io/v1beta1
+{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
+apiVersion: networking.k8s.io/v1
 {{ else }}
-apiVersion: extensions/v1beta1
+apiVersion: extensions/v1
 {{ end -}}
 kind: Ingress
 metadata:
@@ -21,7 +21,7 @@ metadata:
 {{ toYaml .Values.ui.ingress.labels | indent 4 }}
 {{- end }}
 spec:
-  {{- if or (.Capabilities.APIVersions.Has "networking.k8s.io/v1") (.Capabilities.APIVersions.Has "networking.k8s.io/v1beta1") }}
+  {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
   {{- if .Values.ui.ingress.ingressClassName }}
   ingressClassName: {{ .Values.ui.ingress.ingressClassName }}
   {{- end }}
@@ -32,9 +32,12 @@ spec:
       http:
         paths:
           - path: {{ $ingressPath }}
+            pathType: Prefix
             backend:
-              serviceName: {{ $serviceName }}
-              servicePort: {{ $servicePort }}
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $servicePort }}
     {{- end -}}
   {{- if .Values.ui.ingress.tls }}
   tls:
