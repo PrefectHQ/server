@@ -44,3 +44,4 @@ spec:
 {{ tpl (toYaml .Values.ui.ingress.tls | indent 4) . }}
   {{- end -}}
 {{- end -}}
+
