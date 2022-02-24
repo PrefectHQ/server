@@ -52,6 +52,7 @@ spec:
             - name: PGPASSWORD
               valueFrom:
               {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
+            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
             {{- with .Values.towel.env }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
