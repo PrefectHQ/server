@@ -16,7 +16,7 @@
 #
 # Here's an example of a PR that adds an enhancement
 
-feature:
+fix:
   - "Fix missing server configs on hasura and towel deployments - [#346](https://github.com/PrefectHQ/server/pull/346)"
 
 contributor:
