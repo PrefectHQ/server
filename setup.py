@@ -15,7 +15,7 @@ install_requires = [
     "graphql-core < 3.1",
     "httpx >= 0.13.0",
     "json_log_formatter >= 0.3.0",
-    "packaging >= 20.0,",
+    "packaging >= 20.0",
     "psycopg2-binary >= 2.7",
     "pydantic >= 1.7",
     "python-slugify >= 1.2",
@@ -28,7 +28,7 @@ install_requires = [
 
 dev_requires = [
     "black",
-    "asynctest >= 0.13,",
+    "asynctest >= 0.13",
     "pytest >= 5.0",
     "pytest-asyncio",
     "pytest-cov",
