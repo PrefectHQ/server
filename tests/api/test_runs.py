@@ -63,12 +63,12 @@ class TestCreateRun:
         labeled_flow_id,
     ):
         labeled_flow = await models.Flow.where(id=labeled_flow_id).first(
-            {"environment"}
+            {"run_config"}
         )
         # create a flow run
         flow_run_id = await api.runs.create_flow_run(flow_id=labeled_flow_id)
         flow_run = await models.FlowRun.where(id=flow_run_id).first({"labels"})
-        assert flow_run.labels == sorted(labeled_flow.environment["labels"])
+        assert flow_run.labels == sorted(labeled_flow.run_config["labels"])
 
     async def test_create_flow_run_respects_empty_flow_group_labels(
         self,

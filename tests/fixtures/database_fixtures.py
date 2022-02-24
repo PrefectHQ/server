@@ -79,7 +79,7 @@ async def flow_group_id(flow_id):
 async def labeled_flow_id(project_id):
     flow = prefect.Flow(
         name="Labeled Flow",
-        environment=prefect.environments.execution.local.LocalEnvironment(
+        run_config=prefect.run_configs.UniversalRun(
             labels=["foo", "bar"]
         ),
         schedule=prefect.schedules.IntervalSchedule(

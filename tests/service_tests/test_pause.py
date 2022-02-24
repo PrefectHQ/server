@@ -28,7 +28,7 @@ class TestPause:
         flow = prefect.Flow(
             "pause",
             storage=prefect.storage.Local(directory=tmpdir),
-            environment=prefect.environments.LocalEnvironment(),
+            run_config=prefect.run_configs.LocalRun(),
         )
 
         flow.a = prefect.Task("a")
