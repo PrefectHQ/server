@@ -56,7 +56,6 @@ spec:
               value: "true"
             - name: HASURA_GRAPHQL_SERVER_PORT
               value: "3000"
-            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
             {{- with .Values.hasura.env}}
               {{- toYaml . | nindent 12 }}
             {{- end }}
