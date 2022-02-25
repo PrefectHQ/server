@@ -1,5 +1,64 @@
 # Changelog
 
+## 2022.01.25 <Badge text="beta" type="success" />
+
+Released on January 25, 2022.
+
+### Enhancements
+
+- Upgrade version of Hasura GraphQL engine to v2.1.1 - [#337](https://github.com/PrefectHQ/server/pull/337)
+
+## 2022.01.12 <Badge text="beta" type="success" />
+
+Released on January 12, 2022.
+
+### Enhancements
+
+- Upgrade Hasura to `v2.0.9` - [#328](https://github.com/PrefectHQ/server/pull/328)
+
+### Helm
+
+- Add `podAnnotations` - [#327](https://github.com/PrefectHQ/server/pull/327)
+- Fix default `env` values - [#331](https://github.com/PrefectHQ/server/issues/331)
+- Remove `PGPASSWORD` from towel service  - [#316](https://github.com/PrefectHQ/server/pull/316)
+
+### Contributors
+
+- [Lukáš Novotný](https://github.com/novotl)
+- [Oreon Lothamer](https://github.com/oreonl)
+
+## 2021.12.04 <Badge text="beta" type="success" />
+
+Released on December 4, 2021.
+
+### Enhancements
+
+- Allow users to disable/enable apollo playground - [#326](https://github.com/PrefectHQ/server/pull/326)
+
+### Contributors
+
+- [Ahmed Ezzat](https://github.com/bitthebyte)
+
+## 2021.11.30 <Badge text="beta" type="success" />
+
+Released on November 30, 2021.
+
+### Enhancements
+
+- Allow configuration of the maximum artifact payload - [#320](https://github.com/PrefectHQ/server/pull/320)
+
+### Helm
+
+- Fix agent environment block construction - [#312](https://github.com/PrefectHQ/server/pull/312)
+- Allow annotations to be provided for service accounts - [#314](https://github.com/PrefectHQ/server/pull/314)
+- Allow custom flow run job template path to be provided to agents - [#322](https://github.com/PrefectHQ/server/pull/322)
+
+### Contributors
+
+- [Joël Luijmes](https://github.com/joelluijmes)
+- [Rob Williams](https://github.com/rwilliams-exs)
+- [Gabriel Gazola Milan](https://github.com/gabriel-milan)
+
 ## November 09, 2021 <Badge text="beta" type="success" />
 
 Released on November 9, 2021.

@@ -317,7 +317,7 @@ class TestTestWebhook:
         )
 
         assert result.data.test_cloud_hook.success is False
-        assert "No scheme included in URL." in result.data.test_cloud_hook.error
+        assert "URL is missing" in result.data.test_cloud_hook.error
 
     async def test_test_hook(self, run_query, tenant_id, cloud_hook_mock):
 

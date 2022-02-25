@@ -22,6 +22,9 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: hasura
+      {{- with .Values.hasura.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- if .Values.hasura.image.pullSecrets }}
       imagePullSecrets:
@@ -53,6 +56,8 @@ spec:
               valueFrom:
                 {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}            
             - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: "true"
+            - name: HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE
               value: "true"
             - name: HASURA_GRAPHQL_SERVER_PORT
               value: "3000"

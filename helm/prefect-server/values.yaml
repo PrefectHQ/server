@@ -136,7 +136,7 @@ hasura:
   # Prefect
   image:
     name: hasura/graphql-engine
-    tag: v1.3.3
+    tag: v2.0.9
     pullPolicy: IfNotPresent
     pullSecrets: []
     # - name: "secret_name"
@@ -150,11 +150,12 @@ hasura:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -176,11 +177,12 @@ graphql:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -189,7 +191,7 @@ graphql:
   init:
     # init.resources configures resources for the initContainer
     # which upgrades the database
-    env: {}
+    env: []
     resources: {}
 
 # apollo configures the Prefect apollo deployment and service
@@ -239,11 +241,12 @@ apollo:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -297,11 +300,12 @@ ui:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -319,11 +323,12 @@ towel:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}
   securityContext: {}
-  env: {}
+  env: []
   resources: {}
   nodeSelector: {}
   tolerations: []
@@ -354,6 +359,7 @@ agent:
 
   labels: {}
   annotations: {}
+  podAnnotations: {}
   replicas: 1
   strategy: {}
   podSecurityContext: {}

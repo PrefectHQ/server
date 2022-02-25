@@ -22,6 +22,9 @@ spec:
       labels:
         {{- include "prefect-server.matchLabels" . | nindent 8 }}
         app.kubernetes.io/component: towel
+      {{- with .Values.towel.podAnnotations }}
+      annotations: {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
     {{- if .Values.towel.image.pullSecrets }}
       imagePullSecrets:
@@ -49,9 +52,6 @@ spec:
           env:
             - name: PREFECT_SERVER__HASURA__HOST
               value: {{ include "prefect-server.hasura-hostname" . }}
-            - name: PGPASSWORD
-              valueFrom:
-              {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
             {{- (include "prefect-server.envConfig" .) | nindent 12 }}
             {{- with .Values.towel.env }}
               {{- toYaml . | nindent 12 }}
