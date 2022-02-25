@@ -51,7 +51,8 @@ spec:
             - src/prefect_server/services/towel/__main__.py
           env:
             - name: PREFECT_SERVER__HASURA__HOST
-              value: {{ include "prefect-server.hasura-hostname" . }}            
+              value: {{ include "prefect-server.hasura-hostname" . }}
+            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
             {{- with .Values.towel.env }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
