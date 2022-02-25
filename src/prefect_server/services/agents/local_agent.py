@@ -8,9 +8,10 @@ from prefect import api, models
 from prefect.engine.state import Submitted
 from prefect.utilities.graphql import EnumValue, with_args
 from prefect_server.utilities import logging
+from prefect.backend.execution import execute_flow_run
 
 state_schema = prefect.serialization.state.StateSchema()
-environment_schema = prefect.serialization.environment.EnvironmentSchema()
+run_config_schema = prefect.serialization.run_config.RunConfigSchema()
 storage_schema = prefect.serialization.storage.StorageSchema()
 
 
@@ -106,9 +107,8 @@ class LocalAgent:
 
             # run the flow
             self.run_flow(
-                flow_name=fr.flow.name,
+                fr,
                 storage=storage_schema.load(fr.flow.storage),
-                environment=environment_schema.load(fr.flow.environment),
                 config={
                     "cloud.api": f"http://localhost:4200",
                     "cloud.graphql": "http://localhost:4200",
@@ -119,10 +119,10 @@ class LocalAgent:
                 context={"flow_run_id": fr.id},
             )
 
-    def run_flow(self, flow_name, storage, environment, config, context):
+    def run_flow(self, flow_run, storage, config, context):
         with prefect.utilities.configuration.set_temporary_config(config):
             with prefect.context(context):
-                environment.execute(storage.get_flow(flow_name))
+                execute_flow_run(flow_run.id, storage.get_flow(flow_run.flow.name))
 
     async def start(self):
         self.logger.info(f"Starting {type(self).__name__}...")
