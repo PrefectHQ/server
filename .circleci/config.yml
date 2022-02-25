@@ -10,6 +10,8 @@ aliases:
     run:
       name: Install Prefect Server
       command: |
+        # Use the latest pip
+        pip install --upgrade pip
         # install prefect master
         pip install --progress-bar off "git+https://github.com/prefecthq/prefect.git@${PREFECT_VERSION}"
         # install prefect server

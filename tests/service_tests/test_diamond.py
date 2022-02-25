@@ -20,7 +20,7 @@ class TestDiamond:
         flow = prefect.Flow(
             "diamond",
             storage=prefect.storage.Local(directory=tmpdir),
-            environment=prefect.environments.LocalEnvironment(),
+            run_config=prefect.run_configs.LocalRun(),
         )
 
         flow.a = prefect.Task("a")
@@ -182,7 +182,7 @@ class TestDiamondFailOnce:
         flow = prefect.Flow(
             "diamond fail once",
             storage=prefect.storage.Local(directory=tmpdir),
-            environment=prefect.environments.LocalEnvironment(),
+            run_config=prefect.run_configs.LocalRun(),
         )
 
         flow.a = FailOnceTask("a")

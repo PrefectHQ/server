@@ -13,7 +13,6 @@ from prefect.engine.state import (
     Scheduled,
     Success,
 )
-from prefect.environments import LocalEnvironment
 from prefect.storage import Local
 from prefect_server.utilities.tests import set_temporary_config
 
@@ -62,7 +61,7 @@ class TestSimpleReduce:
 
         with prefect.Flow(
             "simple reduce",
-            environment=LocalEnvironment(),
+            run_config=prefect.run_configs.LocalRun(),
             storage=Local(directory=tmpdir),
         ) as flow:
             flow.numbers = numbers()

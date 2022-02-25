@@ -1343,7 +1343,7 @@ class TestScheduledRunAttributes:
         flow = prefect.Flow(
             name="Test Scheduled Flow",
             schedule=prefect.schedules.Schedule(clocks=[clock1, clock2]),
-            environment=prefect.environments.LocalEnvironment(labels=["foo", "bar"]),
+            run_config=prefect.run_configs.UniversalRun(labels=["foo", "bar"]),
         )
         flow.add_task(prefect.Parameter("x", default=1))
         flow_id = await api.flows.create_flow(
