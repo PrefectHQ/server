@@ -37,8 +37,9 @@
     Name fields are limited to 63 characters by the DNS naming spec
 */}}
 {{- define "prefect-server.nameField" -}}
-{{- $name := print (.namePrefix | default "") ( .component ) (.nameSuffix | default "") -}}
-{{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- $componentName := print (.namePrefix | default "") ( .component ) (.nameSuffix | default "") -}}
+{{- $chartName := include "prefect-server.name" . -}}
+{{ printf "%s-%s-%s" .Release.Name $chartName $componentName | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 
