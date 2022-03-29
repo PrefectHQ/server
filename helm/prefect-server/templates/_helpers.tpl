@@ -29,16 +29,21 @@
 
 
 {{- /*
-  prefect-server.nameField(component, [namePrefix], [nameSuffix]):
-    Populates a configuration name field's value by as {release}-{component}
+  prefect-server.nameField(component):
+    Populates a configuration name field's value by as {release}-{component} or
+    {release}-{chart}-{component} depending on the value of 'includeChartNameInComponents'
     Request the component name to be passed by adding to the context e.g.
       include "prefect-server.nameField (merge (dict "component" "apollo") .)
-    Also allows prefix and suffix values to be passed
     Name fields are limited to 63 characters by the DNS naming spec
 */}}
 {{- define "prefect-server.nameField" -}}
-{{- $name := print (.namePrefix | default "") ( .component ) (.nameSuffix | default "") -}}
-{{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- $componentName := .component -}}
+{{- if .Values.includeChartNameInComponents -}}
+  {{- $chartName := include "prefect-server.name" . -}}
+  {{ printf "%s-%s-%s" .Release.Name $chartName $componentName | trunc 63 | trimSuffix "-" }}
+{{- else -}}
+  {{ printf "%s-%s" .Release.Name $componentName | trunc 63 | trimSuffix "-" }}
+{{- end -}}
 {{- end }}
 
 

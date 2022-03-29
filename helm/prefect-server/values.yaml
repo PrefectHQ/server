@@ -22,6 +22,14 @@ prefectVersionTag: "latest"
 # ui version.
 uiVersionTag: "latest"
 
+# includeChartNameInComponents determines if the name of the chart should
+# be included in generated component names. By default, it will not
+# be included and names will be formatted as {release}-{component}.
+# If 'true'', names will be formatted as {release}-{chart}-{compnent}.
+# This is useful if this chart is being used as a subchart with names
+# that may collide with other objects.
+includeChartNameInComponents: false
+
 # imagePullSecrets provides configuration to reference the k8s Secret
 # resources the Helm chart's pods can get credentials from to pull
 # their images.
