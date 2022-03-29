@@ -1,5 +1,21 @@
 # Changelog
 
+## 2022.03.29 <Badge text="beta" type="success" />
+
+Released on March 29, 2022.
+
+### Fixes
+
+- Reduce maximum flow runs rescheduled by Lazarus at once - [#350](https://github.com/PrefectHQ/server/pull/350)
+
+### Helm
+
+- Add `includeChartNameInComponents` toggle to prefix component names with the chart name for improved UX as a subchart - [#355](https://github.com/PrefectHQ/server/pull/355)
+- Fix missing server configs on towel deployment - [#346](https://github.com/PrefectHQ/server/pull/346)
+### Contributors
+
+- [Gabriel Gazola Milan](https://github.com/gabriel-milan)
+
 ## 2022.01.25 <Badge text="beta" type="success" />
 
 Released on January 25, 2022.
