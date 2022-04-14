@@ -17,14 +17,17 @@ jobs:
       - name: Get the version tags
         id: get_version
         run: |
+          # Enable pipefail so git command failures do not result in null versions downstream
+          set -x
+
           echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
           echo ::set-output name=CORE_VERSION::$(\
             git ls-remote --tags --refs --sort="v:refname" \
-            git://github.com/PrefectHQ/prefect.git | tail -n1 | sed 's/.*\///' \
+            https://github.com/PrefectHQ/prefect.git | tail -n1 | sed 's/.*\///' \
           )
           echo ::set-output name=UI_VERSION::$(\
             git ls-remote --tags --refs --sort="v:refname" \
-            git://github.com/PrefectHQ/ui.git | tail -n1 | sed 's/.*\///' \
+            https://github.com/PrefectHQ/ui.git | tail -n1 | sed 's/.*\///' \
           )
 
       - name: Configure Git
