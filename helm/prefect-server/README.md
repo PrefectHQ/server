@@ -69,7 +69,7 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
     # The path to your config that overrides values in `values.yaml`
     CONFIG_PATH=path/to/your/config.yaml
     # The chart version to install
-    VERSION=2022.03.29
+    VERSION=2022.04.14
 
     helm install \
         --namespace $NAMESPACE \

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2022.04.14 <Badge text="beta" type="success" />
+
+Released on April 14, 2022.
+
+### Fixes
+
+- Fix issue where the Helm chart did not correctly set UI/Core image version tags - [#362](https://github.com/PrefectHQ/server/pull/362)
+
 ## 2022.03.29 <Badge text="beta" type="success" />
 
 Released on March 29, 2022.
