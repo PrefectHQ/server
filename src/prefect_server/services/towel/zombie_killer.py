@@ -138,10 +138,11 @@ class ZombieKiller(LoopService):
                 "id": True,
                 "flow_run_id": True,
                 "tenant_id": True,
+                "name": True,
                 # Information about the current flow run state
                 "flow_run": {"state"},
                 # get information about retries from task
-                "task": {"max_retries", "retry_delay", "id", "name"},
+                "task": {"max_retries", "retry_delay"},
                 # count the number of retrying states for this task run
                 with_args(
                     "retry_count: states_aggregate",
@@ -182,7 +183,7 @@ class ZombieKiller(LoopService):
                 else:
                     message = (
                         "No heartbeat detected from the remote task; marking the "
-                        f"task run {tr.task.id} ({tr.task.name}) as failed."
+                        f"task run {tr.id} ({tr.name}) as failed."
                     )
                     await prefect.api.states.set_task_run_state(
                         task_run_id=tr.id,
