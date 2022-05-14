@@ -6,6 +6,7 @@ from prefect import models
 from prefect.engine.state import Retrying, Scheduled
 from prefect_server import api
 from prefect_server.services.towel.zombie_killer import ZombieKiller
+from prefect.utilities.graphql import EnumValue
 
 
 @pytest.fixture(autouse=True)
@@ -157,7 +158,17 @@ async def test_zombie_killer_creates_logs(running_flow_run_id, task_run_id):
     t_log = await models.Log.where(t_where).first(
         selection_set={"message", "level", "name"}
     )
-    assert "No heartbeat detected from the remote task" in t_log.message
+    t_where.pop("task_run_id")
+    t_run = await models.TaskRun.where(t_where).first(
+        selection_set={
+            "task": {"id", "name"},
+        },
+        order_by={"updated": EnumValue("desc")},
+    )
+    assert (
+        "No heartbeat detected from the remote task; marking the "
+        f"task run {t_run.task.id} ({t_run.task.name}) as failed."
+    ) == t_log.message
     assert t_log.level == "ERROR"
     assert t_log.name == "prefect-server.ZombieKiller.TaskRun"
 
