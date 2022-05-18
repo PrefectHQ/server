@@ -144,7 +144,7 @@ hasura:
   # Prefect
   image:
     name: hasura/graphql-engine
-    tag: v2.0.9
+    tag: v2.1.1
     pullPolicy: IfNotPresent
     pullSecrets: []
     # - name: "secret_name"
