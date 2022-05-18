@@ -38,8 +38,8 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.graphql.init.enabled }}
       initContainers:
-        {{- if .Values.graphql.init.enabled }}
         - name: db-upgrade
           {{- with .Values.graphql.init.securityContext -}}
           securityContext:
@@ -65,7 +65,7 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- end }}
+      {{- end }}
       containers:
         - name: graphql
           {{- with .Values.graphql.securityContext -}}
