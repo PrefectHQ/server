@@ -43,6 +43,10 @@ spec:
               value: {{ include "prefect-server.apollo-api-url" . }}
             - name: PREFECT__BACKEND
               value: server
+          {{- with .Values.jobs.createTenant.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
       restartPolicy: OnFailure
   backoffLimit: {{ .Values.jobs.createTenant.backoffLimit }}
 {{- end }}
