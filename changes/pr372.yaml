@@ -1,0 +1,5 @@
+enhancement:
+  - "Adds Google Cloud SQL Auth Proxy Support - [#372](https://github.com/PrefectHQ/server/pull/372)"
+
+contributor:
+  - "[Matt Drago](https://github.com/mattdrago)"
