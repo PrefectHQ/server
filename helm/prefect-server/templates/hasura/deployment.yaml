@@ -80,6 +80,11 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- include "prefect-server.gceProxySidecarContainer" . | nindent 8 }}
+      {{- if "prefect-server.gceProxySidecarVolumes" }}
+      volumes:
+        {{- include "prefect-server.gceProxySidecarVolumes" . | nindent 8 }}
+      {{- end }}
       {{- with .Values.hasura.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
