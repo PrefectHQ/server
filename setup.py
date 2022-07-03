@@ -22,7 +22,7 @@ install_requires = [
     "pyyaml >= 3.13, < 6.0",
     "starlette >= 0.13, < 0.14",
     "toml >= 0.9.0, < 0.11",
-    "urllib3 < 1.26",
+    "urllib3 >= 1.26.0",
     "uvicorn >= 0.11.4, < 0.12",
 ]
 
