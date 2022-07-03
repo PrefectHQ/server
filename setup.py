@@ -15,7 +15,7 @@ install_requires = [
     "graphql-core < 3.1",
     "httpx >= 0.13.0, < 0.14.0",
     "json_log_formatter >= 0.3.0, < 0.4.0",
-    "packaging >= 20.0, < 20.4",
+    "packaging >= 20.0, < 22.0",
     "psycopg2-binary >= 2.7, < 3.0",
     "pydantic >= 1.7, < 1.8",
     "python-slugify >= 1.2,< 5.0",
