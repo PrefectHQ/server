@@ -8,7 +8,7 @@ from box import Box
 import prefect_server
 from prefect.utilities.graphql import parse_graphql
 from prefect_server.utilities.http import httpx_client
-from prefect_server.utilities.exceptions import reraise_as_api_error
+from prefect_server.utilities.exceptions import reraise_as_api_error, GraphQLSystemError
 
 # define common objects for binding resolvers
 query = ariadne.QueryType()
@@ -72,6 +72,10 @@ class GraphQLClient:
             )
             self.logger.error(exc)
             raise exc
+
+        if response.get("errors", {}).get("exception", {}).get("type") == "system":
+            with reraise_as_api_error(GraphQLSystemError, logger=self.logger):
+                raise GraphQLSystemError(result["errors"]["exception"]["message"])
 
         if raise_on_error and "errors" in result:
             if prefect_server.config.debug:

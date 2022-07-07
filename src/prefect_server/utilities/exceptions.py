@@ -16,6 +16,8 @@ class PrefectBackendException(Exception):
 
     pass
 
+class GraphQLSystemError(PrefectBackendException):
+    pass
 
 class APIError(PrefectBackendException):
     # All exceptions of this type include this message for simple parsing from Apollo
