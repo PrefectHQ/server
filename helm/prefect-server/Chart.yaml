@@ -12,6 +12,6 @@ sources:
   - https://github.com/PrefectHQ/server
 dependencies:
 - name: postgresql
-  version: "~9.3.2"
+  version: "11.x.x"
   repository: https://charts.bitnami.com/bitnami
   condition: postgresql.useSubChart

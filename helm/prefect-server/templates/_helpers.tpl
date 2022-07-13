@@ -98,8 +98,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 */}}
 {{- define "prefect-server.postgres-hostname" -}}
 {{- if .Values.postgresql.useSubChart -}}
-  {{- $subchart_overrides := .Values.postgresql -}}
-  {{- $name := include "postgresql.fullname" (dict "Values" $subchart_overrides "Chart" (dict "Name" "postgresql") "Release" .Release) -}}
+  {{- $subchart_overrides := .Values.postgresql -}}+.
+  {{- $name := include "postgresql.primary.fullname" (dict "Values" $subchart_overrides "Chart" (dict "Name" "postgresql") "Release" .Release) -}}
   {{- printf "%s.%s" $name .Release.Namespace -}}
 {{- else -}}
   {{- .Values.postgresql.externalHostname -}}
