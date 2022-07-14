@@ -145,7 +145,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "prefect-server.postgres-secret-ref" -}}
 secretKeyRef:
   name: {{ include "prefect-server.postgres-secret-name" . }}
-  key: postgresql-password
+  key: postgres-password
 {{- end -}}
 
   
