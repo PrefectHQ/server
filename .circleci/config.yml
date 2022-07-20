@@ -190,10 +190,20 @@ jobs:
             docker buildx install
             # Run binfmt
             docker run --rm --privileged tonistiigi/binfmt:latest --install "$BUILDX_PLATFORMS"
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /(2\d{3}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])).*/
       - run:
           name: Log in to docker hub
           command: |
             docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PW
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /(2\d{3}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])).*/
       - run:
           name: Push apollo master tag
           command: |
