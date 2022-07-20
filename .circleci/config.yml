@@ -169,6 +169,58 @@ jobs:
           command: pytest -v -m integration_test
           env:
             - PREFECT__LOOP_SERVICE__DEBUG_MODE: true
+            
+  publish_docker_images:
+    steps:
+      - run:  # https://circleci.com/blog/building-docker-images-for-multiple-os-architectures/
+        name: Install buildx
+        command: |
+          BUILDX_BINARY_URL="https://github.com/docker/buildx/releases/download/v0.8.2/buildx-v0.8.2.linux-amd64"
+          curl --output docker-buildx \
+            --silent --show-error --location --fail --retry 3 \
+            "$BUILDX_BINARY_URL"
+          mkdir -p ~/.docker/cli-plugins
+          mv docker-buildx ~/.docker/cli-plugins/
+          chmod a+x ~/.docker/cli-plugins/docker-buildx
+          docker buildx install
+          # Run binfmt
+          docker run --rm --privileged tonistiigi/binfmt:latest --install "$BUILDX_PLATFORMS"
+    - run:
+        name: Log in to docker hub
+        command: |
+          docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PW
+    - run:
+        name: Push apollo master tag
+        command: |
+          docker buildx build --push services/apollo -t prefecthq/apollo:master --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        filters:
+          branches:
+            only: master
+    - run:
+        name: Push server master tag
+        command: |
+          docker buildx build --push . -t prefecthq/server:master --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        filters:
+          branches:
+            only: master
+    - run:
+        name: Push apollo latest tag
+        command: |
+          docker buildx build --push services/apollo -t prefecthq/apollo:$CIRCLE_TAG -t prefecthq/apollo:latest --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /(2\d{3}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])).*/
+    - run:
+        name: Push server latest tag
+        command: |
+          docker buildx build --push . -t prefecthq/server:$CIRCLE_TAG -t prefecthq/apollo:latest --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /(2\d{3}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])).*/
 
 orbs:
   docker: circleci/docker@1.0.0
@@ -194,52 +246,4 @@ workflows:
       DOCKER_BUILDKIT: 1
       BUILDX_PLATFORMS: linux/amd64,linux/arm64
     jobs:
-      - run:  # https://circleci.com/blog/building-docker-images-for-multiple-os-architectures/
-          name: Install buildx
-          command: |
-            BUILDX_BINARY_URL="https://github.com/docker/buildx/releases/download/v0.8.2/buildx-v0.8.2.linux-amd64"
-            curl --output docker-buildx \
-              --silent --show-error --location --fail --retry 3 \
-              "$BUILDX_BINARY_URL"
-            mkdir -p ~/.docker/cli-plugins
-            mv docker-buildx ~/.docker/cli-plugins/
-            chmod a+x ~/.docker/cli-plugins/docker-buildx
-            docker buildx install
-            # Run binfmt
-            docker run --rm --privileged tonistiigi/binfmt:latest --install "$BUILDX_PLATFORMS"
-      - run:
-          name: Log in to docker hub
-          command: |
-            docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PW
-      - run:
-          name: Push apollo master tag
-          command: |
-            docker buildx build --push services/apollo -t prefecthq/apollo:master --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          filters:
-              branches:
-                only: master
-      - run:
-          name: Push server master tag
-          command: |
-            docker buildx build --push . -t prefecthq/server:master --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          filters:
-              branches:
-                only: master
-      - run:
-          name: Push apollo latest tag
-          command: |
-            docker buildx build --push services/apollo -t prefecthq/apollo:$CIRCLE_TAG -t prefecthq/apollo:latest --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /(2\d{3}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])).*/
-      - run:
-          name: Push server latest tag
-          command: |
-            docker buildx build --push . -t prefecthq/server:$CIRCLE_TAG -t prefecthq/apollo:latest --platform $BUILDX_PLATFORMS --build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /(2\d{3}\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])).*/
+      - publish_docker_images
