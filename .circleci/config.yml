@@ -173,6 +173,9 @@ jobs:
   publish_docker_images:
     machine:
       image: ubuntu-2204:2022.04.1
+    environment:
+      DOCKER_BUILDKIT: 1
+      BUILDX_PLATFORMS: linux/amd64,linux/arm64
     steps:
       - run:  # https://circleci.com/blog/building-docker-images-for-multiple-os-architectures/
           name: Install buildx
@@ -244,8 +247,5 @@ workflows:
       - run_integration_tests
 
   "Build and publish":
-    environment:
-      DOCKER_BUILDKIT: 1
-      BUILDX_PLATFORMS: linux/amd64,linux/arm64
     jobs:
       - publish_docker_images
