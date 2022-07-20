@@ -171,6 +171,8 @@ jobs:
             - PREFECT__LOOP_SERVICE__DEBUG_MODE: true
             
   publish_docker_images:
+    machine:
+      image: ubuntu-2204:2022.04.1
     steps:
       - run:  # https://circleci.com/blog/building-docker-images-for-multiple-os-architectures/
           name: Install buildx
