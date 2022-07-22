@@ -63,6 +63,7 @@ executors:
           POSTGRES_USER: prefect
           POSTGRES_PASSWORD: pr343ct
           POSTGRES_DB: prefect_server
+          PGDATA: /bitnami/postgresql/data
         command: postgres -c max_connections=150
 
       - image: "hasura/graphql-engine:v2.0.9"
