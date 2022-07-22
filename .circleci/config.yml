@@ -99,7 +99,7 @@ jobs:
   run_unit_tests:
     executor: docker-prefect-server
     steps:
-      -
+      - prep_utils
       - *set_environment_variables
       - *install_prefect_server
       - prep_tests
@@ -181,7 +181,7 @@ workflows:
 
   "Run unit tests":
     jobs:
-      -
+      - run_unit_tests
       - run_database_migration_tests
 
   "Run service & integration tests":
