@@ -66,7 +66,7 @@ executors:
           POSTGRES_DB: prefect_server
           POSTGRESQL_EXTRA_FLAGS: "-c max_connections=150"
 
-      - image: "hasura/graphql-engine:v2.1.1"
+      - image: "hasura/graphql-engine:v2.0.9"
         command: /bin/sh -c "sleep 5 && graphql-engine serve"
         environment:
           HASURA_GRAPHQL_DATABASE_URL: postgres://prefect@localhost:5432/prefect_server
