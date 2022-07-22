@@ -69,7 +69,7 @@ executors:
       - image: "hasura/graphql-engine:v2.1.1"
         command: /bin/sh -c "sleep 5 && graphql-engine serve"
         environment:
-          HASURA_GRAPHQL_DATABASE_URL: postgres://prefect:prefect@localhost:5432/prefect_server
+          HASURA_GRAPHQL_DATABASE_URL: postgres://prefect@localhost:5432/prefect_server
           HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE: "true"
           HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
           HASURA_GRAPHQL_SERVER_PORT: "3000"
