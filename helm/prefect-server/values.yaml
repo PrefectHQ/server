@@ -48,9 +48,9 @@ annotations: {}
 # used, these variables are used to create the connection
 # string
 postgresql:
-  postgresqlDatabase: prefect
-  postgresqlUsername: prefect
-  servicePort: 5432
+#  postgresqlDatabase: prefect
+#  postgresqlUsername: prefect
+#  servicePort: 5432
 
   # postgresqlUsername defines the username to authenticate
   # with.
