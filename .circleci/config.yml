@@ -63,7 +63,7 @@ executors:
           POSTGRES_USER: prefect
           POSTGRES_PASSWORD: pr343ct
           POSTGRES_DB: prefect_server
-          POSTGRESQL_EXTRA_FLAGS: max_connections=150
+          POSTGRESQL_EXTRA_FLAGS: "-c max_connections=150"
 
       - image: "hasura/graphql-engine:v2.0.9"
         command: /bin/sh -c "sleep 5 && graphql-engine serve"
