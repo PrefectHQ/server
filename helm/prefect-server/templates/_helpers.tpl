@@ -114,10 +114,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
       secret in PGPASSWORD on containers.
 */}}
 {{- define "prefect-server.postgres-connstr" -}}
-{{- $user := .Values.postgresql.postgresqlUsername -}}
+{{- $user := .Values.postgresql.auth.username -}}
 {{- $host := include "prefect-server.postgres-hostname" . -}}
-{{- $port := .Values.postgresql.servicePort | toString -}}
-{{- $db := .Values.postgresql.postgresqlDatabase -}}
+{{- $port := .Values.postgresql.primary.service.ports.postgresql | toString -}}
+{{- $db := .Values.postgresql.auth.database -}}
 {{- printf "postgresql://%s@%s:%s/%s" $user $host $port $db -}}
 {{- end -}}
 

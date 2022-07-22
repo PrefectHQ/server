@@ -60,6 +60,7 @@ postgresql:
   # Alembic migration manager
   auth:
     username: prefect
+    password: prefect
     database: prefect
 
   # existingSecret configures which secret should be referenced
