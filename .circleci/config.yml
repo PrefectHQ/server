@@ -58,7 +58,7 @@ executors:
           PREFECT_SERVER__DATABASE__USERNAME: prefect
           PREFECT_SERVER__DATABASE__PASSWORD: pr343ct
 
-      - image: "postgres:11"
+      - image: "bitnami/postgresql:14.4.0-debian-11-r9"
         environment:
           POSTGRES_USER: prefect
           POSTGRES_PASSWORD: pr343ct
@@ -99,7 +99,7 @@ jobs:
   run_unit_tests:
     executor: docker-prefect-server
     steps:
-      - prep_utils
+      -
       - *set_environment_variables
       - *install_prefect_server
       - prep_tests
@@ -181,7 +181,7 @@ workflows:
 
   "Run unit tests":
     jobs:
-      - run_unit_tests
+      -
       - run_database_migration_tests
 
   "Run service & integration tests":
