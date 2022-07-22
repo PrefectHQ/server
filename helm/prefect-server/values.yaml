@@ -48,39 +48,40 @@ annotations: {}
 # used, these variables are used to create the connection
 # string
 postgresql:
-#  postgresqlDatabase: prefect
-#  postgresqlUsername: prefect
-#  servicePort: 5432
-
-  # postgresqlUsername defines the username to authenticate
-  # with.
-  # NOTE: If you are using Azure, this will include an '@'
-  # which must be encoded as '%40' for the connection string
-  # to work with both Hasura, the GraphQL server, and the
-  # Alembic migration manager
   auth:
+    # postgresql.auth.username defines the username to authenticate
+    # with.
+    # NOTE: If you are using Azure, this will include an '@'
+    # which must be encoded as '%40' for the connection string
+    # to work with both Hasura, the GraphQL server, and the
+    # Alembic migration manager
     username: prefect
+    # postgresql.auth.password sets the password to be used if
+    # `existingSecret` is not set. This is the password for
+    # `postgresqlUsername` and will be set within the secret at
+    # the key `postgresql-password`. This argument is only relevant
+    # when using the Postgres database included in the chart.
+    # For an external postgres connection, you must create
+    # and use `existingSecret` instead of `postgresqlPassword`.
+    # postgresqlPassword: use-a-strong-password
     password: prefect
     database: prefect
+    postgresPassword: prefect
 
-  # existingSecret configures which secret should be referenced
-  # for access to the database. If null and `useSubChart` is
-  # enabled, the secret will be generated. If using an external
-  # postgres service, this value should be set to the name of 
-  # an existing Kubernetes secret. This secret must contain 
-  # a key-value pair where the key is `postgresql-password `
-  # and the value is your password. For more information, 
-  # see the "Database" section of the README.
-  existingSecret: null
+    # postgresql.auth.existingSecret configures which secret should be referenced
+    # for access to the database. If null and `useSubChart` is
+    # enabled, the secret will be generated. If using an external
+    # postgres service, this value should be set to the name of
+    # an existing Kubernetes secret. This secret must contain
+    # a key-value pair where the key is `postgresql-password `
+    # and the value is your password. For more information,
+    # see the "Database" section of the README.
+    existingSecret: null
 
-  # postgresqlPassword sets the password to be used if
-  # `existingSecret` is not set. This is the password for
-  # `postgresqlUsername` and will be set within the secret at
-  # the key `postgresql-password`. This argument is only relevant 
-  # when using the Postgres database included in the chart. 
-  # For an external postgres connection, you must create 
-  # and use `existingSecret` instead of `postgresqlPassword`.
-  # postgresqlPassword: use-a-strong-password
+  # externalHostname defines the address to contact an externally
+  # managed postgres database instance at. This is not required if
+  # `internalPostgres` is `true`
+  externalHostname: ""
 
   # servicePort configures the port that the database should be
   # accessed at
@@ -90,10 +91,16 @@ postgresql:
       ports:
         postgresql: 5432
 
-    # postgresql configuration below here is only used if using
-    # the subchart
+    initdb:
+      user: postgres
+      scripts:
+        create_pgcrypto.sql: |
+          -- create pgcrypto extension, required for Hasura UUID
+          CREATE EXTENSION IF NOT EXISTS pgcrypto;
+          CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+          SET TIME ZONE 'UTC';
 
-    # persistence enables a PVC that stores the database between
+    # postgresql.primary.persistence enables a PVC that stores the database between
     # deployments. If making changes to the database deployment, this
     # PVC will need to be deleted for database changes to take effect.
     # This is especially notable when the authentication password
@@ -104,25 +111,11 @@ postgresql:
       enabled: false
       size: 8Gi
 
-  # externalHostname defines the address to contact an externally
-  # managed postgres database instance at. This is not required if
-  # `internalPostgres` is `true`
-  externalHostname: ""
-
   # useSubChart determines if a this chart should deploy a
   # user-manager postgres database or use an externally managed
   # postgres instance. If `useSubChart` is `true`, the
   # bitnami/postgresql subchart will be deployed
   useSubChart: true
-
-  initdbUser: postgres
-
-  initdbScripts:
-    create_pgcrypto.sql: |
-      -- create pgcrypto extension, required for Hasura UUID
-      CREATE EXTENSION IF NOT EXISTS pgcrypto;
-      CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-      SET TIME ZONE 'UTC';
 
 # prefectConfig allows override of prefect_server/config.toml values
 # Values placed here will result in environment variable definitions
