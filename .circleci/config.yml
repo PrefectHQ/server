@@ -72,7 +72,7 @@ executors:
           HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE: "true"
           HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
           HASURA_GRAPHQL_SERVER_PORT: "3000"
-
+          PGPASSWORD: pr343ct
 
 version: 2.1
 jobs:
