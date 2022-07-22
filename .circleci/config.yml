@@ -62,6 +62,7 @@ executors:
         environment:
           POSTGRES_USER: prefect
           POSTGRES_PASSWORD: pr343ct
+          POSTGRES_POSTGRES_PASSWORD: pr343ct
           POSTGRES_DB: prefect_server
           POSTGRESQL_EXTRA_FLAGS: "-c max_connections=150"
 
