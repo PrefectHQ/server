@@ -60,9 +60,10 @@ executors:
 
       - image: "bitnami/postgresql:14.4.0-debian-11-r9"
         environment:
-          POSTGRESQL_USERNAME: prefect
-          POSTGRESQL_PASSWORD: pr343ct
-          POSTGRESQL_DATABASE: prefect_server
+          POSTGRES_USER: prefect
+          POSTGRES_PASSWORD: pr343ct
+          POSTGRES_DB: prefect_server
+          PGDATA: /usr/local/var/postgres
         command: postgres -c max_connections=150
 
       - image: "hasura/graphql-engine:v2.0.9"
