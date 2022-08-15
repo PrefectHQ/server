@@ -1,0 +1,5 @@
+fix:
+  - "helm: create agent's env vars only if input variables are not empty - [#1234](https://github.com/PrefectHQ/server/pull/380)"
+
+contributor:
+  - "[Michal Luščon](https://github.com/mluscon)"
