@@ -1,0 +1,5 @@
+enhancement:
+  - " allow helm users to specify a Kubernetes configmap to be mounted as jobTemplateFile to the agent's container - [#379](https://github.com/PrefectHQ/server/pull/379)"
+
+contributor:
+  - "[Michal Luščon](https://github.com/mluscon)"

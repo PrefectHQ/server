@@ -357,6 +357,9 @@ agent:
   # reference: https://docs.prefect.io/orchestration/agents/kubernetes.html#custom-job-template
   jobTemplateFilePath: ""
 
+  # mount job template file from Kubernetes configmap. Filename in configmap must match the filename in jobTemplateFilePath.
+  jobTemplateFileConfigMap: ""
+
   # image configures the container image for the agent deployment
   image:
     name: prefecthq/prefect
