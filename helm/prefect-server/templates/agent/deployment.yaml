@@ -60,20 +60,32 @@ spec:
             value: {{ include "prefect-server.apollo-api-url" . }}
           - name: NAMESPACE
             value: {{ .Release.Namespace }}
+        {{- if .Values.agent.job.imagePullSecrets }}
           - name: IMAGE_PULL_SECRETS
             value: {{ .Values.agent.job.imagePullSecrets | join "," | quote }}
+        {{- end }}
           - name: PREFECT__CLOUD__AGENT__LABELS
             value: {{ .Values.agent.prefectLabels | toJson | quote }}
+        {{- if .Values.agent.job.resources.requests.memory }}
           - name: JOB_MEM_REQUEST
             value: {{ .Values.agent.job.resources.requests.memory | quote }}
+        {{- end }}
+        {{- if .Values.agent.job.resources.limits.memory }}
           - name: JOB_MEM_LIMIT
             value: {{ .Values.agent.job.resources.limits.memory | quote }}
+        {{- end }}
+        {{- if .Values.agent.job.resources.requests.cpu }}
           - name: JOB_CPU_REQUEST
             value: {{ .Values.agent.job.resources.requests.cpu | quote }}
+        {{- end }}
+        {{- if .Values.agent.job.resources.limits.cpu }}
           - name: JOB_CPU_LIMIT
             value: {{ .Values.agent.job.resources.limits.cpu | quote }}
+        {{- end }}
+        {{- if .Values.agent.job.imagePullPolicy }}
           - name: IMAGE_PULL_POLICY
             value: {{ .Values.agent.job.imagePullPolicy | quote }}
+        {{- end }}
           - name: SERVICE_ACCOUNT_NAME
             value: {{ include "prefect-server.serviceAccountName" . }}
           - name: PREFECT__BACKEND
