@@ -38,32 +38,6 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      initContainers:
-        - name: db-upgrade
-          {{- with .Values.graphql.securityContext -}}          
-          securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          image: "{{ .Values.graphql.image.name }}:{{ .Values.graphql.image.tag |  default .Values.serverVersionTag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.graphql.image.pullPolicy  }}
-          command:
-            - "bash"
-            - "-c"
-            - "/usr/local/bin/prefect-server database upgrade --yes"
-          env:
-            - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
-              value: {{ include "prefect-server.postgres-connstr" . | replace "%40" "@" }}
-            - name: PGPASSWORD
-              valueFrom:
-                {{- include "prefect-server.postgres-secret-ref" . | nindent 16 }}
-            {{- (include "prefect-server.envConfig" .) | nindent 12 }}
-            {{- with .Values.graphql.init.env }}
-              {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- with .Values.graphql.init.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
       containers:
         - name: graphql
           {{- with .Values.graphql.securityContext -}}          
@@ -75,10 +49,10 @@ spec:
           command: 
             - bash 
             - "-c" 
-            - "python src/prefect_server/services/graphql/server.py"
+            - "${PREFECT_SERVER_DB_CMD} && python src/prefect_server/services/graphql/server.py"
           env:
             - name: PREFECT_SERVER_DB_CMD
-              value: "echo 'DATABASE MIGRATIONS SKIPPED'"
+              value: {{ include "prefect-server.db-cmd" . }}
             - name: PREFECT_SERVER__DATABASE__CONNECTION_URL
               value: {{ include "prefect-server.postgres-connstr" . }}
             - name: PGPASSWORD
@@ -104,6 +78,11 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+        {{- include "prefect-server.gceProxySidecarContainer" . | nindent 8 }}
+      {{- if "prefect-server.gceProxySidecarVolumes" }}
+      volumes:
+        {{- include "prefect-server.gceProxySidecarVolumes" . | nindent 8 }}
+      {{- end }}
       {{- with .Values.graphql.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

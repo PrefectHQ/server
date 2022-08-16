@@ -11,6 +11,8 @@
     postgresql-connstr
     postgresql-secret-name
     postgresql-secret-ref
+    gceProxySidecarContainer
+    gceProxySidecarVolumes
 
   See also:
     hasura/_helpers.tpl: Provides helpers to generate the hasura API path
@@ -94,6 +96,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
     Generate the hostname of the postgresql service
     If a subchart is used, evaluate using its fullname function
       as {subchart.fullname}-{namespace}
+    If a Cloud SQL Auth Proxy is used, 127.0.0.1 will be returned
     Otherwise, the configured external hostname will be returned
 */}}
 {{- define "prefect-server.postgres-hostname" -}}
@@ -101,6 +104,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   {{- $subchart_overrides := .Values.postgresql -}}
   {{- $name := include "postgresql.fullname" (dict "Values" $subchart_overrides "Chart" (dict "Name" "postgresql") "Release" .Release) -}}
   {{- printf "%s.%s" $name .Release.Namespace -}}
+{{- else if .Values.postgresql.useGceProxySidecar -}}
+  127.0.0.1
 {{- else -}}
   {{- .Values.postgresql.externalHostname -}}
 {{- end -}}
@@ -208,3 +213,43 @@ secretKeyRef:
 {{- include "env-unwrap" $args -}}
 {{- end }}
 
+{{/*
+*/}}
+{{- define "prefect-server.gceProxySidecarContainer" -}}
+{{- if (and .Values.postgresql.useGceProxySidecar (not .Values.postgresql.useSubChart)) -}}
+- name: cloud-sql-proxy
+  image: gcr.io/cloudsql-docker/gce-proxy:{{ .Values.postgresql.gceProxySidecar.image_version }}
+  command:
+    - "/cloud_sql_proxy"
+    - "-ip_address_types={{ .Values.postgresql.gceProxySidecar.cloud_sql_proxy_args.ip_address_types }}"
+    - "-log_debug_stdout"
+    - "-instances={{ .Values.postgresql.gceProxySidecar.cloud_sql_proxy_args.instance_connection_name }}=tcp:{{ .Values.postgresql.servicePort }}"
+    - "-credential_file=/secrets/{{ .Values.postgresql.gceProxySidecar.service_account.filename_in_secret }}"
+  securityContext:
+    runAsNonRoot: true
+  volumeMounts:
+  - name: cloud-sql-proxy-secret-volume
+    mountPath: /secrets/
+    readOnly: true
+  {{- with .Values.postgresql.gceProxySidecar.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "prefect-server.gceProxySidecarVolumes" -}}
+{{- if (and .Values.postgresql.useGceProxySidecar (not .Values.postgresql.useSubChart)) -}}
+- name: cloud-sql-proxy-secret-volume
+  secret:
+    secretName: {{ .Values.postgresql.gceProxySidecar.service_account.secret_name }}
+{{- end }}
+{{- end }}
+
+{{- define "prefect-server.db-cmd" -}}
+{{- if .Values.postgresql.upgradeDb -}}
+"/usr/local/bin/prefect-server database upgrade --yes"
+{{- else -}}
+"echo 'DATABASE MIGRATIONS SKIPPED'"
+{{- end -}}
+{{- end -}}

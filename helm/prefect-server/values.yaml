@@ -86,6 +86,45 @@ postgresql:
   # `internalPostgres` is `true`
   externalHostname: ""
 
+  # upgradeDb defines if the databse should be upgraded when starting
+  # the server
+  upgradeDb: true
+
+  # useGceProxySidecar determines if this chart should deploy the
+  # Cloud SQL Auth Proxy wherever a connection to the Postgres
+  # databse is required.
+  useGceProxySidecar: false
+
+  # gceProxySidecar determines if a gce Proxy sidecar should be
+  # configured to connect to an external Postgresql database hosted
+  # on Google Cloud SQL.
+  gceProxySidecar:
+    # image_version allows for the updating of the version of the
+    # cloud_sql_proxy image to use.
+    image_version: 1.28.0
+
+    cloud_sql_proxy_args:
+      # ip_address_types specifies whether to use PUBLIC or PRIVATE 
+      # ip types.  If connecting from a VPC-native GKE cluster, set
+      # to private to have the proxy connect over a private IP
+      ip_address_types: PUBLIC,PRIVATE
+
+      # instance_connection_name is the connection name of the Cloud SQL
+      # instance that the proxy is to connect to.
+      instance_connection_name: ""
+
+    # service_account holds the details required to configure the proxy
+    # to connect as the provided service account.
+    # See https://cloud.google.com/sql/docs/mysql/connect-kubernetes-engine#service-account-key-file
+    # for details on how to create/configure the secret
+    service_account:
+      # secret_name is the name of the secret that contains the key file
+      # of the service account that the proxy will use for authentication
+      secret_name: ""
+      filename_in_secret: "service_account.json"
+
+    resources: {}
+
   # useSubChart determines if a this chart should deploy a
   # user-manager postgres database or use an externally managed
   # postgres instance. If `useSubChart` is `true`, the
@@ -195,12 +234,6 @@ graphql:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-
-  init:
-    # init.resources configures resources for the initContainer
-    # which upgrades the database
-    env: []
-    resources: {}
 
 # apollo configures the Prefect apollo deployment and service
 # which provides a unified graphql schema for users and the UI
