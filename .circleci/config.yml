@@ -3,8 +3,8 @@ aliases:
     run:
       name: Set environment variables
       command: |
-        # set prefect tag -- currently pinning to master
-        echo 'export PREFECT_VERSION=master' >> $BASH_ENV
+        # set prefect tag -- currently pinning to 1.x
+        echo 'export PREFECT_VERSION=1.x' >> $BASH_ENV
 
   - &install_prefect_server
     run:
@@ -12,7 +12,7 @@ aliases:
       command: |
         # Use the latest pip
         pip install --upgrade pip
-        # install prefect master
+        # install prefect 1.x
         pip install --progress-bar off "git+https://github.com/prefecthq/prefect.git@${PREFECT_VERSION}"
         # install prefect server
         pip install --progress-bar off -e ".[dev]"
@@ -196,7 +196,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
           path: 'services/apollo'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: master
           filters:
             branches:
@@ -207,7 +207,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/server'
           path: '.'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: master
           filters:
             branches:
@@ -220,7 +220,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
           path: 'services/apollo'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
           filters:
             branches:
@@ -233,7 +233,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/server'
           path: '.'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
           filters:
             branches:
