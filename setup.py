@@ -30,7 +30,7 @@ dev_requires = [
     "black",
     "asynctest >= 0.13",
     "pytest >= 5.0",
-    "pytest-asyncio",
+    "pytest-asyncio < 0.19.0",
     "pytest-cov",
     "pytest-env",
 ]
