@@ -445,5 +445,6 @@ jobs:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    resources: {}
     # backoffLimit configures the number of retries; needed to wait for the server to become available
     backoffLimit: 10
