@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 import versioneer
 
 install_requires = [
-    "prefect >= 1.0.0",
+    "prefect >= 1.0.0, < 2.0.0",
     "alembic >= 1.2",
     "ariadne >= 0.8.0",
     "asyncpg >= 0.20",
