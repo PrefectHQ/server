@@ -197,10 +197,12 @@ graphql:
   affinity: {}
 
   init:
+    enabled: true
     # init.resources configures resources for the initContainer
     # which upgrades the database
     env: []
     resources: {}
+    securityContext: {}
 
 # apollo configures the Prefect apollo deployment and service
 # which provides a unified graphql schema for users and the UI
