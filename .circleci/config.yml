@@ -58,7 +58,7 @@ executors:
           PREFECT_SERVER__DATABASE__USERNAME: prefect
           PREFECT_SERVER__DATABASE__PASSWORD: pr343ct
 
-      - image: "bitnami/postgresql:14.4.0-debian-11-r9"
+      - image: "postgres:11"
         environment:
           POSTGRES_USER: prefect
           POSTGRES_PASSWORD: pr343ct
