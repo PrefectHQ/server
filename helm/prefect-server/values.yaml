@@ -199,10 +199,12 @@ graphql:
   affinity: {}
 
   init:
+    enabled: true
     # init.resources configures resources for the initContainer
     # which upgrades the database
     env: []
     resources: {}
+    securityContext: {}
 
 # apollo configures the Prefect apollo deployment and service
 # which provides a unified graphql schema for users and the UI
@@ -359,6 +361,9 @@ agent:
   # reference: https://docs.prefect.io/orchestration/agents/kubernetes.html#custom-job-template
   jobTemplateFilePath: ""
 
+  # mount job template file from Kubernetes configmap. Filename in configmap must match the filename in jobTemplateFilePath.
+  jobTemplateFileConfigMap: ""
+
   # image configures the container image for the agent deployment
   image:
     name: prefecthq/prefect
@@ -442,5 +447,6 @@ jobs:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    resources: {}
     # backoffLimit configures the number of retries; needed to wait for the server to become available
     backoffLimit: 10

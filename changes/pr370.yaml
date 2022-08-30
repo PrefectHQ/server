@@ -1,0 +1,5 @@
+enhancement:
+  - "Improve init container template for graphql - [#370](https://github.com/PrefectHQ/server/pull/370)"
+
+contributor:
+  - "[André Nogueira](https://github.com/aanogueira)"
