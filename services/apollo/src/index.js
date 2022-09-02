@@ -94,6 +94,64 @@ async function runServer() {
     introspection: true,
     playground: APOLLO_API_ENABLE_PLAYGROUND,
     tracing: false, // set to true to see performance metrics w/ every request
+    formatError: error => {
+      // When passed here, errors have 4 fields: message, locations, path, and extensions
+      // 1. Message is the human-readable explanation of what's gone wrong
+      // 2. Locations is field that's meant to explain where things went wrong
+      // we're stripping locations because it's at best inaccurate and at worst exposing
+      // info we don't want users to see.
+      // 3. Path is the route that was called e.g., `create_project`
+      // 4. Extensions is where we put anything additional we'd like to include. By default,
+      // it always includes a code, which is the GQL equivalent of a response code describing
+      // what's gone wrong
+      log(JSON.stringify(error))
+      const errorJson = {
+        path: error.path,
+        message: error.message,
+        extensions: error.extensions
+      }
+
+      // handle the case in which the operation takes longer than 3s
+      if (error.message.includes('database query error')) {
+        errorJson.message = 'Operation timed out'
+        errorJson.extensions = { code: 'API_ERROR' }
+      }
+      // handle intentionally obfuscated API errors
+      else if (error.message.includes('An internal API error occurred')) {
+        errorJson.extensions = { code: 'API_ERROR' }
+      }
+      // handle the case in which we have intra-cluster connectivity issues (generally at deploy-time)
+      // the way refused connections surface changes depending on whether the error was raised through Python
+      else if (
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('Connection refused') ||
+        error.message.includes('connection error') ||
+        error.message.includes('ENOTFOUND') ||
+        error.message.includes('postgres') ||
+        error.message.includes('EAI_AGAIN') ||
+        error.message.includes('EHOSTUNREACH') ||
+        error.message.includes('ECONNRESET')
+      ) {
+        errorJson.message = 'Unable to complete operation'
+        errorJson.extensions = { code: 'API_ERROR' }
+      } // handle version locking errors so the Core client doesn't have to rely on a fragile string match
+      else {
+        errorJson.message = error.message.replace(
+          ipv4Regex,
+          // Replaces all IPv4 elements with • but maintains : in the last position
+          // if it exists
+          match => '•••.•••.•••.•••' + (match.substr(-1) === ':' ? ':' : '')
+        )
+
+        errorJson.message = error.message.replace(
+          ipv6Regex,
+          // Replaces all IPv6 elements with a fake • sequence
+          '••••:••••:••••:••••::::'
+        )
+      }
+
+      return errorJson
+    },
     // this function is called whenever a request is made to the server in order to populate
     // the graphql context
     context: ({ req, connection }) => {
