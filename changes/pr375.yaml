@@ -1,0 +1,5 @@
+fix:
+  - "Update Postgresql chart's version from ~9 to ~11 - [#375](https://github.com/PrefectHQ/server/pull/375)"
+
+contributor:
+  - "[Amit Zafran](https://github.com/amitza)"

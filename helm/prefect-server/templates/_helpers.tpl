@@ -99,7 +99,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "prefect-server.postgres-hostname" -}}
 {{- if .Values.postgresql.useSubChart -}}
   {{- $subchart_overrides := .Values.postgresql -}}
-  {{- $name := include "postgresql.fullname" (dict "Values" $subchart_overrides "Chart" (dict "Name" "postgresql") "Release" .Release) -}}
+  {{- $name := include "postgresql.primary.fullname" (dict "Values" $subchart_overrides "Chart" (dict "Name" "postgresql") "Release" .Release) -}}
   {{- printf "%s.%s" $name .Release.Namespace -}}
 {{- else -}}
   {{- .Values.postgresql.externalHostname -}}
@@ -114,10 +114,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
       secret in PGPASSWORD on containers.
 */}}
 {{- define "prefect-server.postgres-connstr" -}}
-{{- $user := .Values.postgresql.postgresqlUsername -}}
+{{- $user := .Values.postgresql.auth.username -}}
 {{- $host := include "prefect-server.postgres-hostname" . -}}
-{{- $port := .Values.postgresql.servicePort | toString -}}
-{{- $db := .Values.postgresql.postgresqlDatabase -}}
+{{- $port := .Values.postgresql.primary.service.ports.postgresql | toString -}}
+{{- $db := .Values.postgresql.auth.database -}}
 {{- printf "postgresql://%s@%s:%s/%s" $user $host $port $db -}}
 {{- end -}}
 
@@ -145,7 +145,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "prefect-server.postgres-secret-ref" -}}
 secretKeyRef:
   name: {{ include "prefect-server.postgres-secret-name" . }}
-  key: postgresql-password
+  key: postgres-password
 {{- end -}}
 
   
