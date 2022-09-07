@@ -219,6 +219,7 @@ workflows:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
+          attach-at: 'services/apollo'
           path: 'services/apollo'
           extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
