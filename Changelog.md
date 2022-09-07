@@ -1,5 +1,25 @@
 # Changelog
 
+## 2022.09.07 <Badge text="beta" type="success" />
+
+Released on September 7, 2022.
+### Helm
+
+WARNING: This release of the Helm chart includes a breaking change with the upgrade from PostgreSQL 9 to 11. This is required because bitnami no longer hosts the old version of Postgres. If updating from a prior Helm chart release, please take care to back up your database.
+
+- Allow users to specify a Kubernetes config map to be mounted as `jobTemplateFile` in the agent's container - [#379](https://github.com/PrefectHQ/server/pull/379)
+- Improve init container template for graphql - [#370](https://github.com/PrefectHQ/server/pull/370)
+- Create agent's env vars only if input variables are not empty - [#380](https://github.com/PrefectHQ/server/pull/380)
+- Update PostgreSQL from ~9 to ~11 — [#375](https://github.com/PrefectHQ/server/pull/375)
+- Allow specification of resources for the tenant creation job — [#371](https://github.com/PrefectHQ/server/pull/371)
+
+### Contributors
+
+- [Amit Zafran](https://github.com/amitza)
+- [André Nogueira](https://github.com/aanogueira)
+- [Michal Luščon](https://github.com/mluscon)
+- [rcheatham-q](https://github.com/rcheatham-q)
+
 ## 2022.04.14 <Badge text="beta" type="success" />
 
 Released on April 14, 2022.
