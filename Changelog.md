@@ -1,5 +1,23 @@
 # Changelog
 
+## 2022.09.07 <Badge text="beta" type="success" />
+
+Released on September 7, 2022.
+
+### Enhancements
+
+-  allow helm users to specify a Kubernetes configmap to be mounted as jobTemplateFile to the agent's container - [#379](https://github.com/PrefectHQ/server/pull/379)
+- Improve init container template for graphql - [#370](https://github.com/PrefectHQ/server/pull/370)
+
+### Fixes
+
+- helm: create agent's env vars only if input variables are not empty - [#1234](https://github.com/PrefectHQ/server/pull/380)
+
+### Contributors
+
+- [André Nogueira](https://github.com/aanogueira)
+- [Michal Luščon](https://github.com/mluscon)
+
 ## 2022.04.14 <Badge text="beta" type="success" />
 
 Released on April 14, 2022.
