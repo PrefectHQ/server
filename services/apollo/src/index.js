@@ -25,6 +25,35 @@ const TELEMETRY_ID = uuidv4()
 // Server
 const app = express()
 const depthLimit = require('graphql-depth-limit')
+
+
+/*
+  Creates a single capture group for the entirety of an IPv4 address (including trailing . :)
+
+  Example:
+    https://35.237.156.161:8200/v1/auth/jwt/login
+
+  Captures:
+    35.237.156.161:
+
+  Adapted from https://stackoverflow.com/a/36760050/13419215
+*/
+const ipv4Regex = /((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.|\:|\b(?!$)|$)){4}/g
+
+/*
+  Creates a single capture group for the entirety of an IPv6 address
+
+  Example:
+    http://2001:db8:85a3:8d3:1319:8a2e:370:7348/
+
+  Captures:
+    2001:db8:85a3:8d3:1319:8a2e:370:7348
+
+  From https://stackoverflow.com/a/17871737/13419215
+*/
+const ipv6Regex = /(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/g
+
+
 class PrefectApolloServer extends ApolloServer {
   async createGraphQLServerOptions(req, res) {
     const options = await super.createGraphQLServerOptions(req, res)
