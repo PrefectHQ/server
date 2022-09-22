@@ -4,13 +4,13 @@ aliases:
       name: Set environment variables
       command: |
         # set prefect tag -- currently pinning to 1.x branch
-        echo 'export PREFECT_VERSION=1.x' >> $BASH_ENV
+        echo 'export PREFECT_VERSION=0.15.13' >> $BASH_ENV
 
   - &install_prefect_server
     run:
       name: Install Prefect Server
       command: |
-        # install prefect from 1.x branch
+        # install prefect from 0.x tag
         pip install --progress-bar off "git+https://github.com/prefecthq/prefect.git@${PREFECT_VERSION}"
         # install prefect server
         pip install --progress-bar off -e ".[dev]"
@@ -188,12 +188,13 @@ workflows:
 
   'Build and publish development server artifacts':
     jobs:
+      - *set_environment_variables
       - docker/publish:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
           path: 'services/apollo'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=$PREFECT_VERSION --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: master
           filters:
             branches:
@@ -204,7 +205,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/server'
           path: '.'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=$PREFECT_VERSION --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: master
           filters:
             branches:
@@ -212,12 +213,13 @@ workflows:
 
   'Build and publish versioned server artifacts':
     jobs:
+      - *set_environment_variables
       - docker/publish:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/apollo'
           path: 'services/apollo'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=$PREFECT_VERSION --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
           filters:
             branches:
@@ -230,7 +232,7 @@ workflows:
           docker-username: DOCKER_HUB_USER
           image: 'prefecthq/server'
           path: '.'
-          extra_build_args: '--build-arg PREFECT_VERSION=master --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
+          extra_build_args: '--build-arg PREFECT_VERSION=$PREFECT_VERSION --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
           filters:
             branches:
