@@ -23,7 +23,7 @@ jobs:
           echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
           echo ::set-output name=CORE_VERSION::$(\
             git ls-remote --tags --refs --sort="v:refname" \
-            https://github.com/PrefectHQ/prefect.git | tail -n1 | sed 's/.*\///' \
+            https://github.com/PrefectHQ/prefect.git | grep "tags/1." | tail -n1 | sed 's/.*\///' \
           )
           echo ::set-output name=UI_VERSION::$(\
             git ls-remote --tags --refs --sort="v:refname" \
