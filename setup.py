@@ -23,7 +23,7 @@ install_requires = [
     "starlette >= 0.13, < 0.14",
     "toml >= 0.9.0, < 0.11",
     "urllib3 >= 1.26.0",
-    "uvicorn >= 0.11.4, < 0.12",
+    "uvicorn >= 0.18.3, < 0.19",
 ]
 
 dev_requires = [
