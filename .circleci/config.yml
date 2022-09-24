@@ -73,7 +73,6 @@ executors:
           HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
           HASURA_GRAPHQL_SERVER_PORT: "3000"
 
-
 version: 2.1
 jobs:
   check_formatting:
@@ -152,7 +151,7 @@ jobs:
       - run:
           name: Configure credentials
           command: |
-            mkdir ~/.config/gcloud/
+            mkdir -p ~/.config/gcloud/
             echo $GOOGLE_APPLICATION_CREDENTIALS_KEY > ~/.config/gcloud/integration-test-sa.json
             echo 'export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/integration-test-sa.json' >> $BASH_ENV
       - run:
@@ -189,14 +188,14 @@ workflows:
       - run_service_tests
       - run_integration_tests
 
-  'Build and publish development server artifacts':
+  "Build and publish development server artifacts":
     jobs:
       - docker/publish:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
-          image: 'prefecthq/apollo'
-          docker-context: 'services/apollo'
-          path: 'services/apollo'
+          image: "prefecthq/apollo"
+          docker-context: "services/apollo"
+          path: "services/apollo"
           extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: master
           filters:
@@ -206,22 +205,22 @@ workflows:
       - docker/publish:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
-          image: 'prefecthq/server'
-          path: '.'
+          image: "prefecthq/server"
+          path: "."
           extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: master
           filters:
             branches:
               only: master
 
-  'Build and publish versioned server artifacts':
+  "Build and publish versioned server artifacts":
     jobs:
       - docker/publish:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
-          image: 'prefecthq/apollo'
-          docker-context: 'services/apollo'
-          path: 'services/apollo'
+          image: "prefecthq/apollo"
+          docker-context: "services/apollo"
+          path: "services/apollo"
           extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
           filters:
@@ -233,8 +232,8 @@ workflows:
       - docker/publish:
           docker-password: DOCKER_HUB_PW
           docker-username: DOCKER_HUB_USER
-          image: 'prefecthq/server'
-          path: '.'
+          image: "prefecthq/server"
+          path: "."
           extra_build_args: '--build-arg PREFECT_VERSION=1.x --build-arg PREFECT_SERVER_VERSION=$CIRCLE_TAG --build-arg RELEASE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")'
           tag: $CIRCLE_TAG,latest
           filters:
