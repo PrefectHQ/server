@@ -129,8 +129,8 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
     an existing secret is not set.
 */}}
 {{- define "prefect-server.postgres-secret-name" -}}
-{{- if .Values.postgresql.existingSecret -}}
-  {{- .Values.postgresql.existingSecret -}}
+{{- if .Values.postgresql.auth.existingSecret -}}
+  {{- .Values.postgresql.auth.existingSecret -}}
 {{- else -}}
   {{- printf "%s-%s" .Release.Name "postgresql" -}}
 {{- end -}}
