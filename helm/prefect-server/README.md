@@ -197,10 +197,10 @@ We strongly recommend that you do not deploy a production database using this ch
 The provided database will **not** persist your data by default.
 When connecting to an external database, PostgreSQL 11+ is recommended.
 
-In order to use an external database with this Helm chart, you need to create a Kubernetes secret that will contain the database password. This secret must be a key-value pair containing the key `postgresql-password`. You need to create this secret yourself, then reference the secret name using `existingSecret`. The name of the Kubernetes secret is arbitrary, e.g.: 
+In order to use an external database with this Helm chart, you need to create a Kubernetes secret that will contain the database password. This secret must be a key-value pair containing the key `postgres-password`. You need to create this secret yourself, then reference the secret name using `existingSecret`. The name of the Kubernetes secret is arbitrary, e.g.: 
 
 ```shell
-kubectl create secret generic prefect-postgresql-pwd --from-literal='postgresql-password=YOUR_POSTGRES_PWD'
+kubectl create secret generic prefect-postgresql-pwd --from-literal='postgres-password=YOUR_POSTGRES_PWD'
 ```
 
 Then, add the flag `--set postgresql.existingSecret=prefect-postgresql-pwd` to the helm install command to use this secret to connect to your database.
