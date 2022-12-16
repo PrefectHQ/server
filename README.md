@@ -19,6 +19,12 @@
     <img src="https://images.ctfassets.net/gm98wzqotmnx/3mwImS57DEydMQXU1FCGG/6e36e2d49faf78cf4a166f123c2c43ca/image__5_.png" height="27">
 </p>
 
+Looking for the latest [Prefect 2](https://docs.prefect.io/) release? Prefect 2 and [Prefect Cloud 2](https://app.prefect.cloud) have been [released for General Availability](https://www.prefect.io/guide/blog/the-global-coordination-plane/). See [the current Prefect 2 documentation](https://docs.prefect.io/) for details.
+
+Prefect 1 Core, Server, and Cloud are our first-generation workflow and orchestration tools. You can continue to use them and we'll continue to support them while migrating users to Prefect 2.
+
+If you're ready to start migrating your workflows to [Prefect 2](https://github.com/PrefectHQ/prefect), see our [migration guide](https://docs.prefect.io/migration-guide/).
+
 # Prefect Server
 
 Please note: this repo is for Prefect Server development. If you want to run Prefect Server, the best first step is to install [Prefect](https://github.com/prefecthq/prefect) and run `prefect server start`.
