@@ -1,0 +1,5 @@
+fix:
+  - "docs: fix postgresql-password -> postgres-password - [#407](https://github.com/PrefectHQ/server/pull/407)"
+
+contributor:
+  - "[Joël Luijmes](https://github.com/joelluijmes)"
