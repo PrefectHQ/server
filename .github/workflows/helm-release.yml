@@ -20,15 +20,15 @@ jobs:
           # Enable pipefail so git command failures do not result in null versions downstream
           set -x
 
-          echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
-          echo ::set-output name=CORE_VERSION::$(\
+          echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
+          echo "CORE_VERSION=$(\
             git ls-remote --tags --refs --sort="v:refname" \
             https://github.com/PrefectHQ/prefect.git | grep "tags/1." | tail -n1 | sed 's/.*\///' \
-          )
-          echo ::set-output name=UI_VERSION::$(\
+          )" >> $GITHUB_OUTPUT
+          echo "UI_VERSION=$(\
             git ls-remote --tags --refs --sort="v:refname" \
             https://github.com/PrefectHQ/ui.git | tail -n1 | sed 's/.*\///' \
-          )
+          )" >> $GITHUB_OUTPUT
 
       - name: Configure Git
         run: |
@@ -57,7 +57,7 @@ jobs:
       - name: Add dependency chart repos
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
-          
+
       - name: Package helm chart
         run: |
           mkdir /tmp/chart
@@ -87,7 +87,7 @@ jobs:
           git checkout gh-pages
           helm repo index /tmp/chart --url https://prefecthq.github.io/server/charts --merge ./index.yaml
 
-      - name: Commit and push 
+      - name: Commit and push
         run: |
           cp /tmp/chart/index.yaml .
           cp /tmp/chart/prefect-server-$VERSION.* ./charts
