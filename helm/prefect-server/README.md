@@ -27,6 +27,8 @@
 
 <!-- /TOC -->
 
+**Notice**: This Helm chart is for Prefect 1 Server, and we strongly recommend [upgrading to Prefect 2 Server](https://github.com/PrefectHQ/prefect-helm).
+
 ## Usage
 
 ### Installing released versions
@@ -40,6 +42,8 @@ The charts are hosted in a [Helm repository](https://helm.sh/docs/chart_reposito
     ```
     $ helm repo add prefecthq https://prefecthq.github.io/server/
     ```
+
+    **Note**: Please consider upgrading to Prefect 2 instead, which has a new repository at `https://prefecthq.github.io/prefect-helm`
 
 2. Sync versions available in the repo to your local cache.
 
