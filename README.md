@@ -19,9 +19,9 @@
     <img src="https://images.ctfassets.net/gm98wzqotmnx/3mwImS57DEydMQXU1FCGG/6e36e2d49faf78cf4a166f123c2c43ca/image__5_.png" height="27">
 </p>
 
-**Please note**: If you are new to Prefect, we strongly recommend starting with [Prefect 2](https://docs.prefect.io/) and [Prefect Cloud 2](https://app.prefect.cloud), as they are in [General Availability](https://www.prefect.io/guide/blog/the-global-coordination-plane/).
+**Please note**: If you are new to Prefect, we strongly recommend starting with [Prefect 2](https://docs.prefect.io/) and [Prefect Cloud 2](https://app.prefect.cloud), as they are in [General Availability](https://www.prefect.io/guide/blog/the-global-coordination-plane/). 
 
-Prefect 1 Core, Server, and Cloud are our first-generation workflow and orchestration tools. You can continue to use them and we'll continue to support them while migrating users to Prefect 2.
+Prefect 1 Core, Server, and Cloud are our first-generation workflow and orchestration tools. You can continue to use them and we'll continue to support them while migrating users to Prefect 2. Prefect 2 can also be self-hosted and does not depend on this repository in any way.
 
 If you're ready to start migrating your workflows to [Prefect 2](https://github.com/PrefectHQ/prefect), see our [migration guide](https://docs.prefect.io/migration-guide/).
 
